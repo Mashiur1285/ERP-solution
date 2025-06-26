@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Contracts\SupplierContract;
+
 use Inertia\Inertia;
 
 class SupplierController extends Controller
@@ -18,8 +19,11 @@ class SupplierController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
+
     {
+       
        $suppliers = $this->supplierRepository->all();
+       dd($suppliers);
        return Inertia::render('Suppliers/Index', [
            'suppliers' => $suppliers,
        ]);
@@ -39,7 +43,22 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $data=$request->all();
+        dd('hello');
+        $data = [
+    [
+        'company_name' => 'Acme Corporation',
+        'branch_name' => 'Dhaka Branch',
+        'phone_number' => '+8801712345678',
+        'emergency_phone_number' => '+8801812345678',
+        'address' => '123 Business Road, Commercial Area, Dhaka',
+        'email' => 'dhaka@acme-corp.com',
+        'country' => 'Bangladesh',
+        'city' => 'Dhaka',
+        'website' => 'https://acme-corp.com',
+        'notes' => 'Primary supplier for office supplies'
+    ],
+    
+];
         $this->supplierRepository->create($data);
     }
 

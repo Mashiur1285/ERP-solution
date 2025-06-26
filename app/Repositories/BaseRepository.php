@@ -4,7 +4,8 @@ namespace App\Repositories;
 
 use App\Contracts\BaseContract;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
+
 
 abstract class BaseRepository implements BaseContract
 {
@@ -41,6 +42,7 @@ abstract class BaseRepository implements BaseContract
     }
 
     public function all(): Collection{
+        return $this->model->get();
 
     }
 

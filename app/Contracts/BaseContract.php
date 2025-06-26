@@ -14,6 +14,6 @@ interface BaseContract
 
     public function delete (int $id): bool;
 
-    public function all(): Collection
+    public function all(): Collection;
     
 }
