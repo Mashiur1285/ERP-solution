@@ -8,4 +8,5 @@ use App\Http\Controllers\SupplierController;
 //     return Inertia::render('Welcome');
 // });
 
-Route::resource('suppliers', SupplierController::class);
+Route::get('suppliers/create', [SupplierController::class, 'store']);
+
