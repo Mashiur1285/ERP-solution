@@ -13,7 +13,7 @@ class Deposit extends Model
          'deposit_date',
          'is_used'
     ];
-    
+
 
      protected $cast=[
          'is_used' => 'boolean',
