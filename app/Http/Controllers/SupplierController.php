@@ -23,8 +23,8 @@ class SupplierController extends Controller
 
     {
        
-       $suppliers = $this->supplierRepository->all();
-       dd($suppliers);
+        $this->supplierRepository->all();
+    
        return Inertia::render('Suppliers/Index', [
            'suppliers' => $suppliers,
        ]);
@@ -44,6 +44,8 @@ class SupplierController extends Controller
      */
     public function store(StoreSupplierRequest $request)
     {
+        $data= $request->validated();
+;
         $this->supplierRepository->create($data);
     }
 

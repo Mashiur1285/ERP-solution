@@ -8,5 +8,5 @@ use App\Http\Controllers\SupplierController;
 //     return Inertia::render('Welcome');
 // });
 
-Route::get('suppliers/store', [SupplierController::class, 'store']);
-
+Route::post('suppliers/store', [SupplierController::class, 'store']);
+Route::get('suppliers/index', [SupplierController::class, 'index']);
