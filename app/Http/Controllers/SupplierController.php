@@ -23,7 +23,7 @@ class SupplierController extends Controller
 
     {
        
-        $this->supplierRepository->all();
+        $suppliers= $this->supplierRepository->all();
     
        return Inertia::render('Suppliers/Index', [
            'suppliers' => $suppliers,
@@ -70,7 +70,8 @@ class SupplierController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $data=$request->validated();
+        return $this->depositRepository->update($data, id);
     }
 
     /**

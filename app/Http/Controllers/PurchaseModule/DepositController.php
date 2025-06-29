@@ -59,7 +59,8 @@ class DepositController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $data= $request->validated();
+        $depositReport= $this->depositRepository->update($data);
     }
 
     /**
