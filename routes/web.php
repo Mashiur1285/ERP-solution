@@ -8,5 +8,10 @@ use App\Http\Controllers\SupplierController;
 //     return Inertia::render('Welcome');
 // });
 
-Route::post('suppliers/store', [SupplierController::class, 'store']);
-Route::get('suppliers/index', [SupplierController::class, 'index']);
+
+Route::get('suppliers/index', [SupplierController::class, 'index'])->name('suppliers.index');
+Route::get('suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
+Route::post('suppliers/store', [SupplierController::class, 'store'])->name('suppliers.store');
+Route::put('suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
+
+
