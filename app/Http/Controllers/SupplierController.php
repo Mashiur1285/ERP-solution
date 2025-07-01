@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreSupplierRequest;
+use App\Models\Supplier;
 use App\Contracts\SupplierContract;
 
 use Inertia\Inertia;
@@ -63,17 +64,23 @@ class SupplierController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $supplier= $this->supplierRepository->find($id);
+        return Inertia::render('Suppliers/Edit', [
+            'supplier' => $supplier,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        dd($request->all());
-        $data=$request->validated();
-        return $this->depositRepository->update($data, id);
+    { 
+        $data=$request->all();
+        if($this->supplierRepository->update( $data, $id) instanceof Supplier)
+        {
+            return back()->with('success', 'Supplier updated successfully');
+        }
+        return back()->with('error', 'Unable to update');
     }
 
     /**

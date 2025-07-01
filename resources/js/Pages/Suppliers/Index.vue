@@ -18,9 +18,6 @@
             Contact
           </th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Location
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Website
           </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -46,9 +43,6 @@
             <div class="text-sm text-gray-900">{{ supplier.phone_number }}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">{{ supplier.city }}, {{ supplier.country }}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
             <a :href="supplier.website" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
               {{ supplier.website }}
             </a>
@@ -56,7 +50,7 @@
           <td class="px-6 py-4 whitespace-nowrap">
         <a
         :href="`/suppliers/${supplier.id}/edit`"
-        class="inline-flex items-center gap-2 px-3 py-1 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition"
+        class="inline-flex items-center gap-2 px-3 py-1 text-sm font-semibold text-blue-800 bg-indigo-100 rounded-[300px] hover:bg-indigo-200 transition"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

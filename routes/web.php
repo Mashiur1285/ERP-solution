@@ -13,5 +13,5 @@ Route::get('suppliers/index', [SupplierController::class, 'index'])->name('suppl
 Route::get('suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
 Route::post('suppliers/store', [SupplierController::class, 'store'])->name('suppliers.store');
 Route::put('suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
-
+Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
 

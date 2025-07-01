@@ -30,7 +30,7 @@ abstract class BaseRepository implements BaseContract
     public function update(array $data, int $id): Model
     {
         $model= $this->model->findOrFail($id);
-        if(!$model->update())
+        if(!$model->update($data))
         {
             return null;
         }
