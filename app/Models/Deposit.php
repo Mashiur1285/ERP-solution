@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Deposit extends Model
 {
         protected $fillable = [
+         'supplier_id',
          'balance_deposited',
          'balance_remaining',
          'deposit_date',

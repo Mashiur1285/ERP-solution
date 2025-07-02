@@ -3,12 +3,12 @@
 
 namespace App\Repositories;
 
-use App\Models\Supplier; // Make sure you have this model
-use App\Contracts\SupplierContract;
+use App\Models\Deposit;
+use App\Contracts\DepositContract;
 
 class DepositRepository extends BaseRepository implements DepositContract
 {
-    public function __construct(Supplier $model)
+    public function __construct(Deposit $model)
     {
         parent::__construct($model);
     }
@@ -17,11 +17,11 @@ class DepositRepository extends BaseRepository implements DepositContract
     {
         return $this->model
         ->select('suppliers.company_name as name',
-                 'deposits.balance_deposited as deposit amount',
+                 'deposits.balance_deposited as deposit_amount',
                  'deposits.balance_remaining as remaining_amount',
                  'deposits.deposit_date as date'
          ) 
-         ->join('suppliers', 'deposits.supplier_id', 'suppliers_id')
+         ->join('suppliers', 'deposits.supplier_id', 'suppliers.id')
          ->orderBy('deposits.deposit_date', 'desc')
          ->get();
     }

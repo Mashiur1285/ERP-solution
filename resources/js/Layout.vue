@@ -42,6 +42,7 @@
 
         <!-- Nav -->
         <nav class="mt-4 flex-1 px-2">
+          <!-- Suppliers Menu -->
           <button
             @click="toggleSuppliersMenu"
             class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
@@ -71,24 +72,87 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-
-          <!-- Submenu -->
           <div v-if="suppliersMenuOpen && !collapsed" class="pl-6 mt-2 space-y-1">
             <Link
               href="/suppliers/index"
-              class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200"
+              class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
               :class="{ 'bg-blue-600': $page.url.startsWith('/suppliers/index') }"
               @click="logNavigation('/suppliers/index')"
             >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
               Supplier List
             </Link>
             <Link
               href="/suppliers/create"
-              class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200"
+              class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
               :class="{ 'bg-blue-600': $page.url.startsWith('/suppliers/create') }"
               @click="logNavigation('/suppliers/create')"
             >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
               Add Supplier
+            </Link>
+          </div>
+
+          <!-- Deposit Management Menu -->
+          <button
+            @click="toggleDepositsMenu"
+            class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            <svg
+              class="w-5 h-5 mr-2 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <span v-if="!collapsed">Deposit Management</span>
+            <svg
+              v-if="!collapsed"
+              class="w-4 h-4 ml-auto transition-transform duration-200"
+              :class="{ 'rotate-180': depositsMenuOpen }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div v-if="depositsMenuOpen && !collapsed" class="pl-6 mt-2 space-y-1">
+            <Link
+              href="/deposits"
+              class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+              :class="{ 'bg-blue-600': $page.url.startsWith('/deposits') }"
+              @click="logNavigation('/deposits')"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              Manage Deposits
             </Link>
           </div>
         </nav>
@@ -107,10 +171,15 @@ import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 
 const suppliersMenuOpen = ref(false);
+const depositsMenuOpen = ref(false);
 const collapsed = ref(false);
 
 const toggleSuppliersMenu = () => {
   suppliersMenuOpen.value = !suppliersMenuOpen.value;
+};
+
+const toggleDepositsMenu = () => {
+  depositsMenuOpen.value = !depositsMenuOpen.value;
 };
 
 const logNavigation = (url) => {

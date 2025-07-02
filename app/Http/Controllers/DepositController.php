@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Contracts\DepositContract;
+use App\Contracts\SupplierContract;
+use Inertia\Inertia;
 
 class DepositController extends Controller
 {
 
-    public function __construct( protected DepositContract $depositRepository)
+    public function __construct( protected DepositContract $depositRepository,
+    protected SupplierContract $supplierRepository)
     {
-
     }
 
 
@@ -19,7 +21,10 @@ class DepositController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('DepositManagement/Deposit',[
+            'suppliers' => $this->supplierRepository->all(),
+            'depositHistory' => $this->depositRepository->depositHistory(),
+        ]); 
     }
 
     /**
@@ -33,9 +38,9 @@ class DepositController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-       $data= $request->validated();
-       $this->depositRepository->create();
+    {  
+
+       $this->depositRepository->create($request->all());
     }
 
     /**

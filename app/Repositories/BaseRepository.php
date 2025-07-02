@@ -23,7 +23,6 @@ abstract class BaseRepository implements BaseContract
 
     public function create(array $data): Model
     {
-
        return $this->model->create($data);
     }
     

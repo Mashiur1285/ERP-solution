@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('deposits', function (Blueprint $table) {
             $table->id();
             $table->integer('supplier_id');
-            $table->decimal('balance_deposited',2)->unsigned();
-            $table->decimal('balance_remaining',2)->unsigned();
+            $table->decimal('balance_deposited',10,2)->unsigned();
+            $table->decimal('balance_remaining',10, 2)->unsigned()->nullable();
             $table->timestamp('deposit_date')->useCurrent();
             $table->boolean('is_used')->default(false);
             $table->timestamps();
