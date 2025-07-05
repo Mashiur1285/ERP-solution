@@ -1,9 +1,11 @@
 <?php
 
+use App\Contracts\ProductPurchaseContract;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\DepositController;
+use App\Http\Controllers\ProductPurchaseController;
 
 
 // Suppliers
@@ -18,3 +20,7 @@ Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->name('su
 // deposit
 Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
 Route::Post('deposits/store', [DepositController::class, 'store'])->name('deposits.store');
+
+//Purchase
+Route::get('purchases', [ProductPurchaseController::class, 'index'])->name('purchases.index');
+Route::post('products-store', [ProductPurchaseController::class, 'storeProductPurchase'])->name('products.store');

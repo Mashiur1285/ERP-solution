@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,12 +14,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('supplier_id');
-            $table->foreignId('category_id');
-            $table->string('variant');
-            $table->unsignedInteger('bottles_per_box');
-            $table->unsignedSmallInteger('quantity');
-            $table->unsignedInteger('free_bottles')->default(0);
-            $table->decimal('price', 10, 2)->unsigned()->comment('total price of lifting of a  perticular variant');
+            $table->foreignId('category_id')->nullable();
+            $table->json('metadata')->comment('store variants information as JSON');
             $table->dateTime('date');
             $table->timestamps();
             $table->softDeletes();

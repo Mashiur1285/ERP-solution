@@ -10,9 +10,10 @@ use Inertia\Inertia;
 class DepositController extends Controller
 {
 
-    public function __construct( protected DepositContract $depositRepository,
-    protected SupplierContract $supplierRepository)
-    {
+    public function __construct(
+        protected DepositContract $depositRepository,
+        protected SupplierContract $supplierRepository
+    ) {
     }
 
 
@@ -21,10 +22,10 @@ class DepositController extends Controller
      */
     public function index()
     {
-        return Inertia::render('DepositManagement/Deposit',[
+        return Inertia::render('DepositManagement/Deposit', [
             'suppliers' => $this->supplierRepository->all(),
             'depositHistory' => $this->depositRepository->depositHistory(),
-        ]); 
+        ]);
     }
 
     /**
@@ -38,9 +39,8 @@ class DepositController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {  
-
-       $this->depositRepository->create($request->all());
+    {
+        $this->depositRepository->create($request->all());
     }
 
     /**
@@ -64,8 +64,8 @@ class DepositController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $data= $request->validated();
-        $depositReport= $this->depositRepository->update($data);
+        $data = $request->validated();
+        $depositReport = $this->depositRepository->update($data, $id);
     }
 
     /**

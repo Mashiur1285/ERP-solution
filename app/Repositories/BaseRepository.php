@@ -23,14 +23,13 @@ abstract class BaseRepository implements BaseContract
 
     public function create(array $data): Model
     {
-       return $this->model->create($data);
+        return $this->model->create($data);
     }
-    
+
     public function update(array $data, int $id): Model
     {
-        $model= $this->model->findOrFail($id);
-        if(!$model->update($data))
-        {
+        $model = $this->model->findOrFail($id);
+        if (!$model->update($data)) {
             return null;
         }
         return $model->refresh();
@@ -38,16 +37,17 @@ abstract class BaseRepository implements BaseContract
 
     public function find(int $id): Model
     {
-      
-         return $this->model->findOrFail($id);
+
+        return $this->model->findOrFail($id);
     }
 
-    public function delete (int $id): bool
+    public function delete(int $id): bool
     {
-       return $this->model->query()->findOrFail($id)->delete();
+        return $this->model->query()->findOrFail($id)->delete();
     }
 
-    public function all(): Collection{
+    public function all(): Collection
+    {
         return $this->model->get();
 
     }
