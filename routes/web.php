@@ -24,3 +24,4 @@ Route::Post('deposits/store', [DepositController::class, 'store'])->name('deposi
 //Purchase
 Route::get('purchases', [ProductPurchaseController::class, 'index'])->name('purchases.index');
 Route::post('products-store', [ProductPurchaseController::class, 'storeProductPurchase'])->name('products.store');
+Route::get('/purchases/report', [ProductPurchaseController::class, 'purchaseReport'])->name('purchases.report');

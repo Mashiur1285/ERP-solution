@@ -67,7 +67,7 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9  ascended7h1m-1 4h1m4-4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"
                             />
                         </svg>
                         <span v-if="!collapsed">Suppliers</span>
@@ -240,6 +240,33 @@
                             </svg>
                             Manage Purchase
                         </Link>
+                        <Link
+                            href="/purchases/report"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            :class="{
+                                'bg-blue-600':
+                                    $page.url.startsWith('/purchases/report'),
+                            }"
+                            @click.stop="logNavigation('/purchases/report')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01M12 15h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            Purchase Report
+                        </Link>
                     </div>
                 </nav>
             </div>
@@ -257,7 +284,7 @@ import { ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 
 const suppliersMenuOpen = ref(false);
-const depositsMenuOpen = ref(false);
+const depositsMenuOpen = ref(true); // Open by default for convenience
 const collapsed = ref(false);
 
 const toggleSuppliersMenu = () => {

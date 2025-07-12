@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('name');
             $table->foreignId('supplier_id');
             $table->foreignId('category_id')->nullable();
-            $table->json('metadata')->comment('store variants information as JSON');
+            $table->jsonb('metadata')->comment('store variants information as JSON');
             $table->dateTime('date');
             $table->timestamps();
             $table->softDeletes();

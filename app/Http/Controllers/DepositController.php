@@ -40,7 +40,9 @@ class DepositController extends Controller
      */
     public function store(Request $request)
     {
-        $this->depositRepository->create($request->all());
+        $data = $request->all();
+        $data['balance_remaining'] = $data['balance_deposited'];
+        $this->depositRepository->create($data);
     }
 
     /**
