@@ -7,11 +7,15 @@ use Illuminate\Support\ServiceProvider;
 use App\Contracts\SupplierContract;
 use App\Contracts\DepositContract;
 use App\Contracts\ShopContract;
+use App\Contracts\CategoryContract;
 use App\Contracts\ProductPurchaseContract;
 use App\Repositories\ShopRepository;
 use App\Repositories\ProductPurchaseRepository;
 use App\Repositories\SupplierRepository;
 use App\Repositories\DepositRepository;
+use App\Repositories\CategoryRepository;
+
+
 
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -22,5 +26,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(DepositContract::class, DepositRepository::class);
         $this->app->bind(ProductPurchaseContract::class, ProductPurchaseRepository::class);
         $this->app->bind(ShopContract::class, ShopRepository::class);
+        $this->app->bind(CategoryContract::class, CategoryRepository::class);
     }
 }
