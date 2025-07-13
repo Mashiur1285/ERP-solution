@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\ProductPurchaseController;
+use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ShopController;
 
 // Suppliers
@@ -32,3 +33,8 @@ Route::get('shops/create', [ShopController::class, 'create'])->name('shops.creat
 Route::Post('shops/store', [ShopController::class, 'store'])->name('shops.store');
 Route::get('shops/{id}/edit', [ShopController::class, 'edit'])->name('shops.edit');
 Route::Put('shops/{id}', [ShopController::class, 'update'])->name('shops.update');
+
+//Sales
+Route::get('sales', [SalesController::class, 'index'])->name('sales.index');
+Route::get('sales/create', [SalesController::class, 'create'])->name('sales.create');
+Route::post('sales/store', [SalesController::class, 'store'])->name('sales.store');
