@@ -27,4 +27,9 @@ class Product extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    public function category():BelongsTo{
+
+        return $this->belongsTo(Category::class);
+    }
 }
