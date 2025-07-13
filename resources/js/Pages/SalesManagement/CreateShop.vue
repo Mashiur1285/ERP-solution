@@ -1,35 +1,56 @@
 <template>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
-            New Supplier
+            Create Shop
         </h1>
-        <div class="space-y-8 bg-gray-100 p-6 rounded-lg">
-            <div class="text-2xl font-semibold">Add new supplier</div>
+
+        <!-- Shop Creation Form -->
+        <div class="space-y-6 mb-12 bg-gray-100 p-6 rounded-lg">
+            <h2 class="text-2xl font-semibold text-gray-800">Add New Shop</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label
-                        for="company_name"
+                        for="shop_name"
                         class="block text-sm font-medium text-gray-700"
-                        >Company Name*</label
                     >
+                        Shop Name*
+                    </label>
                     <input
-                        v-model="form.company_name"
+                        v-model="shopForm.shop_name"
+                        id="shop_name"
                         type="text"
-                        id="company_name"
+                        placeholder="Enter shop name"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
                         required
                     />
                 </div>
                 <div>
                     <label
-                        for="branch_name"
+                        for="owner_name"
                         class="block text-sm font-medium text-gray-700"
-                        >Branch Name</label
                     >
+                        Owner Name
+                    </label>
                     <input
-                        v-model="form.branch_name"
+                        v-model="shopForm.owner_name"
+                        id="owner_name"
                         type="text"
-                        id="branch_name"
+                        placeholder="Enter owner name"
+                        class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                    />
+                </div>
+                <div>
+                    <label
+                        for="shop_address"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                        Shop Address
+                    </label>
+                    <input
+                        v-model="shopForm.shop_address"
+                        id="shop_address"
+                        type="text"
+                        placeholder="Enter shop address"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
                     />
                 </div>
@@ -37,151 +58,184 @@
                     <label
                         for="phone_number"
                         class="block text-sm font-medium text-gray-700"
-                        >Phone Number*</label
                     >
+                        Phone Number*
+                    </label>
                     <input
-                        v-model="form.phone_number"
-                        type="tel"
+                        v-model="shopForm.phone_number"
                         id="phone_number"
+                        type="text"
+                        placeholder="Enter phone number"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
                         required
-                    />
-                </div>
-                <div>
-                    <label
-                        for="emergency_phone_number"
-                        class="block text-sm font-medium text-gray-700"
-                        >Emergency Phone Number</label
-                    >
-                    <input
-                        v-model="form.emergency_phone_number"
-                        type="tel"
-                        id="emergency_phone_number"
-                        class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
                     />
                 </div>
                 <div>
                     <label
                         for="email"
                         class="block text-sm font-medium text-gray-700"
-                        >Email</label
                     >
+                        Email
+                    </label>
                     <input
-                        v-model="form.email"
-                        type="email"
+                        v-model="shopForm.email"
                         id="email"
+                        type="email"
+                        placeholder="Enter email"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
                     />
                 </div>
                 <div>
                     <label
                         for="website"
                         class="block text-sm font-medium text-gray-700"
-                        >Website</label
                     >
+                        Website
+                    </label>
                     <input
-                        v-model="form.website"
-                        type="url"
+                        v-model="shopForm.website"
                         id="website"
+                        type="url"
+                        placeholder="Enter website"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
                     />
                 </div>
                 <div>
                     <label
-                        for="city"
+                        for="national_id"
                         class="block text-sm font-medium text-gray-700"
-                        >City</label
                     >
+                        National ID
+                    </label>
                     <input
-                        v-model="form.city"
+                        v-model="shopForm.national_id"
+                        id="national_id"
                         type="text"
-                        id="city"
+                        placeholder="Enter national ID"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
                     />
                 </div>
                 <div>
                     <label
-                        for="country"
+                        for="trade_license"
                         class="block text-sm font-medium text-gray-700"
-                        >Country</label
                     >
+                        Trade License
+                    </label>
                     <input
-                        v-model="form.country"
+                        v-model="shopForm.trade_license"
+                        id="trade_license"
                         type="text"
-                        id="country"
+                        placeholder="Enter trade license"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
+                    />
+                </div>
+                <div>
+                    <label
+                        for="tax_id"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                        Tax ID
+                    </label>
+                    <input
+                        v-model="shopForm.tax_id"
+                        id="tax_id"
+                        type="text"
+                        placeholder="Enter tax ID"
+                        class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
                     />
                 </div>
             </div>
             <div>
                 <label
-                    for="address"
+                    for="notes"
                     class="block text-sm font-medium text-gray-700"
-                    >Address*</label
                 >
+                    Notes
+                </label>
                 <textarea
-                    v-model="form.address"
-                    id="address"
+                    v-model="shopForm.notes"
+                    id="notes"
+                    placeholder="Enter any additional notes"
                     class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                    rows="5"
+                    rows="4"
                 ></textarea>
             </div>
-            <div class="flex justify-end space-x-4">
-                <Link
-                    href="/suppliers/index"
-                    class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition duration-200"
-                    >Cancel</Link
-                >
+            <div class="flex justify-end mt-6">
                 <button
-                    @click="submitForm"
+                    @click="submitShop"
                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
                 >
-                    Save Supplier
+                    Create Shop
                 </button>
             </div>
         </div>
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
-import { router, Link } from "@inertiajs/vue3";
+import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
+
+interface ShopForm {
+    shop_name: string;
+    owner_name: string | null;
+    shop_address: string | null;
+    phone_number: string;
+    email: string | null;
+    website: string | null;
+    national_id: string | null;
+    trade_license: string | null;
+    tax_id: string | null;
+    notes: string | null;
+}
+
+const shopForm = ref<ShopForm>({
+    shop_name: "",
+    owner_name: null,
+    shop_address: null,
+    phone_number: "",
+    email: null,
+    website: null,
+    national_id: null,
+    trade_license: null,
+    tax_id: null,
+    notes: null,
+});
 
 defineOptions({
     layout: Layout,
 });
 
-const form = ref({
-    company_name: "",
-    branch_name: "",
-    phone_number: "",
-    emergency_phone_number: "",
-    email: "",
-    address: "",
-    city: "",
-    country: "",
-    website: "",
-});
-
-const submitForm = () => {
-    console.log("Submitting form with data:", form.value);
-    router.post("/suppliers/store", form.value, {
+const submitShop = () => {
+    router.post("/shops/store", shopForm.value, {
         onSuccess: () => {
-            router.visit("/suppliers/index");
+            shopForm.value = {
+                shop_name: "",
+                owner_name: null,
+                shop_address: null,
+                phone_number: "",
+                email: null,
+                website: null,
+                national_id: null,
+                trade_license: null,
+                tax_id: null,
+                notes: null,
+            };
         },
         onError: (errors) => {
-            console.error("Form submission errors:", errors);
+            console.error("Shop creation errors:", errors);
         },
     });
 };
+
+console.log("CreateShop.vue component loaded");
 </script>
 
 <style scoped>
 input,
+select,
 textarea {
     padding: 0.75rem;
     font-size: 0.875rem;
@@ -190,6 +244,6 @@ textarea {
 
 .shadow-xl:hover {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgb(175, 185, 194);
+        0 10px 10px -5px rgb(142, 173, 200);
 }
 </style>

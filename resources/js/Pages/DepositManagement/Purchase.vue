@@ -1,5 +1,3 @@
-<!-- resources/js/Pages/DepositManagement/Purchase.vue -->
-
 <template>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">

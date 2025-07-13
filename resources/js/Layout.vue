@@ -67,7 +67,7 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9  ascended7h1m-1 4h1m4-4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"
                             />
                         </svg>
                         <span v-if="!collapsed">Suppliers</span>
@@ -268,6 +268,100 @@
                             Purchase Report
                         </Link>
                     </div>
+
+                    <!-- Sales Management Menu -->
+                    <button
+                        @click="toggleSalesMenu"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-2 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                        </svg>
+                        <span v-if="!collapsed">Sales Management</span>
+                        <svg
+                            v-if="!collapsed"
+                            class="w-4 h-4 ml-auto transition-transform duration-200"
+                            :class="{ 'rotate-180': salesMenuOpen }"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            />
+                        </svg>
+                    </button>
+                    <div
+                        v-if="salesMenuOpen && !collapsed"
+                        class="pl-6 mt-2 space-y-1"
+                    >
+                        <Link
+                            href="/shops/create"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            :class="{
+                                'bg-blue-600':
+                                    $page.url.startsWith('/shops/create'),
+                            }"
+                            @click.stop="logNavigation('/shops/create')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                />
+                            </svg>
+                            Create Shop
+                        </Link>
+                        <Link
+                            href="/shops"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            :class="{
+                                'bg-blue-600': $page.url.startsWith('/shops'),
+                            }"
+                            @click.stop="logNavigation('/shops')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                />
+                            </svg>
+                            Shop List
+                        </Link>
+                    </div>
                 </nav>
             </div>
 
@@ -285,6 +379,7 @@ import { Link } from "@inertiajs/vue3";
 
 const suppliersMenuOpen = ref(false);
 const depositsMenuOpen = ref(true); // Open by default for convenience
+const salesMenuOpen = ref(false); // Sales menu closed by default
 const collapsed = ref(false);
 
 const toggleSuppliersMenu = () => {
@@ -301,6 +396,14 @@ const toggleDepositsMenu = () => {
         depositsMenuOpen.value
     );
     depositsMenuOpen.value = !depositsMenuOpen.value;
+};
+
+const toggleSalesMenu = () => {
+    console.log(
+        "Toggling Sales Management Menu. Current state:",
+        salesMenuOpen.value
+    );
+    salesMenuOpen.value = !salesMenuOpen.value;
 };
 
 const logNavigation = (url) => {
