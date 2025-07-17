@@ -18,9 +18,11 @@ return new class extends Migration {
             $table->integer('boxes_sold');
             $table->integer('bottles_per_box');
             $table->integer('free_bottles');
+            $table->decimal('purchase_unit_price', 10, 2);
             $table->decimal('unit_price', 10, 2)->default(0.00);
             $table->decimal('total_price', 10, 2)->default(0.00);
             $table->integer('quantity');
+            $table->decimal('profit', 10, 2)->default(0.00);
             $table->string('status')->default(SalesItemsStatus::PENDING->value);
             $table->dateTime('delivery_date')->nullable();
             $table->timestamps();

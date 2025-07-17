@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Product;
 use App\Models\Deposit;
 use App\Contracts\ProductPurchaseContract;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -43,5 +44,43 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'purchase_date' => $purchase->purchase_date,
             ];
         });
+    }
+
+    /**
+     * Update the inventory for a specific product variant.
+     *
+     * @param int $productId
+     * @param string $variant
+     * @param int $quantity
+     * @return void
+     * @throws \Exception
+     */
+    public function updateInventory(Model $product, string $variant, int $quantity): void
+    {
+        // Get the current metadata
+        $metadata = $product->metadata ?? ['variants' => []];
+
+        // Find the variant in the metadata
+        $variantIndex = collect($metadata['variants'])->search(function ($item) use ($variant) {
+            return $item['variant'] === $variant;
+        });
+
+        if ($variantIndex === false) {
+            throw new \Exception("Variant {$variant} not found for product");
+        }
+        // Get the current quantity
+        $currentQuantity = $metadata['variants'][$variantIndex]['quantity'];
+
+        // Validate sufficient quantity
+        if ($currentQuantity < $quantity) {
+            throw new \Exception("Insufficient inventory for variant {$variant}. Available: {$currentQuantity}, Requested: {$quantity}");
+        }
+
+        // Update the quantity
+        $metadata['variants'][$variantIndex]['quantity'] = $currentQuantity - $quantity;
+
+        // Save the updated metadata
+        $product->metadata = $metadata;
+        $product->save();
     }
 }

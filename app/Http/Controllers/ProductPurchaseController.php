@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Contracts\ProductPurchaseContract;
+use App\Contracts\CategoryContract;
+use App\Contracts\BrandContract;
 use App\Contracts\DepositContract;
 use App\Contracts\SupplierContract;
 use App\Http\Requests\storeProductPurchaseRequest;
@@ -16,6 +18,8 @@ class ProductPurchaseController extends Controller
         protected ProductPurchaseContract $productPurchaseRepository,
         protected DepositContract $depositRepository,
         protected SupplierContract $supplierRepository,
+        protected CategoryContract $categoryRepository,
+        protected BrandContract $brandRepository
     ) {
     }
 
@@ -45,8 +49,25 @@ class ProductPurchaseController extends Controller
             ];
         });
 
+        $categories = $this->categoryRepository->all()->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+            ];
+        });
+
+        // Fetch brands
+        $brands = $this->brandRepository->all()->map(function ($brand) {
+            return [
+                'id' => $brand->id,
+                'brand_name' => $brand->brand_name, // Map name to brand_name for frontend
+            ];
+        });
+
         return Inertia::render('DepositManagement/Purchase', [
             'suppliers' => $suppliers,
+            'categories' => $categories,
+            'brands' => $brands,
         ]);
     }
 
@@ -55,6 +76,8 @@ class ProductPurchaseController extends Controller
         $data = [
             'name' => $request->product_name,
             'supplier_id' => $request->supplier_id,
+            'category_id' => $request->category_id,
+            'brand_id' => $request->brand_id,
             'metadata' => $request->variants,
             'date' => now(),
         ];

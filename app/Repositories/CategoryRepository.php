@@ -3,7 +3,7 @@
 
 namespace App\Repositories;
 
-use App\Models\Deposit;
+use App\Models\Category;
 use App\Contracts\CategoryContract;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -13,6 +13,4 @@ class CategoryRepository extends BaseRepository implements CategoryContract
     {
         parent::__construct($model);
     }
-
-   
 }

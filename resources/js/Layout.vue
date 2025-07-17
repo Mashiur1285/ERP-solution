@@ -214,6 +214,59 @@
                             Manage Deposits
                         </Link>
                         <Link
+                            href="/categories/index"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            :class="{
+                                'bg-blue-600':
+                                    $page.url.startsWith('/categories/index'),
+                            }"
+                            @click.stop="logNavigation('/categories/index')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                />
+                            </svg>
+                            Manage Category
+                        </Link>
+                        <Link
+                            href="/brands/index"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            :class="{
+                                'bg-blue-600': $page.url.startsWith('/brands'),
+                            }"
+                            @click.stop="logNavigation('/brands')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M7 7h10m0 0v10m0-10l-7 7"
+                                />
+                            </svg>
+                            Manage Brand
+                        </Link>
+                        <Link
                             href="/purchases"
                             class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
                             :class="{
@@ -362,14 +415,14 @@
                             Shop List
                         </Link>
                         <Link
-                            href="/sales/create"
+                            href="/sales"
                             class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
                             :class="{
                                 'bg-blue-600':
-                                    $page.url.startsWith('/sales/create') &&
+                                    $page.url.startsWith('/sales') &&
                                     !$page.url.includes('/sales/index'),
                             }"
-                            @click.stop="logNavigation('/sales/crate')"
+                            @click.stop="logNavigation('/sales')"
                             :preserveState="true"
                             :preserveScroll="true"
                             @error="handleNavigationError"
@@ -390,13 +443,13 @@
                             Create Sale
                         </Link>
                         <Link
-                            href="/sales/index"
+                            href="/sales/report"
                             class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
                             :class="{
                                 'bg-blue-600':
-                                    $page.url.startsWith('/sales/index'),
+                                    $page.url.startsWith('/sales/report'),
                             }"
-                            @click.stop="logNavigation('/sales/index')"
+                            @click.stop="logNavigation('/sales/report')"
                             :preserveState="true"
                             :preserveScroll="true"
                             @error="handleNavigationError"
@@ -433,8 +486,8 @@ import { ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 
 const suppliersMenuOpen = ref(false);
-const depositsMenuOpen = ref(true); // Open by default for convenience
-const salesMenuOpen = ref(false); // Sales menu closed by default
+const depositsMenuOpen = ref(true);
+const salesMenuOpen = ref(false);
 const collapsed = ref(false);
 
 const toggleSuppliersMenu = () => {

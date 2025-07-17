@@ -24,6 +24,8 @@ class storeProductPurchaseRequest extends FormRequest
         return [
             'product_name' => 'required|string|max:255',
             'supplier_id' => 'required|exists:suppliers,id',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'required|exists:brands,id',
             'variants' => 'required|array|min:1',
             'variants.*.variant' => 'required|string|max:255',
             'variants.*.quantity' => 'required|integer|min:1',

@@ -10,14 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('brands', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('supplier_id');
-            $table->foreignId('category_id')->nullable();
-            $table->foreignId('brand_id')->nullable();
-            $table->jsonb('metadata')->comment('store variants information as JSON');
-            $table->dateTime('date');
+            $table->string('brand_name');
+            $table->text('description')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +25,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('brands');
     }
 };

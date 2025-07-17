@@ -27,6 +27,50 @@
                 </div>
                 <div>
                     <label
+                        for="category_id"
+                        class="block text-sm font-medium text-gray-700"
+                        >Category*</label
+                    >
+                    <select
+                        v-model="productForm.category_id"
+                        id="category_id"
+                        class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        required
+                    >
+                        <option value="" disabled>Select a category</option>
+                        <option
+                            v-for="category in categories"
+                            :key="category.id"
+                            :value="category.id"
+                        >
+                            {{ category.name }}
+                        </option>
+                    </select>
+                </div>
+                <div>
+                    <label
+                        for="brand_id"
+                        class="block text-sm font-medium text-gray-700"
+                        >Brand*</label
+                    >
+                    <select
+                        v-model="productForm.brand_id"
+                        id="brand_id"
+                        class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        required
+                    >
+                        <option value="" disabled>Select a brand</option>
+                        <option
+                            v-for="brand in brands"
+                            :key="brand.id"
+                            :value="brand.id"
+                        >
+                            {{ brand.brand_name }}
+                        </option>
+                    </select>
+                </div>
+                <div>
+                    <label
                         for="purchase_supplier_id"
                         class="block text-sm font-medium text-gray-700"
                         >Supplier*</label
@@ -178,7 +222,17 @@ import Layout from "../../Layout.vue";
 interface Supplier {
     id: number;
     company_name: string;
-    remaining_deposit: number; // Added remaining_deposit
+    remaining_deposit: number;
+}
+
+interface Category {
+    id: number;
+    name: string;
+}
+
+interface Brand {
+    id: number;
+    brand_name: string;
 }
 
 interface ProductVariant {
@@ -191,6 +245,8 @@ interface ProductVariant {
 
 const props = defineProps<{
     suppliers: Supplier[];
+    categories: Category[];
+    brands: Brand[];
 }>();
 
 defineOptions({
@@ -199,6 +255,8 @@ defineOptions({
 
 const productForm = ref({
     product_name: "",
+    category_id: "",
+    brand_id: "",
     supplier_id: "",
     variants: [
         {
@@ -231,6 +289,8 @@ const submitProduct = () => {
         onSuccess: () => {
             productForm.value = {
                 product_name: "",
+                category_id: "",
+                brand_id: "",
                 supplier_id: "",
                 variants: [
                     {
@@ -242,9 +302,11 @@ const submitProduct = () => {
                     },
                 ],
             };
+            console.log("Product submitted successfully");
         },
         onError: (errors) => {
             console.error("Product submission errors:", errors);
+            alert("Failed to submit product: " + JSON.stringify(errors));
         },
     });
 };

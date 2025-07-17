@@ -5,16 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Contracts\CategoryContract;
 use App\Http\Requests\StoreCategoryRequest;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    public function  __construct(
-       protected CategoryContract $categoryRepository,
-        
-        ) {
+    public function __construct(
+        protected CategoryContract $categoryRepository,
 
-
-
+    ) {
 
     }
     /**
@@ -22,7 +20,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Category/Index', [
+            'categories' => $this->categoryRepository->all(),
+        ]);
     }
 
     /**
@@ -39,8 +39,12 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request)
     {
         $data = $request->Validated();
-
-        $this->CategoryRepository->create($data);
+        if ($this->categoryRepository->create($data)) {
+            return redirect()->route('categories.index')
+                ->with('success', 'Category created successfully.');
+        }
+        return redirect()->back()
+            ->with('error', 'Failed to create category.');
     }
 
     /**
@@ -62,9 +66,12 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(StoreCategoryRequest $request, string $id)
     {
-        //
+        $data = $request->validated();
+        $this->categoryRepository->update($data, $id);
+
+        return redirect()->route('categories.index')->with('success', 'Category updated successfully');
     }
 
     /**

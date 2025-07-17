@@ -1,4 +1,5 @@
 <template>
+    <div>{{ props.purchaseHistory }}</div>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
             Purchase Report
@@ -58,6 +59,18 @@
                             scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
+                            Total Bottles
+                        </th>
+                        <th
+                            scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Unit Price (TK)
+                        </th>
+                        <th
+                            scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
                             Total Value (TK)
                         </th>
                         <th
@@ -96,12 +109,25 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">
-                                {{ purchase.quantity || 0 }}
+                                {{
+                                    purchase.quantity /
+                                        purchase.bottles_per_box || 0
+                                }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">
                                 {{ purchase.free_bottles || 0 }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {{ purchase.quantity || 0 }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {{ (purchase.unit_price || 0).toFixed(2) }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

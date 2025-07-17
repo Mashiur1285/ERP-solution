@@ -49,10 +49,10 @@ class DepositRepository extends BaseRepository implements DepositContract
         $deposit->save();
     }
 
-    public function findTheLatestDepositForTheSupplier(int $supplierId): Deposit
+    public function findTheLatestDepositForTheSupplier(int $supplierId): ?Deposit
     {
         return $this->model
-            ->where('supplier_id', operator: $supplierId)
+            ->where('supplier_id', $supplierId)
             ->where('balance_remaining', '>', 0)
             ->orderBy('deposit_date', 'desc')
             ->first();
