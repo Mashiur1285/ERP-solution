@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('sale_id');
             $table->foreignId('product_id');
-            $table->foreignId('suppler_id');
+            $table->foreignId('supplier_id');
             $table->string('invoice_number', 32);
             $table->string('variant');
             $table->integer('boxes_sold');

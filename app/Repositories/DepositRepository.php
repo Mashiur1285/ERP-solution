@@ -67,7 +67,7 @@ class DepositRepository extends BaseRepository implements DepositContract
             )
             ->join('suppliers', 'deposits.supplier_id', 'suppliers.id')
             ->groupBy('suppliers.company_name')
-            ->orderBy('suppliers.company_name')
+            ->orderBy(\DB::raw('SUM(deposits.balance_remaining)'), 'desc') // Order by total_remaining_deposit descending
             ->get();
     }
 }

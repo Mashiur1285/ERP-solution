@@ -6,10 +6,14 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\ProductPurchaseController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ShopController;
+
+Route::get('/dashboard', [DashboardController::class, 'index']);
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 
 // Suppliers
 Route::get('suppliers/index', [SupplierController::class, 'index'])->name('suppliers.index');
@@ -53,3 +57,6 @@ Route::get('sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('sales/create', [SalesController::class, 'create'])->name('sales.create');
 Route::post('sales/store', [SalesController::class, 'store'])->name('sales.store');
 Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report');
+Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->name('sales.payment');
+Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->name('sales.payment.store');
+Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->name('sales.cash-memo');

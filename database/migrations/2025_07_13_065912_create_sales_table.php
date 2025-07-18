@@ -14,6 +14,7 @@ return new class extends Migration {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('shop_id');
+            $table->foreignId('supplier_id');
             $table->string('invoice_number')->unique();
             $table->decimal('total_amount', 10, 2)->default(0.00);
             $table->decimal('subtotal', 10, 2)->default(0.00);

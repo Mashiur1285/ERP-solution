@@ -52,6 +52,32 @@
 
                 <!-- Nav -->
                 <nav class="mt-4 flex-1 px-2">
+                    <!-- Dashboard -->
+                    <Link
+                        href="/"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
+                        :class="{ 'bg-blue-600': $page.url === '/' }"
+                        @click.stop="logNavigation('/')"
+                        :preserveState="true"
+                        :preserveScroll="true"
+                        @error="handleNavigationError"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-2 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                            />
+                        </svg>
+                        <span v-if="!collapsed">Dashboard</span>
+                    </Link>
+
                     <!-- Suppliers Menu -->
                     <button
                         @click="toggleSuppliersMenu"
@@ -271,7 +297,8 @@
                             class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
                             :class="{
                                 'bg-blue-600':
-                                    $page.url.startsWith('/purchases'),
+                                    $page.url.startsWith('/purchases') &&
+                                    !$page.url.includes('/purchases/report'),
                             }"
                             @click.stop="logNavigation('/purchases')"
                             :preserveState="true"
@@ -420,7 +447,7 @@
                             :class="{
                                 'bg-blue-600':
                                     $page.url.startsWith('/sales') &&
-                                    !$page.url.includes('/sales/index'),
+                                    !$page.url.includes('/sales/report'),
                             }"
                             @click.stop="logNavigation('/sales')"
                             :preserveState="true"
@@ -464,10 +491,10 @@
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01M12 15h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
-                            Sale List
+                            Sales Report
                         </Link>
                     </div>
                 </nav>
@@ -482,8 +509,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
+import { Link, usePage } from "@inertiajs/vue3";
 
 const suppliersMenuOpen = ref(false);
 const depositsMenuOpen = ref(true);
@@ -521,6 +548,19 @@ const logNavigation = (url) => {
 const handleNavigationError = (error) => {
     console.error("Navigation error:", error);
 };
+
+// Automatically open Sales Management menu when on sales-related routes
+watch(
+    () => usePage().url,
+    (url) => {
+        if (url.includes("/sales") || url.includes("/shops")) {
+            salesMenuOpen.value = true;
+        } else {
+            salesMenuOpen.value = false;
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <style scoped>

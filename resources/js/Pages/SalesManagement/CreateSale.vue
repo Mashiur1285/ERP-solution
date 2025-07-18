@@ -1,17 +1,14 @@
-```vue
 <template>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
             Create New Sale
         </h1>
 
-        <!-- Debug Info -->
         <div class="mb-4 text-sm text-gray-600">
             <div>Products: {{ products.length }} items</div>
             <div>Filtered Products: {{ filteredProducts.length }} items</div>
         </div>
 
-        <!-- Sale Creation Form -->
         <div
             class="space-y-6 mb-12 bg-gray-50 p-6 rounded-lg border border-gray-200"
         >
@@ -63,6 +60,7 @@
                         v-model="saleForm.category_id"
                         id="category_id"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
+                        @change="filterProducts"
                     >
                         <option value="" selected>All Categories</option>
                         <option
@@ -84,6 +82,7 @@
                         v-model="saleForm.brand_id"
                         id="brand_id"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
+                        @change="filterProducts"
                     >
                         <option value="" selected>All Brands</option>
                         <option
@@ -105,6 +104,7 @@
                         v-model="saleForm.supplier_id"
                         id="supplier_id"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
+                        @change="filterProducts"
                     >
                         <option value="" selected>All Suppliers</option>
                         <option
@@ -118,7 +118,6 @@
                 </div>
             </div>
 
-            <!-- Sale Items -->
             <div class="mt-6">
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">
                     Sale Items
@@ -128,7 +127,6 @@
                     :key="index"
                     class="mb-6 p-6 bg-white rounded-lg shadow-sm border border-gray-200"
                 >
-                    <!-- Product Selection -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label
@@ -139,7 +137,7 @@
                             <select
                                 v-model="item.product_id"
                                 :id="'product_id_' + index"
-                                class="mt-1 block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
+                                class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
                                 required
                                 @change="updateAvailableVariants(index)"
                             >
@@ -164,7 +162,7 @@
                             <select
                                 v-model="item.variant"
                                 :id="'variant_' + index"
-                                class="mt-1 block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
+                                class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
                                 required
                                 @change="populateVariantDetails(index)"
                             >
@@ -182,9 +180,8 @@
                         </div>
                     </div>
 
-                    <!-- Available Inventory -->
                     <div class="border-t border-gray-200 pt-4 mb-4">
-                        <h4 class="text-sm font-medium text-gray-600 mb-2">
+                        <h4 class="text-lg font-bold mb-2">
                             Available Inventory
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -277,9 +274,8 @@
                         </div>
                     </div>
 
-                    <!-- Add Sale -->
                     <div class="border-t border-gray-200 pt-4">
-                        <h4 class="text-sm font-medium text-gray-600 mb-2">
+                        <h4 class="text-lg font-bold text-black mb-2">
                             Add Sale
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -389,7 +385,6 @@
                         </div>
                     </div>
 
-                    <!-- Remove Button -->
                     <div class="flex justify-end mt-4">
                         <button
                             v-if="saleForm.items.length > 1"
@@ -437,10 +432,10 @@
             <div class="flex justify-end mt-6">
                 <button
                     @click="createSale"
-                    :disabled="hasErrors"
+                    :disabled="hasErrors || !isFormValid"
                     class="px-6 py-3 text-white rounded-lg transition duration-200"
                     :class="
-                        hasErrors
+                        hasErrors || !isFormValid
                             ? 'bg-gray-400 cursor-not-allowed'
                             : 'bg-blue-600 hover:bg-blue-700'
                     "
@@ -461,7 +456,6 @@ interface Shop {
     id: number;
     shop_name: string;
 }
-
 interface Product {
     id: number;
     name: string;
@@ -478,22 +472,18 @@ interface Product {
         }[];
     };
 }
-
 interface Supplier {
     id: number;
     company_name: string;
 }
-
 interface Category {
     id: number;
     name: string;
 }
-
 interface Brand {
     id: number;
     brand_name: string;
 }
-
 interface SaleItem {
     product_id: number | null;
     supplier_id: number | null;
@@ -511,7 +501,6 @@ interface SaleItem {
     availableVariants: string[];
     errors?: { boxes_sold?: string };
 }
-
 interface Sale {
     shop_id: number | null;
     category_id: number | null;
@@ -556,9 +545,7 @@ const saleForm = ref<Sale>({
     ],
 });
 
-defineOptions({
-    layout: Layout,
-});
+defineOptions({ layout: Layout });
 
 const filteredProducts = computed(() => {
     console.log("Filtering products with:", {
@@ -566,7 +553,7 @@ const filteredProducts = computed(() => {
         brand_id: saleForm.value.brand_id,
         supplier_id: saleForm.value.supplier_id,
     });
-    const filtered = props.products.filter((product) => {
+    return props.products.filter((product) => {
         const matchesCategory = saleForm.value.category_id
             ? product.category_id === saleForm.value.category_id ||
               product.category_id === null
@@ -580,15 +567,25 @@ const filteredProducts = computed(() => {
             : true;
         return matchesCategory && matchesBrand && matchesSupplier;
     });
-    console.log("Filtered products:", filtered);
-    return filtered;
 });
 
-const hasErrors = computed(() => {
-    return saleForm.value.items.some(
+const hasErrors = computed(() =>
+    saleForm.value.items.some(
         (item) => item.errors && Object.keys(item.errors).length > 0
-    );
-});
+    )
+);
+const isFormValid = computed(
+    () =>
+        saleForm.value.shop_id !== null &&
+        saleForm.value.sale_date &&
+        saleForm.value.items.every(
+            (item) =>
+                item.product_id !== null &&
+                item.variant !== null &&
+                item.boxes_sold > 0 &&
+                item.new_unit_price > 0
+        )
+);
 
 const filterProducts = () => {
     console.log("filterProducts called");
@@ -640,17 +637,13 @@ const updateAvailableVariants = (index: number) => {
 const getAvailableQuantity = (
     productId: number | null,
     variant: string | null
-) => {
-    if (!productId || !variant) return 0;
-    const product = props.products.find((p) => p.id === productId);
-    if (product && product.metadata && product.metadata.variants) {
-        const variantData = product.metadata.variants.find(
-            (v) => v.variant === variant
-        );
-        return variantData ? variantData.quantity : 0;
-    }
-    return 0;
-};
+) =>
+    !productId || !variant
+        ? 0
+        : props.products
+              .find((p) => p.id === productId)
+              ?.metadata?.variants.find((v) => v.variant === variant)
+              ?.quantity || 0;
 
 const populateVariantDetails = (index: number) => {
     const item = saleForm.value.items[index];
@@ -668,21 +661,15 @@ const populateVariantDetails = (index: number) => {
                 );
                 item.free_bottles = variantData.free_bottles;
                 item.unit_price = variantData.unit_price;
-                item.new_unit_price = variantData.unit_price; // Initialize with purchase price
+                item.new_unit_price = variantData.unit_price;
                 item.errors = item.errors || {};
-                if (item.boxes_sold > item.available_boxes) {
+                if (item.boxes_sold > item.available_boxes)
                     item.errors.boxes_sold = `Cannot exceed available boxes: ${item.available_boxes}`;
-                } else {
-                    delete item.errors.boxes_sold;
-                }
+                else delete item.errors.boxes_sold;
                 calculateItemTotal(index);
-            } else {
-                resetItemFields(item);
-            }
+            } else resetItemFields(item);
         }
-    } else {
-        resetItemFields(item);
-    }
+    } else resetItemFields(item);
 };
 
 const resetItemFields = (item: SaleItem) => {
@@ -701,17 +688,15 @@ const resetItemFields = (item: SaleItem) => {
 const calculateItemTotal = (index: number) => {
     const item = saleForm.value.items[index];
     item.errors = item.errors || {};
-    if (item.boxes_sold > item.available_boxes) {
+    if (item.boxes_sold > item.available_boxes)
         item.errors.boxes_sold = `Cannot exceed available boxes: ${item.available_boxes}`;
-    } else {
-        delete item.errors.boxes_sold;
-    }
+    else delete item.errors.boxes_sold;
     item.total_quantity = item.boxes_sold * item.bottles_per_box;
     item.total_price = item.total_quantity * item.new_unit_price;
     item.profit = item.total_quantity * (item.new_unit_price - item.unit_price);
 };
 
-const addItem = () => {
+const addItem = () =>
     saleForm.value.items.push({
         product_id: null,
         supplier_id: saleForm.value.supplier_id,
@@ -729,47 +714,55 @@ const addItem = () => {
         availableVariants: [],
         errors: {},
     });
-};
 
-const removeItem = (index: number) => {
-    saleForm.value.items.splice(index, 1);
-};
+const removeItem = (index: number) => saleForm.value.items.splice(index, 1);
 
 const createSale = () => {
-    if (hasErrors.value) {
-        alert("Please correct all errors before submitting.");
+    if (hasErrors.value || !isFormValid.value) {
+        alert(
+            "Please fill all required fields and correct errors before submitting."
+        );
         return;
     }
     console.log("Submitting sale:", saleForm.value);
     router.post("/sales/store", saleForm.value, {
-        onSuccess: () => {
-            saleForm.value = {
-                shop_id: null,
-                category_id: null,
-                brand_id: null,
-                supplier_id: null,
-                sale_date: new Date().toISOString().split("T")[0],
-                items: [
-                    {
-                        product_id: null,
-                        supplier_id: null,
-                        variant: null,
-                        boxes_sold: 0,
-                        bottles_per_box: 0,
-                        available_bottles: 0,
-                        available_boxes: 0,
-                        total_quantity: 0,
-                        free_bottles: 0,
-                        unit_price: 0,
-                        new_unit_price: 0,
-                        total_price: 0,
-                        profit: 0,
-                        availableVariants: [],
-                        errors: {},
-                    },
-                ],
-            };
-            console.log("Sale created successfully");
+        onSuccess: (page) => {
+            console.log("onSuccess response:", page);
+            const saleId = page.props.flash?.sale_id || null;
+            if (saleId) {
+                router.visit(`/sales/payment/${saleId}`); // Redirect to GET route for payment form
+            } else {
+                console.error("Sale ID not found in response");
+                alert(
+                    "Sale created, but unable to redirect to payment. Please navigate manually."
+                );
+                saleForm.value = {
+                    shop_id: null,
+                    category_id: null,
+                    brand_id: null,
+                    supplier_id: null,
+                    sale_date: new Date().toISOString().split("T")[0],
+                    items: [
+                        {
+                            product_id: null,
+                            supplier_id: null,
+                            variant: null,
+                            boxes_sold: 0,
+                            bottles_per_box: 0,
+                            available_bottles: 0,
+                            available_boxes: 0,
+                            total_quantity: 0,
+                            free_bottles: 0,
+                            unit_price: 0,
+                            new_unit_price: 0,
+                            total_price: 0,
+                            profit: 0,
+                            availableVariants: [],
+                            errors: {},
+                        },
+                    ],
+                };
+            }
         },
         onError: (errors) => {
             console.error("Sale creation errors:", errors);
@@ -778,21 +771,15 @@ const createSale = () => {
     });
 };
 
-// Watch for changes in products prop to debug
 watch(
     () => props.products,
-    (newProducts) => {
-        console.log("Products prop updated:", newProducts);
-    },
+    (newProducts) => console.log("Products prop updated:", newProducts),
     { immediate: true }
 );
-
-// Watch for changes in filteredProducts to debug
 watch(
     () => filteredProducts.value,
-    (newFilteredProducts) => {
-        console.log("Filtered products updated:", newFilteredProducts);
-    },
+    (newFilteredProducts) =>
+        console.log("Filtered products updated:", newFilteredProducts),
     { deep: true }
 );
 
@@ -807,19 +794,15 @@ textarea {
     font-size: 0.875rem;
     line-height: 1.5;
 }
-
 .shadow-xl:hover {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(59, 130, 246, 0.2);
 }
-
 button:hover svg {
     transform: scale(1.1);
     transition: transform 0.2s;
 }
-
 .border-red-500 {
     border-color: #ef4444 !important;
 }
 </style>
-```

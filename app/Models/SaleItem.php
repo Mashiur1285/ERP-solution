@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SaleItem extends Model
 {
@@ -16,6 +15,7 @@ class SaleItem extends Model
         'variant',
         'boxes_sold',
         'bottles_per_box',
+        'quantity',
         'free_bottles',
         'purchase_unit_price',
         'unit_price',
@@ -24,12 +24,16 @@ class SaleItem extends Model
         'profit',
         'status',
         'delivery_date',
+        'invoice_number',
+        'status',
     ];
 
     protected $casts = [
         'delivery_date' => 'datetime',
+        'purchase_unit_price' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
+        'profit' => 'decimal:2',
     ];
 
     public function sale(): BelongsTo
@@ -37,13 +41,8 @@ class SaleItem extends Model
         return $this->belongsTo(Sale::class);
     }
 
-    public function product(): BelongsToMany
+    public function product(): BelongsTo
     {
-        return $this->blongsTo(Product::class);
-    }
-
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(Supplier::class, 'supplier_id');
+        return $this->belongsTo(Product::class);
     }
 }
