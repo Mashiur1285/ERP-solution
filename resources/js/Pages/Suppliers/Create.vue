@@ -1,3 +1,4 @@
+```vue
 <template>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
@@ -17,8 +18,15 @@
                         type="text"
                         id="company_name"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
+                        :class="{ 'border-red-500': form.errors.company_name }"
+                        @input="form.clearErrors('company_name')"
                     />
+                    <p
+                        v-if="form.errors.company_name"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.company_name }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -31,7 +39,15 @@
                         type="text"
                         id="branch_name"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        :class="{ 'border-red-500': form.errors.branch_name }"
+                        @input="form.clearErrors('branch_name')"
                     />
+                    <p
+                        v-if="form.errors.branch_name"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.branch_name }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -44,8 +60,15 @@
                         type="tel"
                         id="phone_number"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
+                        :class="{ 'border-red-500': form.errors.phone_number }"
+                        @input="form.clearErrors('phone_number')"
                     />
+                    <p
+                        v-if="form.errors.phone_number"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.phone_number }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -58,7 +81,18 @@
                         type="tel"
                         id="emergency_phone_number"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        :class="{
+                            'border-red-500':
+                                form.errors.emergency_phone_number,
+                        }"
+                        @input="form.clearErrors('emergency_phone_number')"
                     />
+                    <p
+                        v-if="form.errors.emergency_phone_number"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.emergency_phone_number }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -71,8 +105,15 @@
                         type="email"
                         id="email"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
+                        :class="{ 'border-red-500': form.errors.email }"
+                        @input="form.clearErrors('email')"
                     />
+                    <p
+                        v-if="form.errors.email"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.email }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -85,7 +126,15 @@
                         type="url"
                         id="website"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        :class="{ 'border-red-500': form.errors.website }"
+                        @input="form.clearErrors('website')"
                     />
+                    <p
+                        v-if="form.errors.website"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.website }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -98,8 +147,15 @@
                         type="text"
                         id="city"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
+                        :class="{ 'border-red-500': form.errors.city }"
+                        @input="form.clearErrors('city')"
                     />
+                    <p
+                        v-if="form.errors.city"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.city }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -112,8 +168,15 @@
                         type="text"
                         id="country"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
-                        required
+                        :class="{ 'border-red-500': form.errors.country }"
+                        @input="form.clearErrors('country')"
                     />
+                    <p
+                        v-if="form.errors.country"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ form.errors.country }}
+                    </p>
                 </div>
             </div>
             <div>
@@ -126,8 +189,13 @@
                     v-model="form.address"
                     id="address"
                     class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                    :class="{ 'border-red-500': form.errors.address }"
                     rows="5"
+                    @input="form.clearErrors('address')"
                 ></textarea>
+                <p v-if="form.errors.address" class="mt-1 text-sm text-red-500">
+                    {{ form.errors.address }}
+                </p>
             </div>
             <div class="flex justify-end space-x-4">
                 <Link
@@ -138,8 +206,9 @@
                 <button
                     @click="submitForm"
                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+                    :disabled="form.processing"
                 >
-                    Save Supplier
+                    {{ form.processing ? "Saving..." : "Save Supplier" }}
                 </button>
             </div>
         </div>
@@ -147,15 +216,15 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { router, Link } from "@inertiajs/vue3";
+import { useForm } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 
 defineOptions({
     layout: Layout,
 });
 
-const form = ref({
+const form = useForm({
     company_name: "",
     branch_name: "",
     phone_number: "",
@@ -168,10 +237,9 @@ const form = ref({
 });
 
 const submitForm = () => {
-    console.log("Submitting form with data:", form.value);
-    router.post("/suppliers/store", form.value, {
+    form.post("/suppliers/store", {
         onSuccess: () => {
-            router.visit("/suppliers/index");
+            form.reset();
         },
         onError: (errors) => {
             console.error("Form submission errors:", errors);
@@ -193,3 +261,4 @@ textarea {
         0 10px 10px -5px rgb(175, 185, 194);
 }
 </style>
+```

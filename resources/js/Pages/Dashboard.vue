@@ -1,7 +1,34 @@
+```vue
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
     >
+        <!-- Language Toggle -->
+        <div class="flex justify-end space-x-2 mb-4">
+            <button
+                @click="changeLanguage('en')"
+                :class="[
+                    'px-4 py-2 rounded-md font-medium transition-colors',
+                    currentLanguage === 'en'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                ]"
+            >
+                {{ translations.en.languageLabel }}
+            </button>
+            <button
+                @click="changeLanguage('bn')"
+                :class="[
+                    'px-4 py-2 rounded-md font-medium transition-colors',
+                    currentLanguage === 'bn'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                ]"
+            >
+                {{ translations.bn.languageLabel }}
+            </button>
+        </div>
+
         <div
             class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"
         >
@@ -9,7 +36,7 @@
                 class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
-                    class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center shadow-sm"
+                    class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
                 >
                     <svg
                         class="w-8 h-8 text-indigo-600"
@@ -25,7 +52,7 @@
                         />
                     </svg>
                 </div>
-                Dashboard
+                {{ t("dashboardTitle") }}
             </h1>
         </div>
 
@@ -35,7 +62,7 @@
             >
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">
-                        Total Suppliers
+                        {{ t("totalSuppliers") }}
                     </h2>
                     <div
                         class="p-2 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -62,7 +89,7 @@
                     {{ animatedSuppliersCount }}
                 </p>
                 <p class="text-sm text-gray-500 mt-2">
-                    Active suppliers in the system
+                    {{ t("activeSuppliers") }}
                 </p>
                 <div class="mt-4 max-h-36 overflow-y-auto space-y-2">
                     <div
@@ -74,10 +101,11 @@
                         class="bg-gray-50 p-2 rounded flex justify-between items-center"
                     >
                         <span class="font-medium text-gray-700">{{
-                            supplier.company_name || "Supplier " + (index + 1)
+                            supplier.company_name ||
+                            t("supplier") + " " + (index + 1)
                         }}</span>
                         <span class="text-sm text-gray-500"
-                            >ID: {{ supplier.id }}</span
+                            >{{ t("id") }}: {{ supplier.id }}</span
                         >
                     </div>
                 </div>
@@ -88,7 +116,7 @@
             >
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">
-                        Top Deposit Suppliers
+                        {{ t("topDepositSuppliers") }}
                     </h2>
                     <div
                         class="p-2 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -119,9 +147,9 @@
                             <span class="text-gray-700">{{
                                 deposit.supplier_name
                             }}</span>
-                            <span class="font-semibold text-indigo-600">{{
-                                animatedDeposits[index]
-                            }}</span>
+                            <span class="font-semibold text-indigo-600"
+                                >৳{{ animatedDeposits[index] }}</span
+                            >
                         </div>
                         <div class="w-full bg-gray-100 h-2 rounded-full mt-1">
                             <div
@@ -142,7 +170,7 @@
             >
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">
-                        Total Shops
+                        {{ t("totalShops") }}
                     </h2>
                     <div
                         class="p-2 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -169,7 +197,7 @@
                     {{ animatedTotalShops }}
                 </p>
                 <p class="text-sm text-gray-500 mt-2">
-                    Registered shops in the system
+                    {{ t("registeredShops") }}
                 </p>
                 <div class="mt-4 max-h-36 overflow-y-auto space-y-2">
                     <div
@@ -181,10 +209,10 @@
                         class="bg-gray-50 p-2 rounded flex justify-between items-center"
                     >
                         <span class="font-medium text-gray-700">{{
-                            shop.shop_name || "Shop " + (index + 1)
+                            shop.shop_name || t("shop") + " " + (index + 1)
                         }}</span>
                         <span class="text-sm text-gray-500"
-                            >ID: {{ shop.id }}</span
+                            >{{ t("id") }}: {{ shop.id }}</span
                         >
                     </div>
                 </div>
@@ -216,13 +244,14 @@
                                 />
                             </svg>
                         </div>
-                        {{ selectedMonthYear }} Sales Overview
+                        {{ selectedMonthYear }} {{ t("salesOverview") }}
                     </h2>
                     <div class="flex space-x-2">
-                        <a
-                            :href="previousMonthUrl"
+                        <button
+                            @click="navigateToPreviousMonth"
                             class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                            aria-label="Previous month"
+                            :aria-label="t('previousMonth')"
+                            :disabled="loading"
                         >
                             <svg
                                 class="w-5 h-5 text-gray-600"
@@ -237,11 +266,12 @@
                                     d="M15 19l-7-7 7-7"
                                 />
                             </svg>
-                        </a>
-                        <a
-                            :href="nextMonthUrl"
+                        </button>
+                        <button
+                            @click="navigateToNextMonth"
                             class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                            aria-label="Next month"
+                            :aria-label="t('nextMonth')"
+                            :disabled="loading"
                         >
                             <svg
                                 class="w-5 h-5 text-gray-600"
@@ -256,7 +286,7 @@
                                     d="M9 5l7 7-7 7"
                                 />
                             </svg>
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -267,7 +297,7 @@
                         class="bg-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-between space-y-4"
                     >
                         <h3 class="text-lg font-semibold text-gray-800">
-                            Sales Breakdown
+                            {{ t("salesBreakdown") }}
                         </h3>
                         <div class="relative w-40 h-40">
                             <svg class="w-full h-full" viewBox="0 0 100 100">
@@ -320,7 +350,7 @@
                                     class="w-3 h-3 rounded-full bg-green-500 mr-2"
                                 ></span>
                                 <span>
-                                    Paid:
+                                    {{ t("paid") }}:
                                     <span class="font-semibold"
                                         >{{ paidPercentage }}%</span
                                     >
@@ -331,7 +361,7 @@
                                     class="w-3 h-3 rounded-full bg-yellow-500 mr-2"
                                 ></span>
                                 <span>
-                                    Due:
+                                    {{ t("due") }}:
                                     <span class="font-semibold"
                                         >{{ duePercentage }}%</span
                                     >
@@ -361,11 +391,13 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Total Sales</p>
+                            <p class="text-sm text-gray-600">
+                                {{ t("totalSales") }}
+                            </p>
                             <p
                                 class="text-2xl font-bold text-indigo-600 animate-pulse-slow"
                             >
-                                {{ animatedTotalSales }}
+                                ৳{{ animatedTotalSales }}
                             </p>
                         </div>
                     </div>
@@ -391,11 +423,13 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Paid Amount</p>
+                            <p class="text-sm text-gray-600">
+                                {{ t("paidAmount") }}
+                            </p>
                             <p
                                 class="text-2xl font-bold text-green-600 animate-pulse-slow"
                             >
-                                {{ animatedPaidAmount }}
+                                ৳{{ animatedPaidAmount }}
                             </p>
                         </div>
                     </div>
@@ -421,11 +455,13 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Due Amount</p>
+                            <p class="text-sm text-gray-600">
+                                {{ t("dueAmount") }}
+                            </p>
                             <p
                                 class="text-2xl font-bold text-yellow-600 animate-pulse-slow"
                             >
-                                {{ animatedDueAmount }}
+                                ৳{{ animatedDueAmount }}
                             </p>
                         </div>
                     </div>
@@ -434,7 +470,7 @@
                         class="bg-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-between space-y-4"
                     >
                         <h3 class="text-lg font-semibold text-gray-800">
-                            Profit & Loss
+                            {{ t("profitAndLoss") }}
                         </h3>
                         <div class="flex space-x-4">
                             <div class="relative w-24 h-24">
@@ -511,18 +547,20 @@
                             </div>
                         </div>
                         <div class="flex space-x-4 text-sm text-gray-600">
-                            <p>
-                                Profit:
-                                <span class="font-semibold">{{
-                                    animatedProfit
-                                }}</span>
-                            </p>
-                            <p>
-                                Loss:
-                                <span class="font-semibold">{{
-                                    animatedLoss
-                                }}</span>
-                            </p>
+                            <div class="flex items-center">
+                                <span>{{ t("profit") }}:&nbsp;</span>
+                                <span
+                                    class="font-semibold text-emerald-600 w-14 text-left inline-block tabular-nums"
+                                    >৳{{ animatedProfit }}</span
+                                >
+                            </div>
+                            <div class="flex items-center">
+                                <span>{{ t("loss") }}:&nbsp;</span>
+                                <span
+                                    class="font-semibold text-rose-600 w-14 text-left inline-block tabular-nums"
+                                    >৳{{ animatedLoss }}</span
+                                >
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -533,9 +571,11 @@
 
 <script setup>
 import { defineProps, ref, onMounted, computed, watch } from "vue";
+import { router } from "@inertiajs/vue3";
 import Layout from "@/Layout.vue";
 
 defineOptions({ layout: Layout });
+
 const props = defineProps({
     suppliersCount: Number,
     topDeposits: Array,
@@ -546,6 +586,127 @@ const props = defineProps({
     year: Number,
 });
 
+// Translation object
+const translations = {
+    en: {
+        languageLabel: "English",
+        dashboardTitle: "Dashboard",
+        totalSuppliers: "Total Suppliers",
+        activeSuppliers: "Active suppliers in the system",
+        supplier: "Supplier",
+        id: "ID",
+        topDepositSuppliers: "Top Deposit Suppliers",
+        totalShops: "Total Shops",
+        registeredShops: "Registered shops in the system",
+        shop: "Shop",
+        salesOverview: "Sales Overview",
+        previousMonth: "Previous month",
+        nextMonth: "Next month",
+        salesBreakdown: "Sales Breakdown",
+        paid: "Paid",
+        due: "Due",
+        totalSales: "Total Sales",
+        paidAmount: "Paid Amount",
+        dueAmount: "Due Amount",
+        profitAndLoss: "Profit & Loss",
+        profit: "Profit",
+        loss: "Loss",
+    },
+    bn: {
+        languageLabel: "বাংলা",
+        dashboardTitle: "ড্যাশবোর্ড",
+        totalSuppliers: "মোট সরবরাহকারী",
+        activeSuppliers: "সিস্টেমে সক্রিয় সরবরাহকারী",
+        supplier: "সরবরাহকারী",
+        id: "আইডি",
+        topDepositSuppliers: "শীর্ষ আমানত সরবরাহকারী",
+        totalShops: "মোট দোকান",
+        registeredShops: "সিস্টেমে নিবন্ধিত দোকান",
+        shop: "দোকান",
+        salesOverview: "বিক্রয় ওভারভিউ",
+        previousMonth: "পূর্ববর্তী মাস",
+        nextMonth: "পরবর্তী মাস",
+        salesBreakdown: "বিক্রয় বিভাজন",
+        paid: "প্রদত্ত",
+        due: "বাকি",
+        totalSales: "মোট বিক্রয়",
+        paidAmount: "প্রদত্ত পরিমাণ",
+        dueAmount: "বাকি পরিমাণ",
+        profitAndLoss: "লাভ ও ক্ষতি",
+        profit: "লাভ",
+        loss: "ক্ষতি",
+    },
+};
+
+// Reactive language state
+const currentLanguage = ref(localStorage.getItem("language") || "en");
+
+// Loading state for navigation
+const loading = ref(false);
+
+// Translation function
+const t = computed(() => (key) => translations[currentLanguage.value][key]);
+
+// Function to change language
+const changeLanguage = (lang) => {
+    currentLanguage.value = lang;
+    localStorage.setItem("language", lang);
+    document.documentElement.lang = lang;
+};
+
+// Navigation functions
+const navigateToPreviousMonth = () => {
+    let newMonth = selectedMonth.value - 1;
+    let newYear = selectedYear.value;
+    if (newMonth < 0) {
+        newMonth = 11;
+        newYear--;
+    }
+    selectedMonth.value = newMonth;
+    selectedYear.value = newYear;
+    navigateToMonth(newMonth, newYear);
+};
+
+const navigateToNextMonth = () => {
+    let newMonth = selectedMonth.value + 1;
+    let newYear = selectedYear.value;
+    if (newMonth > 11) {
+        newMonth = 0;
+        newYear++;
+    }
+    selectedMonth.value = newMonth;
+    selectedYear.value = newYear;
+    navigateToMonth(newMonth, newYear);
+};
+
+const navigateToMonth = (month, year) => {
+    loading.value = true;
+    router.visit(`/dashboard?month=${month + 1}&year=${year}`, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            // Manually update animated values with new props
+            const { total_sales, paid_amount, due_amount, profit, loss } =
+                page.props.monthlySales;
+            const duration = 1000;
+            animateNumber(animatedTotalSales, total_sales, duration);
+            animateNumber(animatedPaidAmount, paid_amount, duration);
+            animateNumber(animatedDueAmount, due_amount, duration);
+            animateNumber(animatedProfit, profit, duration);
+            animateNumber(animatedLoss, loss, duration);
+        },
+        onError: (errors) => {
+            console.error("Navigation error:", errors);
+            alert(
+                "Failed to load data for the selected month. Please try again."
+            );
+        },
+        onFinish: () => {
+            loading.value = false;
+        },
+    });
+};
+
+// Animation and other existing logic
 const animatedSuppliersCount = ref(0);
 const animatedDeposits = ref([]);
 const animatedWidths = ref([]);
@@ -625,27 +786,10 @@ const lossCircumference = computed(() => {
 
 const selectedMonthYear = computed(() => {
     const date = new Date(selectedYear.value, selectedMonth.value);
-    return date.toLocaleString("default", { month: "long", year: "numeric" });
-});
-
-const previousMonthUrl = computed(() => {
-    let newMonth = selectedMonth.value - 1;
-    let newYear = selectedYear.value;
-    if (newMonth < 0) {
-        newMonth = 11;
-        newYear--;
-    }
-    return `/dashboard?month=${newMonth + 1}&year=${newYear}`;
-});
-
-const nextMonthUrl = computed(() => {
-    let newMonth = selectedMonth.value + 1;
-    let newYear = selectedYear.value;
-    if (newMonth > 11) {
-        newMonth = 0;
-        newYear++;
-    }
-    return `/dashboard?month=${newMonth + 1}&year=${newYear}`;
+    return date.toLocaleString(currentLanguage.value, {
+        month: "long",
+        year: "numeric",
+    });
 });
 
 const animateNumber = (refVar, targetValue, duration) => {
@@ -670,6 +814,9 @@ const animateNumber = (refVar, targetValue, duration) => {
 
 onMounted(() => {
     const duration = 2000;
+
+    // Set document language based on stored preference
+    document.documentElement.lang = currentLanguage.value;
 
     animateNumber(
         animatedSuppliersCount,
@@ -714,6 +861,7 @@ onMounted(() => {
     animateNumber(animatedTotalShops, props.shops.length, duration);
 });
 
+// Watch for changes to props.monthlySales
 watch(
     () => props.monthlySales,
     (newVal) => {
@@ -737,6 +885,13 @@ const getBarWidth = (amount) => {
 </script>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+
+body,
+html {
+    font-family: "Noto Serif Bengali", Arial, sans-serif;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
