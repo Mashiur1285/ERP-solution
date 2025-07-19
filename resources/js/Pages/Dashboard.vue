@@ -222,6 +222,200 @@
             </div>
         </div>
 
+        <!-- Inventory Stock Section -->
+        <div class="mt-10">
+            <div
+                class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl relative overflow-hidden"
+            >
+                <!-- SVG Background -->
+                <svg
+                    class="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
+                    viewBox="0 0 1440 320"
+                    preserveAspectRatio="none"
+                >
+                    <path
+                        fill="#4f46e5"
+                        fill-opacity="0.1"
+                        d="M0,160L48,138.7C96,117,192,75,288,80C384,85,480,139,576,149.3C672,160,768,128,864,106.7C960,85,1056,75,1152,90.7C1248,107,1344,149,1392,170.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+                    />
+                </svg>
+
+                <div class="relative z-10">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2
+                            class="text-2xl font-semibold text-gray-800 flex items-center"
+                        >
+                            <div
+                                class="p-2 mr-3 bg-indigo-200 rounded-full flex items-center justify-center"
+                            >
+                                <svg
+                                    class="w-8 h-8 text-indigo-700"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                                    />
+                                </svg>
+                            </div>
+                            {{ t("inventoryStock") }}
+                        </h2>
+                        <div class="flex space-x-4">
+                            <input
+                                v-model="searchQuery"
+                                type="text"
+                                :placeholder="t('searchProducts')"
+                                class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <button
+                                @click="toggleView"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            >
+                                {{
+                                    viewMode === "chart"
+                                        ? t("showList")
+                                        : t("showChart")
+                                }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Total Metrics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-600">
+                                {{ t("totalProducts") }}
+                            </p>
+                            <p class="text-2xl font-bold text-indigo-600">
+                                {{ toBengaliNumber(totalProducts) }}
+                            </p>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-600">
+                                {{ t("totalQuantity") }}
+                            </p>
+                            <p class="text-2xl font-bold text-indigo-600">
+                                {{ toBengaliNumber(totalQuantity) }}
+                            </p>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-600">
+                                {{ t("totalPurchaseValue") }}
+                            </p>
+                            <p class="text-2xl font-bold text-indigo-600">
+                                ৳{{ toBengaliNumber(totalPurchaseValue) }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Chart View -->
+                    <div v-if="viewMode === 'chart'" class="mb-6">
+                        <canvas
+                            ref="inventoryChart"
+                            class="w-full h-80"
+                        ></canvas>
+                    </div>
+
+                    <!-- List View -->
+                    <div v-if="viewMode === 'list'" class="space-y-4">
+                        <div
+                            v-for="(item, index) in filteredInventory"
+                            :key="index"
+                            class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                            @click="toggleVariants(index)"
+                        >
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3
+                                        class="text-lg font-semibold text-gray-800"
+                                    >
+                                        {{ item.product_name }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600">
+                                        {{ t("totalQuantity") }}:
+                                        <span
+                                            class="font-semibold text-indigo-600"
+                                            >{{
+                                                toBengaliNumber(
+                                                    item.total_quantity
+                                                )
+                                            }}</span
+                                        >
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                        {{ t("totalValue") }}:
+                                        <span
+                                            class="font-semibold text-indigo-600"
+                                            >৳{{
+                                                toBengaliNumber(
+                                                    item.total_value
+                                                )
+                                            }}</span
+                                        >
+                                    </p>
+                                </div>
+                                <div
+                                    class="p-2 bg-indigo-100 rounded-full flex items-center justify-center"
+                                >
+                                    <svg
+                                        class="w-6 h-6 text-indigo-600 transform transition-transform"
+                                        :class="{
+                                            'rotate-180':
+                                                expandedVariants[index],
+                                        }"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div
+                                v-if="expandedVariants[index]"
+                                class="mt-4 space-y-2 animate-slide-down"
+                            >
+                                <div
+                                    v-for="(variant, vIndex) in item.variants"
+                                    :key="vIndex"
+                                    class="flex justify-between items-center text-sm text-gray-600"
+                                >
+                                    <span>{{ variant.variant }}</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-semibold">{{
+                                            toBengaliNumber(variant.quantity)
+                                        }}</span>
+                                        <div
+                                            class="w-24 bg-gray-200 rounded-full h-2"
+                                        >
+                                            <div
+                                                class="h-2 rounded-full bg-indigo-500 transition-all duration-1000"
+                                                :style="{
+                                                    width:
+                                                        getVariantBarWidth(
+                                                            variant.quantity
+                                                        ) + '%',
+                                                }"
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="mt-10">
             <div
                 class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl"
@@ -587,6 +781,7 @@
 <script setup>
 import { defineProps, ref, onMounted, computed, watch } from "vue";
 import { router } from "@inertiajs/vue3";
+import Chart from "chart.js/auto";
 import Layout from "@/Layout.vue";
 
 defineOptions({ layout: Layout });
@@ -599,6 +794,7 @@ const props = defineProps({
     monthlySales: Object,
     month: Number,
     year: Number,
+    inventoryStock: Array,
 });
 
 // Translation object
@@ -626,6 +822,15 @@ const translations = {
         profitAndLoss: "Profit & Loss",
         profit: "Profit",
         loss: "Loss",
+        inventoryStock: "Inventory Stock",
+        totalQuantity: "Total Quantity",
+        totalValue: "Total Value",
+        totalProducts: "Total Products",
+        totalPurchaseValue: "Total Purchase Value",
+        searchProducts: "Search products...",
+        showChart: "Show Chart",
+        showList: "Show List",
+        products: "Products",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -650,25 +855,43 @@ const translations = {
         profitAndLoss: "লাভ ও ক্ষতি",
         profit: "লাভ",
         loss: "ক্ষতি",
+        inventoryStock: "ইনভেন্টরি স্টক",
+        totalQuantity: "মোট পরিমাণ",
+        totalValue: "মোট মূল্য",
+        totalProducts: "মোট পণ্য",
+        totalPurchaseValue: "মোট ক্রয় মূল্য",
+        searchProducts: "পণ্য অনুসন্ধান করুন...",
+        showChart: "চার্ট দেখান",
+        showList: "তালিকা দেখান",
+        products: "পণ্য",
     },
 };
 
-// Reactive language state
+// Reactive states
 const currentLanguage = ref(localStorage.getItem("language") || "en");
-
-// Loading state for navigation
 const loading = ref(false);
+const viewMode = ref("chart"); // 'chart' or 'list'
+const searchQuery = ref("");
+const expandedVariants = ref({});
+const inventoryChart = ref(null);
+let chartInstance = null;
+
+// Computed properties for total metrics
+const totalProducts = computed(() => props.inventoryStock.length);
+const totalQuantity = computed(() =>
+    props.inventoryStock.reduce((sum, item) => sum + item.total_quantity, 0)
+);
+const totalPurchaseValue = computed(() =>
+    props.inventoryStock.reduce((sum, item) => sum + item.total_value, 0)
+);
 
 // Translation function
 const t = computed(() => (key) => translations[currentLanguage.value][key]);
 
 // Function to convert numbers to Bengali
 const toBengaliNumber = (num) => {
-    // Handle undefined, null, or non-numeric values
     if (num === null || num === undefined || num === "") return "";
     if (typeof num !== "number" && typeof num !== "string") return num;
-
-    // If language is not Bengali, return original number
     if (currentLanguage.value !== "bn") return num;
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
@@ -677,12 +900,42 @@ const toBengaliNumber = (num) => {
         .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
 };
 
-// Function to change language
+// Change language
 const changeLanguage = (lang) => {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
     document.documentElement.lang = lang;
 };
+
+// Toggle between chart and list view
+const toggleView = () => {
+    viewMode.value = viewMode.value === "chart" ? "list" : "chart";
+};
+
+// Toggle variant details
+const toggleVariants = (index) => {
+    expandedVariants.value[index] = !expandedVariants.value[index];
+};
+
+// Calculate progress bar width for variants
+const getVariantBarWidth = (quantity) => {
+    const maxQuantity = Math.max(
+        ...props.inventoryStock.flatMap((item) =>
+            item.variants.map((v) => v.quantity)
+        ),
+        1
+    );
+    return Math.min((quantity / maxQuantity) * 100, 100);
+};
+
+// Filter inventory based on search query
+const filteredInventory = computed(() => {
+    if (!searchQuery.value) return props.inventoryStock;
+    const query = searchQuery.value.toLowerCase();
+    return props.inventoryStock.filter((item) =>
+        item.product_name.toLowerCase().includes(query)
+    );
+});
 
 // Navigation functions
 const navigateToPreviousMonth = () => {
@@ -714,7 +967,6 @@ const navigateToMonth = (month, year) => {
     router.visit(`/dashboard?month=${month + 1}&year=${year}`, {
         preserveScroll: true,
         onSuccess: (page) => {
-            // Manually update animated values with new props
             const { total_sales, paid_amount, due_amount, profit, loss } =
                 page.props.monthlySales;
             const duration = 1000;
@@ -736,7 +988,7 @@ const navigateToMonth = (month, year) => {
     });
 };
 
-// Animation and other existing logic
+// Animation and other logic
 const animatedSuppliersCount = ref(0);
 const animatedDeposits = ref([]);
 const animatedWidths = ref([]);
@@ -746,10 +998,9 @@ const animatedDueAmount = ref(0);
 const animatedProfit = ref(0);
 const animatedLoss = ref(0);
 const animatedTotalShops = ref(0);
-const selectedMonth = ref(props.month - 1); // Convert to 0-11 for JavaScript Date
+const animatedInventoryStock = ref([]);
+const selectedMonth = ref(props.month - 1);
 const selectedYear = ref(props.year);
-
-// --- Sales Distribution Computed Properties for Pie Chart ---
 
 const paidPercentage = computed(() => {
     if (animatedTotalSales.value === 0) return 0;
@@ -790,8 +1041,6 @@ const dueOffset = computed(() => {
     return circumference - (paidPercent / 100) * circumference;
 });
 
-// --- Profit and Loss Computed Properties ---
-
 const profitPercentage = computed(() => {
     if (animatedTotalSales.value === 0) return 0;
     return ((animatedProfit.value / animatedTotalSales.value) * 100).toFixed(0);
@@ -811,8 +1060,6 @@ const lossCircumference = computed(() => {
     const percentage = parseFloat(lossPercentage.value);
     return `${(percentage / 100) * circumference}, ${circumference}`;
 });
-
-// --- Computed Properties for Navigation ---
 
 const selectedMonthYear = computed(() => {
     const date = new Date(selectedYear.value, selectedMonth.value);
@@ -842,10 +1089,133 @@ const animateNumber = (refVar, targetValue, duration) => {
     }, stepTime);
 };
 
+const initializeChart = () => {
+    if (inventoryChart.value && props.inventoryStock.length) {
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        const labels = props.inventoryStock.map((item) => item.product_name);
+        const quantities = props.inventoryStock.map(
+            (item) =>
+                animatedInventoryStock.value[item.product_name]
+                    ?.total_quantity || item.total_quantity
+        );
+
+        chartInstance = new Chart(inventoryChart.value, {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: t.value("totalQuantity"),
+                        data: quantities,
+                        backgroundColor: "#4f46e5", // Solid indigo
+                        borderColor: "#6d28d9", // Darker purple
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        barPercentage: 0.4,
+                        categoryPercentage: 0.5,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: t.value("totalQuantity"),
+                            font: {
+                                size: 16,
+                                weight: "600",
+                                family: "'Noto Serif Bengali', Arial, sans-serif",
+                            },
+                            color: "#1f2937",
+                        },
+                        grid: {
+                            color: "rgba(0, 0, 0, 0.05)",
+                            borderColor: "#d1d5db",
+                            drawTicks: false,
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                family: "'Noto Serif Bengali', Arial, sans-serif",
+                            },
+                            color: "#4b5563",
+                            padding: 10,
+                        },
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: t.value("products"),
+                            font: {
+                                size: 16,
+                                weight: "600",
+                                family: "'Noto Serif Bengali', Arial, sans-serif",
+                            },
+                            color: "#1f2937",
+                        },
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                family: "'Noto Serif Bengali', Arial, sans-serif",
+                            },
+                            color: "#4b5563",
+                            maxRotation: 45,
+                            minRotation: 45,
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: "rgba(17, 24, 39, 0.9)",
+                        titleFont: {
+                            size: 14,
+                            family: "'Noto Serif Bengali', Arial, sans-serif",
+                        },
+                        bodyFont: {
+                            size: 12,
+                            family: "'Noto Serif Bengali', Arial, sans-serif",
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        boxPadding: 6,
+                        callbacks: {
+                            label: function (context) {
+                                return `${t.value(
+                                    "totalQuantity"
+                                )}: ${toBengaliNumber(context.raw)}`;
+                            },
+                        },
+                    },
+                },
+                animation: {
+                    duration: 2000,
+                    easing: "easeOutQuart",
+                },
+                hover: {
+                    animationDuration: 400,
+                },
+            },
+        });
+    }
+};
+
 onMounted(() => {
     const duration = 2000;
 
-    // Set document language based on stored preference
     document.documentElement.lang = currentLanguage.value;
 
     animateNumber(
@@ -889,9 +1259,29 @@ onMounted(() => {
     animateNumber(animatedLoss, loss, duration);
 
     animateNumber(animatedTotalShops, props.shops.length, duration);
+
+    // Animate inventory stock
+    animatedInventoryStock.value = {};
+    props.inventoryStock.forEach((item) => {
+        animatedInventoryStock.value[item.product_name] = {
+            total_quantity: 0,
+            total_value: 0,
+        };
+        animateNumber(
+            animatedInventoryStock.value[item.product_name].total_quantity,
+            item.total_quantity,
+            duration
+        );
+        animateNumber(
+            animatedInventoryStock.value[item.product_name].total_value,
+            item.total_value,
+            duration
+        );
+    });
+
+    initializeChart();
 });
 
-// Watch for changes to props.monthlySales
 watch(
     () => props.monthlySales,
     (newVal) => {
@@ -903,6 +1293,51 @@ watch(
         animateNumber(animatedLoss, newVal.loss, duration);
     },
     { deep: true }
+);
+
+watch(
+    () => props.inventoryStock,
+    (newVal) => {
+        const duration = 1000;
+        animatedInventoryStock.value = {};
+        newVal.forEach((item) => {
+            animatedInventoryStock.value[item.product_name] = {
+                total_quantity: 0,
+                total_value: 0,
+            };
+            animateNumber(
+                animatedInventoryStock.value[item.product_name].total_quantity,
+                item.total_quantity,
+                duration
+            );
+            animateNumber(
+                animatedInventoryStock.value[item.product_name].total_value,
+                item.total_value,
+                duration
+            );
+        });
+        initializeChart();
+    },
+    { deep: true }
+);
+
+watch(
+    () => viewMode.value,
+    () => {
+        if (viewMode.value === "chart") {
+            setTimeout(initializeChart, 0); // Ensure chart re-renders
+        }
+    }
+);
+
+// Watch for language changes to update the chart
+watch(
+    () => currentLanguage.value,
+    () => {
+        if (viewMode.value === "chart") {
+            setTimeout(initializeChart, 0); // Reinitialize chart to reflect new language
+        }
+    }
 );
 
 const getBarWidth = (amount) => {
@@ -945,20 +1380,38 @@ html {
     }
 }
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
 .animate-fade-in {
     animation: fadeIn 1s ease-out;
 }
+
 .animate-pulse-slow {
     animation: pulseSlow 2s infinite;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.3s ease-out;
 }
 
 .max-h-36::-webkit-scrollbar {
     width: 6px;
 }
+
 .max-h-36::-webkit-scrollbar-thumb {
     background: #a5b4fc;
     border-radius: 3px;
 }
+
 .max-h-36::-webkit-scrollbar-track {
     background: #f1f5f9;
 }

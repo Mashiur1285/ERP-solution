@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Contracts\SupplierContract;
 use App\Contracts\DepositContract;
-use Inertia\Inertia;
 use App\Contracts\SalesContract;
 use App\Contracts\ShopContract;
+use App\Contracts\ProductPurchaseContract; // Add this
+use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,7 @@ class DashboardController extends Controller
         protected DepositContract $depositRepository,
         protected SalesContract $salesRepository,
         protected ShopContract $shopRepository,
+        protected ProductPurchaseContract $productPurchaseRepository // Add this
     ) {
     }
 
@@ -28,13 +30,16 @@ class DashboardController extends Controller
             ->totalRemainingDepositsBySupplier()
             ->take(5);
 
+        // Fetch inventory stock
+        $inventoryStock = $this->productPurchaseRepository->getInventoryStock();
+
         // Get month and year from query parameters, default to current month
         $month = $request->query('month', Carbon::now()->month);
         $year = $request->query('year', Carbon::now()->year);
 
         // Validate month and year
         $month = max(1, min(12, (int) $month));
-        $year = max(2000, min(Carbon::now()->year + 1, (int) $year)); // Limit to reasonable range
+        $year = max(2000, min(Carbon::now()->year + 1, (int) $year));
 
         // Calculate monthly sales metrics
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
@@ -59,6 +64,7 @@ class DashboardController extends Controller
             'suppliers' => $suppliers,
             'shops' => $shops,
             'topDeposits' => $topDeposits,
+            'inventoryStock' => $inventoryStock, // Add this
             'monthlySales' => [
                 'total_sales' => $totalSales,
                 'paid_amount' => $totalPaid,

@@ -15,8 +15,10 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
     {
         parent::__construct($model);
     }
+
     public function purchaseHistory(): Collection
     {
+        // Existing purchaseHistory method remains unchanged
         $query = "
             SELECT
                 suppliers.company_name as supplier_name,
@@ -46,21 +48,48 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         });
     }
 
-    /**
-     * Update the inventory for a specific product variant.
-     *
-     * @param int $productId
-     * @param string $variant
-     * @param int $quantity
-     * @return void
-     * @throws \Exception
-     */
+    public function getInventoryStock(): Collection
+    {
+        $query = "
+            SELECT
+                products.name as product_name,
+                variant_data
+            FROM products
+            LEFT JOIN LATERAL jsonb_array_elements(COALESCE(products.metadata->'variants', '[]'::jsonb)) as variant_data ON true
+            WHERE products.deleted_at IS NULL
+        ";
+
+        return collect(DB::select($query))->map(function ($item) {
+            $variant = json_decode($item->variant_data, true) ?: [];
+            return [
+                'product_name' => $item->product_name,
+                'variant' => $variant['variant'] ?? 'N/A',
+                'quantity' => $variant['quantity'] ?? 0,
+                'unit_price' => $variant['unit_price'] ?? 0,
+                'total_value' => ($variant['quantity'] ?? 0) * ($variant['unit_price'] ?? 0),
+            ];
+        })->groupBy('product_name')->map(function ($group) {
+            return [
+                'product_name' => $group->first()['product_name'],
+                'variants' => $group->map(function ($item) {
+                    return [
+                        'variant' => $item['variant'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'total_value' => $item['total_value'],
+                    ];
+                })->values(),
+                'total_quantity' => $group->sum('quantity'),
+                'total_value' => $group->sum('total_value'),
+            ];
+        })->values();
+    }
+
     public function updateInventory(Model $product, string $variant, int $quantity): void
     {
-        // Get the current metadata
+        // Existing updateInventory method remains unchanged
         $metadata = $product->metadata ?? ['variants' => []];
 
-        // Find the variant in the metadata
         $variantIndex = collect($metadata['variants'])->search(function ($item) use ($variant) {
             return $item['variant'] === $variant;
         });
@@ -68,18 +97,15 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         if ($variantIndex === false) {
             throw new \Exception("Variant {$variant} not found for product");
         }
-        // Get the current quantity
+
         $currentQuantity = $metadata['variants'][$variantIndex]['quantity'];
 
-        // Validate sufficient quantity
         if ($currentQuantity < $quantity) {
             throw new \Exception("Insufficient inventory for variant {$variant}. Available: {$currentQuantity}, Requested: {$quantity}");
         }
 
-        // Update the quantity
         $metadata['variants'][$variantIndex]['quantity'] = $currentQuantity - $quantity;
 
-        // Save the updated metadata
         $product->metadata = $metadata;
         $product->save();
     }
