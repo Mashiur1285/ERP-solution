@@ -1,3 +1,4 @@
+```vue
 <template>
     <div class="min-h-screen bg-gray-50 p-4">
         <div
@@ -6,7 +7,7 @@
             <!-- Sidebar -->
             <div
                 :class="[
-                    'relative bg-blue-800 text-white rounded-l-xl flex flex-col transition-all duration-300',
+                    'relative bg-indigo-800 text-white rounded-l-xl flex flex-col transition-all duration-300',
                     collapsed ? 'w-20' : 'w-64',
                 ]"
             >
@@ -55,8 +56,8 @@
                     <!-- Dashboard -->
                     <Link
                         href="/"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
-                        :class="{ 'bg-blue-600': $page.url === '/' }"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-indigo-700 transition duration-200"
+                        :class="{ 'bg-indigo-600': $page.url === '/' }"
                         @click.stop="logNavigation('/')"
                         :preserveState="true"
                         :preserveScroll="true"
@@ -81,7 +82,7 @@
                     <!-- Suppliers Menu -->
                     <button
                         @click="toggleSuppliersMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-indigo-700 transition duration-200"
                     >
                         <svg
                             class="w-5 h-5 mr-2 shrink-0"
@@ -119,9 +120,9 @@
                     >
                         <Link
                             href="/suppliers/create"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/suppliers/create'),
                             }"
                             @click.stop="logNavigation('/suppliers/create')"
@@ -146,9 +147,9 @@
                         </Link>
                         <Link
                             href="/suppliers/index"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/suppliers/index'),
                             }"
                             @click.stop="logNavigation('/suppliers/index')"
@@ -176,7 +177,7 @@
                     <!-- Purchase Management Menu -->
                     <button
                         @click="toggleDepositsMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-indigo-700 transition duration-200"
                     >
                         <svg
                             class="w-5 h-5 mr-2 shrink-0"
@@ -214,9 +215,9 @@
                     >
                         <Link
                             href="/deposits"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/deposits'),
                             }"
                             @click.stop="logNavigation('/deposits')"
@@ -241,9 +242,9 @@
                         </Link>
                         <Link
                             href="/categories/index"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/categories/index'),
                             }"
                             @click.stop="logNavigation('/categories/index')"
@@ -268,9 +269,10 @@
                         </Link>
                         <Link
                             href="/brands/index"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600': $page.url.startsWith('/brands'),
+                                'bg-indigo-600':
+                                    $page.url.startsWith('/brands'),
                             }"
                             @click.stop="logNavigation('/brands')"
                             :preserveState="true"
@@ -294,9 +296,9 @@
                         </Link>
                         <Link
                             href="/purchases"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/purchases') &&
                                     !$page.url.includes('/purchases/report'),
                             }"
@@ -322,9 +324,9 @@
                         </Link>
                         <Link
                             href="/purchases/report"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/purchases/report'),
                             }"
                             @click.stop="logNavigation('/purchases/report')"
@@ -352,7 +354,7 @@
                     <!-- Sales Management Menu -->
                     <button
                         @click="toggleSalesMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-blue-700 transition duration-200"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-indigo-700 transition duration-200"
                     >
                         <svg
                             class="w-5 h-5 mr-2 shrink-0"
@@ -390,9 +392,9 @@
                     >
                         <Link
                             href="/shops/create"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/shops/create'),
                             }"
                             @click.stop="logNavigation('/shops/create')"
@@ -417,9 +419,9 @@
                         </Link>
                         <Link
                             href="/shops"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600': $page.url.startsWith('/shops'),
+                                'bg-indigo-600': $page.url.startsWith('/shops'),
                             }"
                             @click.stop="logNavigation('/shops')"
                             :preserveState="true"
@@ -443,9 +445,9 @@
                         </Link>
                         <Link
                             href="/sales"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/sales') &&
                                     !$page.url.includes('/sales/report'),
                             }"
@@ -471,9 +473,9 @@
                         </Link>
                         <Link
                             href="/sales/report"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
                             :class="{
-                                'bg-blue-600':
+                                'bg-indigo-600':
                                     $page.url.startsWith('/sales/report'),
                             }"
                             @click.stop="logNavigation('/sales/report')"
@@ -566,6 +568,7 @@ watch(
 <style scoped>
 .shadow-xl:hover {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgb(3, 113, 209);
+        0 10px 10px -5px rgb(99, 102, 241);
 }
 </style>
+```

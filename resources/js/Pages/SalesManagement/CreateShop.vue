@@ -1,5 +1,64 @@
 <template>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
+        <!-- Toast Notification -->
+        <div
+            v-if="showToast"
+            class="fixed top-6 right-6 px-7 py-5 rounded-lg shadow-md flex items-center space-x-3 animate-toast-in"
+            :class="toastClasses"
+            role="alert"
+        >
+            <svg
+                class="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    v-if="toastType === 'success'"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                />
+                <path
+                    v-else-if="toastType === 'warning'"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <path
+                    v-else
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </svg>
+            <span class="font-medium text-white">{{ toastMessage }}</span>
+            <button
+                @click="closeToast"
+                class="ml-2 text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white"
+                aria-label="Close notification"
+            >
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
+                </svg>
+            </button>
+        </div>
+
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
             Create Shop
         </h1>
@@ -21,8 +80,18 @@
                         type="text"
                         placeholder="Enter shop name"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        :class="{
+                            'border-red-500': shopForm.errors?.shop_name,
+                        }"
+                        @input="shopForm.clearErrors?.('shop_name')"
                         required
                     />
+                    <p
+                        v-if="shopForm.errors?.shop_name"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ shopForm.errors.shop_name }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -67,8 +136,18 @@
                         type="text"
                         placeholder="Enter phone number"
                         class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50 transition duration-200"
+                        :class="{
+                            'border-red-500': shopForm.errors?.phone_number,
+                        }"
+                        @input="shopForm.clearErrors?.('phone_number')"
                         required
                     />
+                    <p
+                        v-if="shopForm.errors?.phone_number"
+                        class="mt-1 text-sm text-red-500"
+                    >
+                        {{ shopForm.errors.phone_number }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -165,8 +244,9 @@
                 <button
                     @click="submitShop"
                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+                    :disabled="shopForm.processing"
                 >
-                    Create Shop
+                    {{ shopForm.processing ? "Creating..." : "Create Shop" }}
                 </button>
             </div>
         </div>
@@ -174,8 +254,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { router, useForm } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 
 interface ShopForm {
@@ -189,9 +269,10 @@ interface ShopForm {
     trade_license: string | null;
     tax_id: string | null;
     notes: string | null;
+    errors?: Record<string, string>;
 }
 
-const shopForm = ref<ShopForm>({
+const shopForm = useForm<ShopForm>({
     shop_name: "",
     owner_name: null,
     shop_address: null,
@@ -204,28 +285,82 @@ const shopForm = ref<ShopForm>({
     notes: null,
 });
 
+// Toast state
+const showToast = ref(false);
+const toastMessage = ref("");
+const toastType = ref("success"); // success, warning, error
+const toastExiting = ref(false);
+
+const toastClasses = computed(() => ({
+    "bg-green-500": toastType.value === "success",
+    "bg-orange-500": toastType.value === "warning",
+    "bg-red-500": toastType.value === "error",
+    "text-white": true,
+}));
+
+const showToastWithType = (message: string, type: string = "success") => {
+    // Close any existing toast before showing a new one
+    if (showToast.value) {
+        toastExiting.value = true;
+        setTimeout(() => {
+            showToast.value = false;
+            toastExiting.value = false;
+            toastMessage.value = message;
+            toastType.value = type;
+            showToast.value = true;
+            // Auto-hide toast after 5 seconds
+            setTimeout(() => {
+                toastExiting.value = true;
+                setTimeout(() => {
+                    showToast.value = false;
+                }, 300);
+            }, 5000);
+        }, 300);
+    } else {
+        toastMessage.value = message;
+        toastType.value = type;
+        showToast.value = true;
+        toastExiting.value = false;
+        // Auto-hide toast after 5 seconds
+        setTimeout(() => {
+            toastExiting.value = true;
+            setTimeout(() => {
+                showToast.value = false;
+            }, 300);
+        }, 5000);
+    }
+};
+
+const closeToast = () => {
+    toastExiting.value = true;
+    setTimeout(() => {
+        showToast.value = false;
+        toastExiting.value = false;
+    }, 300);
+};
+
 defineOptions({
     layout: Layout,
 });
 
 const submitShop = () => {
-    router.post("/shops/store", shopForm.value, {
+    // Basic client-side validation for required fields
+    if (!shopForm.shop_name || !shopForm.phone_number) {
+        showToastWithType("Please fill all required fields.", "warning");
+        return;
+    }
+
+    shopForm.post("/shops/store", {
         onSuccess: () => {
-            shopForm.value = {
-                shop_name: "",
-                owner_name: null,
-                shop_address: null,
-                phone_number: "",
-                email: null,
-                website: null,
-                national_id: null,
-                trade_license: null,
-                tax_id: null,
-                notes: null,
-            };
+            shopForm.reset();
+            showToastWithType("Shop Created Successfully", "success");
         },
-        onError: (errors) => {
+        onError: (errors: Record<string, string>) => {
             console.error("Shop creation errors:", errors);
+            showToastWithType(
+                "Failed to create shop. Please check the form.",
+                "error"
+            );
         },
     });
 };
@@ -245,5 +380,36 @@ textarea {
 .shadow-xl:hover {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgb(142, 173, 200);
+}
+
+/* Toast animations */
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+.animate-toast-in {
+    animation: toast-in 0.3s ease-out forwards;
+}
+
+.animate-toast-out {
+    animation: toast-out 0.3s ease-out forwards;
 }
 </style>

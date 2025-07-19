@@ -1,5 +1,5 @@
+```vue
 <template>
-    <div>{{ props.purchaseHistory }}</div>
     <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-xl">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
             Purchase Report
@@ -16,66 +16,69 @@
             >
                 No purchases found.
             </div>
-            <table v-else class="min-w-full divide-y divide-gray-400">
+            <table
+                v-else
+                class="min-w-full w-full table-fixed divide-y divide-gray-400"
+            >
                 <thead class="bg-gray-50">
                     <tr>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Supplier
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Product Name
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Variant
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Bottles per Box
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[8%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Boxes
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Free Bottles
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Total Bottles
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Unit Price (TK)
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Total Value (TK)
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            class="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             Date
                         </th>
@@ -85,20 +88,29 @@
                     <tr
                         v-for="(purchase, index) in purchaseHistory"
                         :key="index"
-                        class="hover:bg-gray-50 transition-colors"
+                        class="hover:bg-indigo-50 transition-colors"
                     >
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-normal max-w-[150px]">
+                            <div
+                                class="text-sm text-gray-900 truncate"
+                                :title="purchase.supplier_name || '-'"
+                            >
                                 {{ purchase.supplier_name || "-" }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-normal max-w-[150px]">
+                            <div
+                                class="text-sm text-gray-900 truncate"
+                                :title="purchase.product_name || '-'"
+                            >
                                 {{ purchase.product_name || "-" }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-normal max-w-[120px]">
+                            <div
+                                class="text-sm text-gray-900 truncate"
+                                :title="purchase.variant || 'N/A'"
+                            >
                                 {{ purchase.variant || "N/A" }}
                             </div>
                         </td>
@@ -135,8 +147,17 @@
                                 {{ (purchase.total_value || 0).toFixed(2) }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-normal max-w-[150px]">
+                            <div
+                                class="text-sm text-gray-900 truncate"
+                                :title="
+                                    purchase.purchase_date
+                                        ? new Date(
+                                              purchase.purchase_date
+                                          ).toLocaleString()
+                                        : '-'
+                                "
+                            >
                                 {{
                                     purchase.purchase_date
                                         ? new Date(
@@ -190,7 +211,7 @@ textarea {
 
 .shadow-xl:hover {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgb(142, 173, 200);
+        0 10px 10px -5px rgb(99, 102, 241);
 }
 
 table {
@@ -216,3 +237,4 @@ tbody tr:last-child td:last-child {
     border-bottom-right-radius: 0.5rem;
 }
 </style>
+```

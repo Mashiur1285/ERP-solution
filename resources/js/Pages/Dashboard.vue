@@ -86,7 +86,7 @@
                 <p
                     class="text-4xl font-bold text-indigo-600 animate-pulse-slow"
                 >
-                    {{ animatedSuppliersCount }}
+                    {{ toBengaliNumber(animatedSuppliersCount) }}
                 </p>
                 <p class="text-sm text-gray-500 mt-2">
                     {{ t("activeSuppliers") }}
@@ -105,7 +105,8 @@
                             t("supplier") + " " + (index + 1)
                         }}</span>
                         <span class="text-sm text-gray-500"
-                            >{{ t("id") }}: {{ supplier.id }}</span
+                            >{{ t("id") }}:
+                            {{ toBengaliNumber(supplier.id) }}</span
                         >
                     </div>
                 </div>
@@ -148,7 +149,9 @@
                                 deposit.supplier_name
                             }}</span>
                             <span class="font-semibold text-indigo-600"
-                                >৳{{ animatedDeposits[index] }}</span
+                                >৳{{
+                                    toBengaliNumber(animatedDeposits[index])
+                                }}</span
                             >
                         </div>
                         <div class="w-full bg-gray-100 h-2 rounded-full mt-1">
@@ -194,7 +197,7 @@
                 <p
                     class="text-4xl font-bold text-indigo-600 animate-pulse-slow"
                 >
-                    {{ animatedTotalShops }}
+                    {{ toBengaliNumber(animatedTotalShops) }}
                 </p>
                 <p class="text-sm text-gray-500 mt-2">
                     {{ t("registeredShops") }}
@@ -212,7 +215,7 @@
                             shop.shop_name || t("shop") + " " + (index + 1)
                         }}</span>
                         <span class="text-sm text-gray-500"
-                            >{{ t("id") }}: {{ shop.id }}</span
+                            >{{ t("id") }}: {{ toBengaliNumber(shop.id) }}</span
                         >
                     </div>
                 </div>
@@ -338,7 +341,9 @@
                                 class="absolute inset-0 flex items-center justify-center"
                             >
                                 <span class="text-2xl font-bold text-gray-800"
-                                    >{{ totalSalesPercentage }}%</span
+                                    >{{
+                                        toBengaliNumber(totalSalesPercentage)
+                                    }}%</span
                                 >
                             </div>
                         </div>
@@ -352,7 +357,9 @@
                                 <span>
                                     {{ t("paid") }}:
                                     <span class="font-semibold"
-                                        >{{ paidPercentage }}%</span
+                                        >{{
+                                            toBengaliNumber(paidPercentage)
+                                        }}%</span
                                     >
                                 </span>
                             </div>
@@ -363,7 +370,9 @@
                                 <span>
                                     {{ t("due") }}:
                                     <span class="font-semibold"
-                                        >{{ duePercentage }}%</span
+                                        >{{
+                                            toBengaliNumber(duePercentage)
+                                        }}%</span
                                     >
                                 </span>
                             </div>
@@ -397,7 +406,7 @@
                             <p
                                 class="text-2xl font-bold text-indigo-600 animate-pulse-slow"
                             >
-                                ৳{{ animatedTotalSales }}
+                                ৳{{ toBengaliNumber(animatedTotalSales) }}
                             </p>
                         </div>
                     </div>
@@ -429,7 +438,7 @@
                             <p
                                 class="text-2xl font-bold text-green-600 animate-pulse-slow"
                             >
-                                ৳{{ animatedPaidAmount }}
+                                ৳{{ toBengaliNumber(animatedPaidAmount) }}
                             </p>
                         </div>
                     </div>
@@ -461,7 +470,7 @@
                             <p
                                 class="text-2xl font-bold text-yellow-600 animate-pulse-slow"
                             >
-                                ৳{{ animatedDueAmount }}
+                                ৳{{ toBengaliNumber(animatedDueAmount) }}
                             </p>
                         </div>
                     </div>
@@ -505,7 +514,9 @@
                                 >
                                     <span
                                         class="text-lg font-bold text-emerald-600"
-                                        >{{ profitPercentage }}%</span
+                                        >{{
+                                            toBengaliNumber(profitPercentage)
+                                        }}%</span
                                     >
                                 </div>
                             </div>
@@ -541,24 +552,28 @@
                                 >
                                     <span
                                         class="text-lg font-bold text-rose-600"
-                                        >{{ lossPercentage }}%</span
+                                        >{{
+                                            toBengaliNumber(lossPercentage)
+                                        }}%</span
                                     >
                                 </div>
                             </div>
                         </div>
                         <div class="flex space-x-4 text-sm text-gray-600">
                             <div class="flex items-center">
-                                <span>{{ t("profit") }}:&nbsp;</span>
+                                <span>{{ t("profit") }}: </span>
                                 <span
                                     class="font-semibold text-emerald-600 w-14 text-left inline-block tabular-nums"
-                                    >৳{{ animatedProfit }}</span
+                                    >৳{{
+                                        toBengaliNumber(animatedProfit)
+                                    }}</span
                                 >
                             </div>
                             <div class="flex items-center">
-                                <span>{{ t("loss") }}:&nbsp;</span>
+                                <span>{{ t("loss") }}: </span>
                                 <span
                                     class="font-semibold text-rose-600 w-14 text-left inline-block tabular-nums"
-                                    >৳{{ animatedLoss }}</span
+                                    >৳{{ toBengaliNumber(animatedLoss) }}</span
                                 >
                             </div>
                         </div>
@@ -646,6 +661,21 @@ const loading = ref(false);
 
 // Translation function
 const t = computed(() => (key) => translations[currentLanguage.value][key]);
+
+// Function to convert numbers to Bengali
+const toBengaliNumber = (num) => {
+    // Handle undefined, null, or non-numeric values
+    if (num === null || num === undefined || num === "") return "";
+    if (typeof num !== "number" && typeof num !== "string") return num;
+
+    // If language is not Bengali, return original number
+    if (currentLanguage.value !== "bn") return num;
+
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return num
+        .toString()
+        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+};
 
 // Function to change language
 const changeLanguage = (lang) => {
@@ -933,3 +963,4 @@ html {
     background: #f1f5f9;
 }
 </style>
+```
