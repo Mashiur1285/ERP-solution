@@ -60,3 +60,6 @@ Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.rep
 Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->name('sales.payment');
 Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->name('sales.payment.store');
 Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->name('sales.cash-memo');
+
+//Inventory report
+Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->name('inventory.report');

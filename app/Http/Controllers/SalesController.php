@@ -195,7 +195,7 @@ class SalesController extends Controller
 
             $this->salesRepository->updateSales($data, $id);
 
-            DB::table('payments')->insert([
+            $paymentData = [
                 'shop_id' => $sale->shop_id,
                 'sale_id' => $sale->id,
                 'amount' => $paymentAmount,
@@ -205,7 +205,9 @@ class SalesController extends Controller
                 'payment_date' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
+
+            DB::table('payments')->insert($paymentData);
 
             $shop = $this->shopRepository->find($sale->shop_id);
 
@@ -217,13 +219,9 @@ class SalesController extends Controller
                     'paid_amount' => $newPaidAmount,
                     'due_amount' => $newDueAmount,
                     'shop_name' => $shop ? $shop->shop_name : 'Unknown',
+                    'status' => $sale->status, // Include status
                 ],
-                'payment' => [
-                    'amount' => $paymentAmount,
-                    'payment_method' => $request->payment_method,
-                    'advance_balance' => $currentAdvanceBalance,
-                    'payment_date' => now()->toDateTimeString(),
-                ],
+                'payment' => $paymentData, // Pass full payment data
             ]);
         });
     }
@@ -235,10 +233,6 @@ class SalesController extends Controller
         }
 
         $shop = $this->shopRepository->find($sale->shop_id);
-        $advanceBalance = DB::table('payments')
-            ->where('shop_id', $sale->shop_id)
-            ->sum('advance_balance');
-
         $latestPayment = DB::table('payments')
             ->where('sale_id', $sale->id)
             ->orderBy('payment_date', 'desc')
@@ -252,12 +246,20 @@ class SalesController extends Controller
                 'paid_amount' => $sale->paid_amount,
                 'due_amount' => $sale->due_amount,
                 'shop_name' => $shop ? $shop->shop_name : 'Unknown',
+                'status' => $sale->status, // Include status
             ],
-            'payment' => [
-                'amount' => $latestPayment ? $latestPayment->amount : 0,
-                'payment_method' => $latestPayment ? $latestPayment->payment_method : '',
-                'advance_balance' => $advanceBalance,
-                'payment_date' => $latestPayment ? $latestPayment->payment_date : now()->toDateTimeString(),
+            'payment' => $latestPayment ? [
+                'amount' => $latestPayment->amount,
+                'payment_method' => $latestPayment->payment_method,
+                'advance_balance' => $latestPayment->advance_balance,
+                'payment_date' => $latestPayment->payment_date,
+                'status' => $latestPayment->status, // Include payment status
+            ] : [
+                'amount' => 0,
+                'payment_method' => '',
+                'advance_balance' => 0,
+                'payment_date' => now()->toDateTimeString(),
+                'status' => PaymentStatus::PENDING,
             ],
         ]);
     }

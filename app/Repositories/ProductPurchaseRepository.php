@@ -61,12 +61,18 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
         return collect(DB::select($query))->map(function ($item) {
             $variant = json_decode($item->variant_data, true) ?: [];
+            $quantity = $variant['quantity'] ?? 0;
+            $bottles_per_box = isset($variant['bottles_per_box']) && is_numeric($variant['bottles_per_box']) && $variant['bottles_per_box'] > 0
+                ? $variant['bottles_per_box']
+                : null;
             return [
                 'product_name' => $item->product_name,
                 'variant' => $variant['variant'] ?? 'N/A',
-                'quantity' => $variant['quantity'] ?? 0,
+                'quantity' => $quantity,
                 'unit_price' => $variant['unit_price'] ?? 0,
-                'total_value' => ($variant['quantity'] ?? 0) * ($variant['unit_price'] ?? 0),
+                'bottles_per_box' => $bottles_per_box,
+                'boxes' => $bottles_per_box ? floor($quantity / $bottles_per_box) : 0,
+                'total_value' => $quantity * ($variant['unit_price'] ?? 0),
             ];
         })->groupBy('product_name')->map(function ($group) {
             return [
@@ -76,10 +82,13 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                         'variant' => $item['variant'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
+                        'bottles_per_box' => $item['bottles_per_box'],
+                        'boxes' => $item['boxes'],
                         'total_value' => $item['total_value'],
                     ];
                 })->values(),
                 'total_quantity' => $group->sum('quantity'),
+                'total_boxes' => $group->sum('boxes'),
                 'total_value' => $group->sum('total_value'),
             ];
         })->values();

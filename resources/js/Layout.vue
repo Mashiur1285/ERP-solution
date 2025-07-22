@@ -499,6 +499,74 @@
                             Sales Report
                         </Link>
                     </div>
+
+                    <!-- Inventory Management Menu -->
+                    <button
+                        @click="toggleInventoryMenu"
+                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-indigo-700 transition duration-200"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-2 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                            />
+                        </svg>
+                        <span v-if="!collapsed">Inventory Management</span>
+                        <svg
+                            v-if="!collapsed"
+                            class="w-4 h-4 ml-auto transition-transform duration-200"
+                            :class="{ 'rotate-180': inventoryMenuOpen }"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            />
+                        </svg>
+                    </button>
+                    <div
+                        v-if="inventoryMenuOpen && !collapsed"
+                        class="pl-6 mt-2 space-y-1"
+                    >
+                        <Link
+                            href="/inventory/report"
+                            class="block px-4 py-2 text-sm rounded-md hover:bg-indigo-600 transition duration-200 flex items-center"
+                            :class="{
+                                'bg-indigo-600':
+                                    $page.url.startsWith('/inventory/report'),
+                            }"
+                            @click.stop="logNavigation('/inventory/report')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01M12 15h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            Inventory Report
+                        </Link>
+                    </div>
                 </nav>
             </div>
 
@@ -517,6 +585,7 @@ import { Link, usePage } from "@inertiajs/vue3";
 const suppliersMenuOpen = ref(false);
 const depositsMenuOpen = ref(true);
 const salesMenuOpen = ref(false);
+const inventoryMenuOpen = ref(false);
 const collapsed = ref(false);
 
 const toggleSuppliersMenu = () => {
@@ -543,6 +612,14 @@ const toggleSalesMenu = () => {
     salesMenuOpen.value = !salesMenuOpen.value;
 };
 
+const toggleInventoryMenu = () => {
+    console.log(
+        "Toggling Inventory Management Menu. Current state:",
+        inventoryMenuOpen.value
+    );
+    inventoryMenuOpen.value = !inventoryMenuOpen.value;
+};
+
 const logNavigation = (url) => {
     console.log("Navigating to:", url);
 };
@@ -551,14 +628,40 @@ const handleNavigationError = (error) => {
     console.error("Navigation error:", error);
 };
 
-// Automatically open Sales Management menu when on sales-related routes
+// Automatically open relevant menu when on related routes
 watch(
     () => usePage().url,
     (url) => {
         if (url.includes("/sales") || url.includes("/shops")) {
             salesMenuOpen.value = true;
-        } else {
+            depositsMenuOpen.value = false;
+            inventoryMenuOpen.value = false;
+            suppliersMenuOpen.value = false;
+        } else if (url.includes("/inventory")) {
+            inventoryMenuOpen.value = true;
             salesMenuOpen.value = false;
+            depositsMenuOpen.value = false;
+            suppliersMenuOpen.value = false;
+        } else if (
+            url.includes("/deposits") ||
+            url.includes("/categories") ||
+            url.includes("/brands") ||
+            url.includes("/purchases")
+        ) {
+            depositsMenuOpen.value = true;
+            salesMenuOpen.value = false;
+            inventoryMenuOpen.value = false;
+            suppliersMenuOpen.value = false;
+        } else if (url.includes("/suppliers")) {
+            suppliersMenuOpen.value = true;
+            depositsMenuOpen.value = false;
+            salesMenuOpen.value = false;
+            inventoryMenuOpen.value = false;
+        } else {
+            suppliersMenuOpen.value = false;
+            depositsMenuOpen.value = false;
+            salesMenuOpen.value = false;
+            inventoryMenuOpen.value = false;
         }
     },
     { immediate: true }

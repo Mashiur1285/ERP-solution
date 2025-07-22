@@ -1,5 +1,6 @@
 ```vue
 <template>
+    <div>{{ inventoryStock }}</div>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
     >
@@ -416,6 +417,7 @@
             </div>
         </div>
 
+        <!-- Sales Overview Section -->
         <div class="mt-10">
             <div
                 class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl"
@@ -779,7 +781,7 @@
 </template>
 
 <script setup>
-import { defineProps, ref, onMounted, computed, watch } from "vue";
+import { defineProps, ref, onMounted, computed, watch, reactive } from "vue";
 import { router } from "@inertiajs/vue3";
 import Chart from "chart.js/auto";
 import Layout from "@/Layout.vue";
@@ -791,10 +793,36 @@ const props = defineProps({
     topDeposits: Array,
     suppliers: Array,
     shops: Array,
-    monthlySales: Object,
+    monthlySales: {
+        type: Object,
+        default: () => ({
+            total_sales: 0,
+            paid_amount: 0,
+            due_amount: 0,
+            profit: 0,
+            loss: 0,
+        }),
+        validator: (sales) =>
+            typeof sales.total_sales === "number" &&
+            typeof sales.paid_amount === "number" &&
+            typeof sales.due_amount === "number" &&
+            typeof sales.profit === "number" &&
+            typeof sales.loss === "number",
+    },
     month: Number,
     year: Number,
-    inventoryStock: Array,
+    inventoryStock: {
+        type: Array,
+        default: () => [],
+        validator: (stock) =>
+            stock.every(
+                (item) =>
+                    typeof item.product_name === "string" &&
+                    typeof item.total_quantity === "number" &&
+                    typeof item.total_value === "number" &&
+                    Array.isArray(item.variants)
+            ),
+    },
 });
 
 // Translation object
@@ -879,10 +907,13 @@ let chartInstance = null;
 // Computed properties for total metrics
 const totalProducts = computed(() => props.inventoryStock.length);
 const totalQuantity = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + item.total_quantity, 0)
+    props.inventoryStock.reduce(
+        (sum, item) => sum + (item.total_quantity || 0),
+        0
+    )
 );
 const totalPurchaseValue = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + item.total_value, 0)
+    props.inventoryStock.reduce((sum, item) => sum + (item.total_value || 0), 0)
 );
 
 // Translation function
@@ -921,7 +952,7 @@ const toggleVariants = (index) => {
 const getVariantBarWidth = (quantity) => {
     const maxQuantity = Math.max(
         ...props.inventoryStock.flatMap((item) =>
-            item.variants.map((v) => v.quantity)
+            item.variants.map((v) => v.quantity || 0)
         ),
         1
     );
@@ -970,11 +1001,26 @@ const navigateToMonth = (month, year) => {
             const { total_sales, paid_amount, due_amount, profit, loss } =
                 page.props.monthlySales;
             const duration = 1000;
-            animateNumber(animatedTotalSales, total_sales, duration);
-            animateNumber(animatedPaidAmount, paid_amount, duration);
-            animateNumber(animatedDueAmount, due_amount, duration);
-            animateNumber(animatedProfit, profit, duration);
-            animateNumber(animatedLoss, loss, duration);
+            animateNumber(
+                animatedTotalSales,
+                total_sales || 0,
+                duration,
+                "totalSales"
+            );
+            animateNumber(
+                animatedPaidAmount,
+                paid_amount || 0,
+                duration,
+                "paidAmount"
+            );
+            animateNumber(
+                animatedDueAmount,
+                due_amount || 0,
+                duration,
+                "dueAmount"
+            );
+            animateNumber(animatedProfit, profit || 0, duration, "profit");
+            animateNumber(animatedLoss, loss || 0, duration, "loss");
         },
         onError: (errors) => {
             console.error("Navigation error:", errors);
@@ -998,7 +1044,8 @@ const animatedDueAmount = ref(0);
 const animatedProfit = ref(0);
 const animatedLoss = ref(0);
 const animatedTotalShops = ref(0);
-const animatedInventoryStock = ref([]);
+// Fixed: Use reactive instead of ref for complex object
+const animatedInventoryStock = reactive({});
 const selectedMonth = ref(props.month - 1);
 const selectedYear = ref(props.year);
 
@@ -1069,7 +1116,18 @@ const selectedMonthYear = computed(() => {
     });
 });
 
-const animateNumber = (refVar, targetValue, duration) => {
+const animateNumber = (refVar, targetValue, duration, context = "unknown") => {
+    if (!refVar || typeof refVar !== "object" || !("value" in refVar)) {
+        console.error(
+            `Invalid refVar in ${context}: Must be a Vue ref object`,
+            refVar
+        );
+        return;
+    }
+    if (isNaN(targetValue)) {
+        console.warn(`Invalid targetValue in ${context}:`, targetValue);
+        targetValue = 0;
+    }
     let startValue = refVar.value;
     const stepTime = 20;
     const steps = duration / stepTime;
@@ -1098,8 +1156,9 @@ const initializeChart = () => {
         const labels = props.inventoryStock.map((item) => item.product_name);
         const quantities = props.inventoryStock.map(
             (item) =>
-                animatedInventoryStock.value[item.product_name]
-                    ?.total_quantity || item.total_quantity
+                animatedInventoryStock[item.product_name]?.total_quantity ||
+                item.total_quantity ||
+                0
         );
 
         chartInstance = new Chart(inventoryChart.value, {
@@ -1110,8 +1169,8 @@ const initializeChart = () => {
                     {
                         label: t.value("totalQuantity"),
                         data: quantities,
-                        backgroundColor: "#4f46e5", // Solid indigo
-                        borderColor: "#6d28d9", // Darker purple
+                        backgroundColor: "#4f46e5",
+                        borderColor: "#6d28d9",
                         borderWidth: 1,
                         borderRadius: 8,
                         barPercentage: 0.4,
@@ -1213,6 +1272,69 @@ const initializeChart = () => {
     }
 };
 
+// Fixed: Simplified animation function for inventory stock
+const animateInventoryStock = (inventory, duration) => {
+    console.log("animateInventoryStock: Input inventory", inventory);
+
+    // Clear existing data
+    Object.keys(animatedInventoryStock).forEach((key) => {
+        delete animatedInventoryStock[key];
+    });
+
+    inventory.forEach((item) => {
+        if (
+            !item.product_name ||
+            typeof item.product_name !== "string" ||
+            isNaN(item.total_quantity) ||
+            isNaN(item.total_value)
+        ) {
+            console.warn(`Invalid inventory item:`, item);
+            return;
+        }
+
+        // Initialize with reactive properties
+        animatedInventoryStock[item.product_name] = {
+            total_quantity: 0,
+            total_value: 0,
+        };
+
+        // Animate to target values
+        const targetQuantity = item.total_quantity || 0;
+        const targetValue = item.total_value || 0;
+
+        let currentQuantity = 0;
+        let currentValue = 0;
+
+        const stepTime = 20;
+        const steps = duration / stepTime;
+        const quantityIncrement = targetQuantity / steps;
+        const valueIncrement = targetValue / steps;
+
+        const timer = setInterval(() => {
+            currentQuantity += quantityIncrement;
+            currentValue += valueIncrement;
+
+            if (currentQuantity >= targetQuantity) {
+                animatedInventoryStock[item.product_name].total_quantity =
+                    targetQuantity;
+                animatedInventoryStock[item.product_name].total_value =
+                    targetValue;
+                clearInterval(timer);
+            } else {
+                animatedInventoryStock[item.product_name].total_quantity =
+                    Math.ceil(currentQuantity);
+                animatedInventoryStock[item.product_name].total_value =
+                    Math.ceil(currentValue);
+            }
+        }, stepTime);
+    });
+
+    console.log(
+        "animateInventoryStock: Final animatedInventoryStock",
+        animatedInventoryStock
+    );
+};
+
 onMounted(() => {
     const duration = 2000;
 
@@ -1221,7 +1343,8 @@ onMounted(() => {
     animateNumber(
         animatedSuppliersCount,
         props.suppliersCount || props.suppliers.length || 0,
-        duration
+        duration,
+        "suppliersCount"
     );
 
     animatedWidths.value = new Array(props.topDeposits.length).fill(0);
@@ -1229,7 +1352,7 @@ onMounted(() => {
 
     props.topDeposits.forEach((deposit, index) => {
         let startDeposit = 0;
-        const targetDeposit = deposit.total_remaining_deposit;
+        const targetDeposit = deposit.total_remaining_deposit || 0;
         const targetWidth = getBarWidth(deposit.total_remaining_deposit);
         const incrementDeposit = targetDeposit / (duration / 20);
         const widthIncrement = targetWidth / (duration / 20);
@@ -1251,33 +1374,31 @@ onMounted(() => {
     });
 
     const { total_sales, paid_amount, due_amount, profit, loss } =
-        props.monthlySales;
-    animateNumber(animatedTotalSales, total_sales, duration);
-    animateNumber(animatedPaidAmount, paid_amount, duration);
-    animateNumber(animatedDueAmount, due_amount, duration);
-    animateNumber(animatedProfit, profit, duration);
-    animateNumber(animatedLoss, loss, duration);
+        props.monthlySales || {};
+    if (
+        typeof total_sales !== "number" ||
+        typeof paid_amount !== "number" ||
+        typeof due_amount !== "number" ||
+        typeof profit !== "number" ||
+        typeof loss !== "number"
+    ) {
+        console.warn("Invalid monthlySales data:", props.monthlySales);
+    } else {
+        animateNumber(animatedTotalSales, total_sales, duration, "totalSales");
+        animateNumber(animatedPaidAmount, paid_amount, duration, "paidAmount");
+        animateNumber(animatedDueAmount, due_amount, duration, "dueAmount");
+        animateNumber(animatedProfit, profit, duration, "profit");
+        animateNumber(animatedLoss, loss, duration, "loss");
+    }
 
-    animateNumber(animatedTotalShops, props.shops.length, duration);
+    animateNumber(
+        animatedTotalShops,
+        props.shops.length || 0,
+        duration,
+        "totalShops"
+    );
 
-    // Animate inventory stock
-    animatedInventoryStock.value = {};
-    props.inventoryStock.forEach((item) => {
-        animatedInventoryStock.value[item.product_name] = {
-            total_quantity: 0,
-            total_value: 0,
-        };
-        animateNumber(
-            animatedInventoryStock.value[item.product_name].total_quantity,
-            item.total_quantity,
-            duration
-        );
-        animateNumber(
-            animatedInventoryStock.value[item.product_name].total_value,
-            item.total_value,
-            duration
-        );
-    });
+    animateInventoryStock(props.inventoryStock, duration);
 
     initializeChart();
 });
@@ -1286,11 +1407,36 @@ watch(
     () => props.monthlySales,
     (newVal) => {
         const duration = 1000;
-        animateNumber(animatedTotalSales, newVal.total_sales, duration);
-        animateNumber(animatedPaidAmount, newVal.paid_amount, duration);
-        animateNumber(animatedDueAmount, newVal.due_amount, duration);
-        animateNumber(animatedProfit, newVal.profit, duration);
-        animateNumber(animatedLoss, newVal.loss, duration);
+        if (
+            typeof newVal.total_sales !== "number" ||
+            typeof newVal.paid_amount !== "number" ||
+            typeof newVal.due_amount !== "number" ||
+            typeof newVal.profit !== "number" ||
+            typeof newVal.loss !== "number"
+        ) {
+            console.warn("Invalid monthlySales data in watch:", newVal);
+            return;
+        }
+        animateNumber(
+            animatedTotalSales,
+            newVal.total_sales,
+            duration,
+            "totalSales"
+        );
+        animateNumber(
+            animatedPaidAmount,
+            newVal.paid_amount,
+            duration,
+            "paidAmount"
+        );
+        animateNumber(
+            animatedDueAmount,
+            newVal.due_amount,
+            duration,
+            "dueAmount"
+        );
+        animateNumber(animatedProfit, newVal.profit, duration, "profit");
+        animateNumber(animatedLoss, newVal.loss, duration, "loss");
     },
     { deep: true }
 );
@@ -1299,23 +1445,8 @@ watch(
     () => props.inventoryStock,
     (newVal) => {
         const duration = 1000;
-        animatedInventoryStock.value = {};
-        newVal.forEach((item) => {
-            animatedInventoryStock.value[item.product_name] = {
-                total_quantity: 0,
-                total_value: 0,
-            };
-            animateNumber(
-                animatedInventoryStock.value[item.product_name].total_quantity,
-                item.total_quantity,
-                duration
-            );
-            animateNumber(
-                animatedInventoryStock.value[item.product_name].total_value,
-                item.total_value,
-                duration
-            );
-        });
+        console.log("watch: props.inventoryStock changed", newVal);
+        animateInventoryStock(newVal, duration);
         initializeChart();
     },
     { deep: true }
@@ -1341,9 +1472,10 @@ watch(
 );
 
 const getBarWidth = (amount) => {
-    const maxAmount = computed(() =>
-        Math.max(...props.topDeposits.map((d) => d.total_remaining_deposit), 1)
-    ).value;
+    const maxAmount = Math.max(
+        ...props.topDeposits.map((d) => d.total_remaining_deposit || 0),
+        1
+    );
     const width = (amount / maxAmount) * 100;
     return Math.min(Math.max(width, 10), 100);
 };

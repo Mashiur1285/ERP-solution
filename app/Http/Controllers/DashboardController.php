@@ -64,7 +64,7 @@ class DashboardController extends Controller
             'suppliers' => $suppliers,
             'shops' => $shops,
             'topDeposits' => $topDeposits,
-            'inventoryStock' => $inventoryStock, // Add this
+            'inventoryStock' => $inventoryStock,
             'monthlySales' => [
                 'total_sales' => $totalSales,
                 'paid_amount' => $totalPaid,

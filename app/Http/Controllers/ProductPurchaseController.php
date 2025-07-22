@@ -105,5 +105,12 @@ class ProductPurchaseController extends Controller
             'purchaseHistory' => $this->productPurchaseRepository->purchaseHistory(),
         ]);
     }
+
+    public function inventoryReport()
+    {
+        return Inertia::render('InventoryManagement/InventoryReport', [
+            'inventoryStock' => $this->productPurchaseRepository->getInventoryStock(),
+        ]);
+    }
 }
 
