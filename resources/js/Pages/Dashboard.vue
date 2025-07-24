@@ -1,4 +1,5 @@
-```vue
+
+
 <template>
     <div>{{ inventoryStock }}</div>
     <div
