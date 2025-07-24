@@ -1,7 +1,6 @@
 
 
 <template>
-    <div>{{ inventoryStock }}</div>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
     >
@@ -286,28 +285,98 @@
                         </div>
                     </div>
 
-                    <!-- Total Metrics -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <!-- Total Metrics with Boxes -->
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+                    >
                         <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
-                            <p class="text-sm text-gray-600">
-                                {{ t("totalProducts") }}
-                            </p>
+                            <div class="flex items-center mb-1">
+                                <svg
+                                    class="w-4 h-4 text-indigo-600 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                    ></path>
+                                </svg>
+                                <p class="text-sm text-gray-600">
+                                    {{ t("totalProducts") }}
+                                </p>
+                            </div>
                             <p class="text-2xl font-bold text-indigo-600">
                                 {{ toBengaliNumber(totalProducts) }}
                             </p>
                         </div>
                         <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
-                            <p class="text-sm text-gray-600">
-                                {{ t("totalQuantity") }}
+                            <div class="flex items-center mb-1">
+                                <svg
+                                    class="w-4 h-4 text-indigo-600 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                    ></path>
+                                </svg>
+                                <p class="text-sm text-gray-600">
+                                    {{ t("totalBoxes") }}
+                                </p>
+                            </div>
+                            <p class="text-2xl font-bold text-indigo-600">
+                                {{ toBengaliNumber(totalBoxes) }}
                             </p>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
+                            <div class="flex items-center mb-1">
+                                <svg
+                                    class="w-4 h-4 text-indigo-600 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                                    ></path>
+                                </svg>
+                                <p class="text-sm text-gray-600">
+                                    {{ t("totalQuantity") }}
+                                </p>
+                            </div>
                             <p class="text-2xl font-bold text-indigo-600">
                                 {{ toBengaliNumber(totalQuantity) }}
                             </p>
                         </div>
                         <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
-                            <p class="text-sm text-gray-600">
-                                {{ t("totalPurchaseValue") }}
-                            </p>
+                            <div class="flex items-center mb-1">
+                                <svg
+                                    class="w-4 h-4 text-indigo-600 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    ></path>
+                                </svg>
+                                <p class="text-sm text-gray-600">
+                                    {{ t("totalPurchaseValue") }}
+                                </p>
+                            </div>
                             <p class="text-2xl font-bold text-indigo-600">
                                 ৳{{ toBengaliNumber(totalPurchaseValue) }}
                             </p>
@@ -327,41 +396,125 @@
                         <div
                             v-for="(item, index) in filteredInventory"
                             :key="index"
-                            class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                            class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-gray-100"
                             @click="toggleVariants(index)"
                         >
-                            <div class="flex justify-between items-center">
-                                <div>
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
                                     <h3
-                                        class="text-lg font-semibold text-gray-800"
+                                        class="text-lg font-semibold text-gray-800 mb-3"
                                     >
                                         {{ item.product_name }}
                                     </h3>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalQuantity") }}:
-                                        <span
-                                            class="font-semibold text-indigo-600"
-                                            >{{
-                                                toBengaliNumber(
-                                                    item.total_quantity
-                                                )
-                                            }}</span
+
+                                    <!-- Product Summary Cards -->
+                                    <div
+                                        class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"
+                                    >
+                                        <div
+                                            class="bg-emerald-50 p-3 rounded-lg border border-emerald-200"
                                         >
-                                    </p>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalValue") }}:
-                                        <span
-                                            class="font-semibold text-indigo-600"
-                                            >৳{{
-                                                toBengaliNumber(
-                                                    item.total_value
-                                                )
-                                            }}</span
+                                            <div class="flex items-center mb-1">
+                                                <svg
+                                                    class="w-4 h-4 text-emerald-600 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                    ></path>
+                                                </svg>
+                                                <span
+                                                    class="text-xs text-gray-600 uppercase font-medium"
+                                                    >{{ t("totalBoxes") }}</span
+                                                >
+                                            </div>
+                                            <span
+                                                class="text-lg font-bold text-emerald-600"
+                                            >
+                                                {{
+                                                    toBengaliNumber(
+                                                        item.total_boxes || 0
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+
+                                        <div
+                                            class="bg-blue-50 p-3 rounded-lg border border-blue-200"
                                         >
-                                    </p>
+                                            <div class="flex items-center mb-1">
+                                                <svg
+                                                    class="w-4 h-4 text-blue-600 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                                                    ></path>
+                                                </svg>
+                                                <span
+                                                    class="text-xs text-gray-600 uppercase font-medium"
+                                                    >{{
+                                                        t("totalQuantity")
+                                                    }}</span
+                                                >
+                                            </div>
+                                            <span
+                                                class="text-lg font-bold text-blue-600"
+                                            >
+                                                {{
+                                                    toBengaliNumber(
+                                                        item.total_quantity
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+
+                                        <div
+                                            class="bg-purple-50 p-3 rounded-lg border border-purple-200"
+                                        >
+                                            <div class="flex items-center mb-1">
+                                                <svg
+                                                    class="w-4 h-4 text-purple-600 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    ></path>
+                                                </svg>
+                                                <span
+                                                    class="text-xs text-gray-600 uppercase font-medium"
+                                                    >{{ t("totalValue") }}</span
+                                                >
+                                            </div>
+                                            <span
+                                                class="text-lg font-bold text-purple-600"
+                                            >
+                                                ৳{{
+                                                    toBengaliNumber(
+                                                        item.total_value
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div
-                                    class="p-2 bg-indigo-100 rounded-full flex items-center justify-center"
+                                    class="p-2 bg-indigo-100 rounded-full flex items-center justify-center ml-4"
                                 >
                                     <svg
                                         class="w-6 h-6 text-indigo-600 transform transition-transform"
@@ -382,25 +535,139 @@
                                     </svg>
                                 </div>
                             </div>
+
+                            <!-- Variant Details -->
                             <div
                                 v-if="expandedVariants[index]"
-                                class="mt-4 space-y-2 animate-slide-down"
+                                class="mt-6 space-y-3 animate-slide-down border-t border-gray-200 pt-4"
                             >
+                                <h4
+                                    class="text-sm font-semibold text-gray-700 mb-3"
+                                >
+                                    {{ t("variantDetails") }}
+                                </h4>
                                 <div
                                     v-for="(variant, vIndex) in item.variants"
                                     :key="vIndex"
-                                    class="flex justify-between items-center text-sm text-gray-600"
+                                    class="bg-gray-50 p-4 rounded-lg border border-gray-200"
                                 >
-                                    <span>{{ variant.variant }}</span>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="font-semibold">{{
-                                            toBengaliNumber(variant.quantity)
-                                        }}</span>
+                                    <div
+                                        class="grid grid-cols-1 sm:grid-cols-5 gap-3"
+                                    >
+                                        <div class="text-center">
+                                            <span
+                                                class="text-xs text-gray-500 uppercase font-medium block mb-1"
+                                                >{{ t("variant") }}</span
+                                            >
+                                            <span
+                                                class="text-sm font-semibold text-gray-800"
+                                                >{{ variant.variant }}ml</span
+                                            >
+                                        </div>
+
+                                        <div class="text-center">
+                                            <span
+                                                class="text-xs text-gray-500 uppercase font-medium block mb-1"
+                                                >{{ t("boxes") }}</span
+                                            >
+                                            <span
+                                                class="text-sm font-semibold text-emerald-600 flex items-center justify-center"
+                                            >
+                                                <svg
+                                                    class="w-3 h-3 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                    ></path>
+                                                </svg>
+                                                {{
+                                                    toBengaliNumber(
+                                                        variant.boxes || 0
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+
+                                        <div class="text-center">
+                                            <span
+                                                class="text-xs text-gray-500 uppercase font-medium block mb-1"
+                                                >{{ t("quantity") }}</span
+                                            >
+                                            <span
+                                                class="text-sm font-semibold text-blue-600"
+                                                >{{
+                                                    toBengaliNumber(
+                                                        variant.quantity
+                                                    )
+                                                }}</span
+                                            >
+                                        </div>
+
+                                        <div class="text-center">
+                                            <span
+                                                class="text-xs text-gray-500 uppercase font-medium block mb-1"
+                                                >{{ t("unitPrice") }}</span
+                                            >
+                                            <span
+                                                class="text-sm font-semibold text-gray-800"
+                                                >৳{{
+                                                    toBengaliNumber(
+                                                        variant.unit_price
+                                                    )
+                                                }}</span
+                                            >
+                                        </div>
+
+                                        <div class="text-center">
+                                            <span
+                                                class="text-xs text-gray-500 uppercase font-medium block mb-1"
+                                                >{{ t("totalValue") }}</span
+                                            >
+                                            <span
+                                                class="text-sm font-semibold text-purple-600"
+                                                >৳{{
+                                                    toBengaliNumber(
+                                                        variant.total_value
+                                                    )
+                                                }}</span
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <!-- Progress Bar for Variant Quantity -->
+                                    <div class="mt-3">
                                         <div
-                                            class="w-24 bg-gray-200 rounded-full h-2"
+                                            class="flex justify-between items-center mb-1"
+                                        >
+                                            <span
+                                                class="text-xs text-gray-500"
+                                                >{{ t("stockLevel") }}</span
+                                            >
+                                            <span class="text-xs text-gray-600"
+                                                >{{
+                                                    toBengaliNumber(
+                                                        variant.quantity
+                                                    )
+                                                }}
+                                                /
+                                                {{
+                                                    toBengaliNumber(
+                                                        getMaxVariantQuantity()
+                                                    )
+                                                }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="w-full bg-gray-200 rounded-full h-2"
                                         >
                                             <div
-                                                class="h-2 rounded-full bg-indigo-500 transition-all duration-1000"
+                                                class="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-1000"
                                                 :style="{
                                                     width:
                                                         getVariantBarWidth(
@@ -855,11 +1122,18 @@ const translations = {
         totalQuantity: "Total Quantity",
         totalValue: "Total Value",
         totalProducts: "Total Products",
+        totalBoxes: "Total Boxes",
         totalPurchaseValue: "Total Purchase Value",
         searchProducts: "Search products...",
         showChart: "Show Chart",
         showList: "Show List",
         products: "Products",
+        variantDetails: "Variant Details",
+        variant: "Variant",
+        boxes: "Boxes",
+        quantity: "Quantity",
+        unitPrice: "Unit Price",
+        stockLevel: "Stock Level",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -888,11 +1162,18 @@ const translations = {
         totalQuantity: "মোট পরিমাণ",
         totalValue: "মোট মূল্য",
         totalProducts: "মোট পণ্য",
+        totalBoxes: "মোট বক্স",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
         searchProducts: "পণ্য অনুসন্ধান করুন...",
         showChart: "চার্ট দেখান",
         showList: "তালিকা দেখান",
         products: "পণ্য",
+        variantDetails: "ভেরিয়েন্ট বিবরণ",
+        variant: "ভেরিয়েন্ট",
+        boxes: "বক্স",
+        quantity: "পরিমাণ",
+        unitPrice: "একক দাম",
+        stockLevel: "স্টক লেভেল",
     },
 };
 
@@ -915,6 +1196,11 @@ const totalQuantity = computed(() =>
 );
 const totalPurchaseValue = computed(() =>
     props.inventoryStock.reduce((sum, item) => sum + (item.total_value || 0), 0)
+);
+
+// NEW: Total boxes computation
+const totalBoxes = computed(() =>
+    props.inventoryStock.reduce((sum, item) => sum + (item.total_boxes || 0), 0)
 );
 
 // Translation function
@@ -951,13 +1237,18 @@ const toggleVariants = (index) => {
 
 // Calculate progress bar width for variants
 const getVariantBarWidth = (quantity) => {
-    const maxQuantity = Math.max(
+    const maxQuantity = getMaxVariantQuantity();
+    return Math.min((quantity / maxQuantity) * 100, 100);
+};
+
+// Get maximum variant quantity for progress bar calculations
+const getMaxVariantQuantity = () => {
+    return Math.max(
         ...props.inventoryStock.flatMap((item) =>
             item.variants.map((v) => v.quantity || 0)
         ),
         1
     );
-    return Math.min((quantity / maxQuantity) * 100, 100);
 };
 
 // Filter inventory based on search query

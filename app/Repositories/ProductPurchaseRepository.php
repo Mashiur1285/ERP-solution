@@ -51,20 +51,22 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
     public function getInventoryStock(): Collection
     {
         $query = "
-            SELECT
-                products.name as product_name,
-                variant_data
-            FROM products
-            LEFT JOIN LATERAL jsonb_array_elements(COALESCE(products.metadata->'variants', '[]'::jsonb)) as variant_data ON true
-            WHERE products.deleted_at IS NULL
-        ";
+        SELECT
+            products.name as product_name,
+            variant_data
+        FROM products
+        LEFT JOIN LATERAL jsonb_array_elements(COALESCE(products.metadata->'variants', '[]'::jsonb)) as variant_data ON true
+        WHERE products.deleted_at IS NULL
+    ";
 
-        return collect(DB::select($query))->map(function ($item) {
+        // First, collect all individual variant records
+        $rawData = collect(DB::select($query))->map(function ($item) {
             $variant = json_decode($item->variant_data, true) ?: [];
             $quantity = $variant['quantity'] ?? 0;
             $bottles_per_box = isset($variant['bottles_per_box']) && is_numeric($variant['bottles_per_box']) && $variant['bottles_per_box'] > 0
                 ? $variant['bottles_per_box']
                 : null;
+
             return [
                 'product_name' => $item->product_name,
                 'variant' => $variant['variant'] ?? 'N/A',
@@ -74,26 +76,39 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'boxes' => $bottles_per_box ? floor($quantity / $bottles_per_box) : 0,
                 'total_value' => $quantity * ($variant['unit_price'] ?? 0),
             ];
-        })->groupBy('product_name')->map(function ($group) {
+        });
+
+        // Group by product_name first, then by variant within each product
+        return $rawData->groupBy('product_name')->map(function ($productGroup, $productName) {
+            // Within each product, group by variant name and sum the quantities
+            $variantGroups = $productGroup->groupBy('variant')->map(function ($variantGroup, $variantName) {
+                // Sum all quantities, boxes, and total_values for the same variant
+                $totalQuantity = $variantGroup->sum('quantity');
+                $totalBoxes = $variantGroup->sum('boxes');
+                $totalValue = $variantGroup->sum('total_value');
+
+                // Use the first item's unit_price and bottles_per_box (assuming they're the same for same variant)
+                $firstItem = $variantGroup->first();
+
+                return [
+                    'variant' => $variantName,
+                    'quantity' => $totalQuantity,
+                    'unit_price' => $firstItem['unit_price'],
+                    'bottles_per_box' => $firstItem['bottles_per_box'],
+                    'boxes' => $totalBoxes,
+                    'total_value' => $totalValue,
+                ];
+            });
+
             return [
-                'product_name' => $group->first()['product_name'],
-                'variants' => $group->map(function ($item) {
-                    return [
-                        'variant' => $item['variant'],
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['unit_price'],
-                        'bottles_per_box' => $item['bottles_per_box'],
-                        'boxes' => $item['boxes'],
-                        'total_value' => $item['total_value'],
-                    ];
-                })->values(),
-                'total_quantity' => $group->sum('quantity'),
-                'total_boxes' => $group->sum('boxes'),
-                'total_value' => $group->sum('total_value'),
+                'product_name' => $productName,
+                'variants' => $variantGroups->values(),
+                'total_quantity' => $variantGroups->sum('quantity'),
+                'total_boxes' => $variantGroups->sum('boxes'),
+                'total_value' => $variantGroups->sum('total_value'),
             ];
         })->values();
     }
-
     public function updateInventory(Model $product, string $variant, int $quantity): void
     {
         // Existing updateInventory method remains unchanged
