@@ -302,14 +302,15 @@
 
             <div class="flex justify-end mt-8 space-x-4">
                 <button
-                    @click="submitPayment"
+                    @click="openModal"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:from-blue-700 hover:to-indigo-700 transition duration-200 flex items-center"
                     :disabled="
                         !paymentForm.payment_method ||
                         (paymentForm.payment_method === 'mfs' &&
                             !paymentForm.mfs_provider) ||
                         paymentError ||
-                        isSubmitting
+                        isSubmitting ||
+                        paymentForm.amount <= 0
                     "
                 >
                     <svg
@@ -364,6 +365,202 @@
             </div>
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div
+        v-if="showModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        role="dialog"
+        aria-labelledby="modal-title"
+    >
+        <div
+            class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-xl animate-fade-in"
+        >
+            <div class="flex items-center justify-between mb-4">
+                <h3
+                    id="modal-title"
+                    class="text-lg font-semibold text-gray-800 flex items-center"
+                >
+                    <svg
+                        class="w-6 h-6 text-indigo-600 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                    </svg>
+                    Confirm Payment
+                </h3>
+                <button
+                    @click="closeModal"
+                    class="text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label="Close modal"
+                >
+                    <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    </svg>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">
+                    Are you sure you want to record this payment?
+                </p>
+                <div
+                    class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-xl border border-indigo-200"
+                >
+                    <h4 class="text-md font-semibold text-gray-800 mb-3">
+                        Payment Summary
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <svg
+                                class="w-5 h-5 text-blue-600 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <div>
+                                <p class="text-sm text-gray-600">
+                                    Payment Amount
+                                </p>
+                                <p class="font-bold text-blue-600">
+                                    ৳{{ paymentForm.amount.toLocaleString() }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <svg
+                                class="w-5 h-5 text-orange-600 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                />
+                            </svg>
+                            <div>
+                                <p class="text-sm text-gray-600">
+                                    Payment Method
+                                </p>
+                                <p class="font-bold text-orange-600">
+                                    {{
+                                        paymentForm.payment_method === "mfs"
+                                            ? paymentForm.mfs_provider
+                                            : paymentForm.payment_method
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <svg
+                                class="w-5 h-5 text-indigo-600 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-toolbar="round"
+                                    stroke-width="2"
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <div>
+                                <p class="text-sm text-gray-600">Due Amount</p>
+                                <p
+                                    class="font-bold"
+                                    :class="
+                                        dueAmount >= 0
+                                            ? 'text-indigo-600'
+                                            : 'text-red-600'
+                                    "
+                                >
+                                    ৳{{ dueAmount.toLocaleString() }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <svg
+                                class="w-5 h-5 text-purple-600 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                />
+                            </svg>
+                            <div>
+                                <p class="text-sm text-gray-600">
+                                    Invoice Number
+                                </p>
+                                <p class="font-bold text-purple-600">
+                                    {{ sale.invoice_number }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button
+                    @click="closeModal"
+                    class="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+                >
+                    Cancel
+                </button>
+                <button
+                    @click="confirmPayment"
+                    class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2"
+                    :disabled="isSubmitting"
+                >
+                    <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                        />
+                    </svg>
+                    <span>Confirm Payment</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -396,6 +593,7 @@ const paymentForm = ref({
 const dueAmount = ref(props.sale.due_amount ?? 0);
 const paymentError = ref<string | null>(null);
 const isSubmitting = ref(false);
+const showModal = ref(false);
 
 const maxPaymentAmount = computed(() => {
     return Number(
@@ -421,6 +619,8 @@ const calculateDue = () => {
         paymentForm.value.amount = 0;
         payment = 0;
         paymentError.value = "Payment amount must be a positive number.";
+    } else if (payment === 0) {
+        paymentError.value = "Payment amount must be greater than zero.";
     } else {
         paymentError.value = null;
     }
@@ -429,13 +629,32 @@ const calculateDue = () => {
 };
 
 const onPaymentMethodChange = () => {
-    if (paymentForm.value.payment_method !== "mfs") {
+    if (paymentForm.payment_method !== "mfs") {
         paymentForm.value.mfs_provider = "";
     }
 };
 
-const submitPayment = () => {
+const openModal = () => {
+    if (
+        !paymentForm.value.payment_method ||
+        (paymentForm.value.payment_method === "mfs" &&
+            !paymentForm.value.mfs_provider) ||
+        paymentError.value ||
+        isSubmitting.value ||
+        paymentForm.value.amount <= 0
+    ) {
+        return;
+    }
+    showModal.value = true;
+};
+
+const closeModal = () => {
+    showModal.value = false;
+};
+
+const confirmPayment = () => {
     isSubmitting.value = true;
+    showModal.value = false;
     const method =
         paymentForm.value.payment_method === "mfs"
             ? paymentForm.value.mfs_provider
@@ -462,7 +681,7 @@ const submitPayment = () => {
         {
             onSuccess: () => {
                 console.log("Payment submitted successfully");
-                router.visit(`/sales/cash-memo/${props.sale.id}`); // Redirect to cash memo
+                router.visit(`/sales/cash-memo/${props.sale.id}`);
             },
             onError: (errors) => {
                 console.error("Payment submission errors:", errors);
