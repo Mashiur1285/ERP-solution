@@ -1,6 +1,7 @@
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-3xl mx-auto rounded-xl shadow-sm print:bg-white print:shadow-none print:border-none"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle -->
         <div class="flex justify-end space-x-2 mb-4 print:hidden">
@@ -143,10 +144,20 @@
                             >
                                 {{ getTranslation("saleStatus") }}
                             </td>
-                            <td
-                                class="px-6 py-3 text-gray-900 text-sm text-right"
-                            >
-                                {{ sale.status }}
+                            <td class="px-6 py-3 text-sm text-right">
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-medium capitalize"
+                                    :class="{
+                                        'bg-yellow-100 text-yellow-800':
+                                            sale.status === 'pending',
+                                        'bg-blue-100 text-blue-800':
+                                            sale.status === 'in_progress',
+                                        'bg-green-100 text-green-800':
+                                            sale.status === 'completed',
+                                    }"
+                                >
+                                    {{ sale.status }}
+                                </span>
                             </td>
                         </tr>
                         <tr class="hover:bg-gray-50 transition-colors">
@@ -155,10 +166,20 @@
                             >
                                 {{ getTranslation("paymentStatus") }}
                             </td>
-                            <td
-                                class="px-6 py-3 text-gray-900 text-sm text-right"
-                            >
-                                {{ payment.status }}
+                            <td class="px-6 py-3 text-sm text-right">
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-medium capitalize"
+                                    :class="{
+                                        'bg-red-100 text-red-800':
+                                            payment.status === 'unpaid',
+                                        'bg-yellow-100 text-yellow-800':
+                                            payment.status === 'pending',
+                                        'bg-green-100 text-green-800':
+                                            payment.status === 'paid',
+                                    }"
+                                >
+                                    {{ payment.status }}
+                                </span>
                             </td>
                         </tr>
                     </tbody>
@@ -278,10 +299,6 @@ const translations = {
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 
-const formatCurrency = (value: number) => {
-    return `৳${toBengaliNumber(Number(value).toFixed(2))}`;
-};
-
 const formatDate = (date: string) => {
     return new Date(date).toLocaleString(currentLanguage.value, {
         year: "numeric",
@@ -327,13 +344,25 @@ const goToSales = () => {
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+/* Import Kalpurush font from provided CDN */
+@import url("https://fonts.maateen.me/kalpurush/font.css");
 
-body,
-html {
-    font-family: "Noto Serif Bengali", Arial, sans-serif;
+/* Apply Kalpurush font for Bangla text */
+.bangla-font {
+    font-family: "Kalpurush", serif;
 }
 
+/* Ensure specific elements use Kalpurush for Bangla */
+.bangla-font h1,
+.bangla-font h2,
+.bangla-font p,
+.bangla-font td,
+.bangla-font span,
+.bangla-font button {
+    font-family: "Kalpurush", serif;
+}
+
+/* Remove previous Noto Serif Bengali import and body/html font */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -365,25 +394,6 @@ html {
     animation: pulseSlow 2s infinite;
 }
 
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-tr {
-    border-bottom: 1px solid #e5e7eb;
-}
-
-td {
-    padding: 12px 0;
-}
-
-button:hover svg {
-    transform: scale(1.1);
-    transition: transform 0.2s ease-in-out;
-}
-
-/* Print Styles */
 @media print {
     .print\:hidden {
         display: none;

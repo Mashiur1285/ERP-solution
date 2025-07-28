@@ -92,7 +92,7 @@ class ProductPurchaseController extends Controller
 
         $latestDeposit = $this->depositRepository->findTheLatestDepositForTheSupplier($data['supplier_id']);
         if ($latestDeposit) {
-            //update the balance_remaining is_used fields in deposit table
+
             $this->depositRepository->updateDepositTable($totalAmountForAllVariants, $latestDeposit);
         }
         return redirect()->route('purchases.index')->with('success', 'Purchase added successfully');

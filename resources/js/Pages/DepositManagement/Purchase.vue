@@ -1,6 +1,8 @@
+```vue
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Toast Notification -->
         <div
@@ -37,7 +39,7 @@
                     d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
             </svg>
-            <span class="font-medium text-white">{{ toastMessage }}</span>
+            <span class="font-medium text-white">{{ t(toastMessage) }}</span>
             <button
                 @click="closeToast"
                 class="ml-2 text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
@@ -87,7 +89,7 @@
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                             />
                         </svg>
-                        Confirm Purchase
+                        {{ t("confirmPurchase") }}
                     </h3>
                     <button
                         @click="closeModal"
@@ -111,13 +113,13 @@
                 </div>
                 <div class="mb-6">
                     <p class="text-gray-600 mb-4">
-                        Are you sure you want to add this purchase?
+                        {{ t("confirmPurchasePrompt") }}
                     </p>
                     <div
                         class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-xl border border-indigo-200"
                     >
                         <h4 class="text-md font-semibold text-gray-800 mb-3">
-                            Purchase Summary
+                            {{ t("purchaseSummary") }}
                         </h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex items-center">
@@ -136,10 +138,10 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Items
+                                        {{ t("totalItems") }}
                                     </p>
                                     <p class="font-bold text-indigo-600">
-                                        {{ totalQuantity.toLocaleString() }}
+                                        {{ toBengaliNumber(totalQuantity) }}
                                     </p>
                                 </div>
                             </div>
@@ -159,10 +161,14 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Variants
+                                        {{ t("totalVariants") }}
                                     </p>
                                     <p class="font-bold text-orange-600">
-                                        {{ productForm.variants.length }}
+                                        {{
+                                            toBengaliNumber(
+                                                productForm.variants.length
+                                            )
+                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -182,10 +188,10 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Boxes
+                                        {{ t("totalBoxes") }}
                                     </p>
                                     <p class="font-bold text-blue-600">
-                                        {{ totalBoxes.toLocaleString() }}
+                                        {{ toBengaliNumber(totalBoxes) }}
                                     </p>
                                 </div>
                             </div>
@@ -205,10 +211,49 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Cost
+                                        {{ t("totalCost") }}
                                     </p>
                                     <p class="font-bold text-green-600">
-                                        ৳{{ totalCost.toLocaleString() }}
+                                        ৳{{ toBengaliNumber(totalCost) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center col-span-2">
+                                <svg
+                                    class="w-5 h-5 text-purple-600 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                                <div>
+                                    <p class="text-sm text-gray-600">
+                                        {{ t("remainingDeposit") }}
+                                    </p>
+                                    <p
+                                        class="text-lg font-bold"
+                                        :class="{
+                                            'text-green-600':
+                                                remainingDepositAfterPurchase >=
+                                                0,
+                                            'text-red-600':
+                                                remainingDepositAfterPurchase <
+                                                0,
+                                        }"
+                                    >
+                                        ৳{{
+                                            toBengaliNumber(
+                                                remainingDepositAfterPurchase.toFixed(
+                                                    2
+                                                )
+                                            )
+                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -220,12 +265,14 @@
                         @click="closeModal"
                         class="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
                     >
-                        Cancel
+                        {{ t("cancel") }}
                     </button>
                     <button
                         @click="confirmPurchase"
                         class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2"
-                        :disabled="isLoading"
+                        :disabled="
+                            isLoading || remainingDepositAfterPurchase < 0
+                        "
                     >
                         <svg
                             class="w-5 h-5"
@@ -240,7 +287,7 @@
                                 d="M5 13l4 4L19 7"
                             />
                         </svg>
-                        <span>Confirm</span>
+                        <span>{{ t("confirm") }}</span>
                     </button>
                 </div>
             </div>
@@ -270,8 +317,32 @@
                         />
                     </svg>
                 </div>
-                Purchase Management
+                {{ t("purchaseManagement") }}
             </h1>
+            <div class="flex space-x-2">
+                <button
+                    @click="changeLanguage('en')"
+                    :class="[
+                        'px-4 py-2 rounded-md font-medium transition-colors',
+                        currentLanguage === 'en'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                    ]"
+                >
+                    {{ translations.en.languageLabel }}
+                </button>
+                <button
+                    @click="changeLanguage('bn')"
+                    :class="[
+                        'px-4 py-2 rounded-md font-medium transition-colors',
+                        currentLanguage === 'bn'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                    ]"
+                >
+                    {{ translations.bn.languageLabel }}
+                </button>
+            </div>
         </div>
 
         <!-- Main Form Container -->
@@ -314,7 +385,7 @@
                                 />
                             </svg>
                         </div>
-                        Add New Purchase
+                        {{ t("addNewPurchase") }}
                     </h2>
                 </div>
 
@@ -324,7 +395,7 @@
                         class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
                     >
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">
-                            Product Information
+                            {{ t("productInformation") }}
                         </h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -333,7 +404,7 @@
                                     for="product_name"
                                     class="block text-sm font-semibold text-gray-700 mb-2"
                                 >
-                                    Product Name*
+                                    {{ t("productName") }}*
                                 </label>
                                 <div class="relative">
                                     <div
@@ -357,7 +428,7 @@
                                         v-model="productForm.product_name"
                                         id="product_name"
                                         type="text"
-                                        placeholder="Enter product name"
+                                        :placeholder="t('enterProductName')"
                                         class="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                         :class="{
                                             'border-red-400 focus:border-red-500 focus:ring-red-200':
@@ -373,7 +444,7 @@
                                     "
                                     class="mt-2 text-sm text-red-600"
                                 >
-                                    Product name is required
+                                    {{ t("productNameRequired") }}
                                 </p>
                             </div>
 
@@ -382,7 +453,7 @@
                                     for="category_id"
                                     class="block text-sm font-semibold text-gray-700 mb-2"
                                 >
-                                    Category*
+                                    {{ t("category") }}*
                                 </label>
                                 <div class="relative">
                                     <div
@@ -398,7 +469,7 @@
                                                 stroke-linecap="round"
                                                 stroke-linejoin="round"
                                                 stroke-width="2"
-                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0 Anita2 0 012-2h10"
+                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h10a2 2 0 012 2v2"
                                             />
                                         </svg>
                                     </div>
@@ -414,7 +485,7 @@
                                         required
                                     >
                                         <option value="" disabled>
-                                            Select a category
+                                            {{ t("selectCategory") }}
                                         </option>
                                         <option
                                             v-for="category in categories"
@@ -448,7 +519,7 @@
                                     "
                                     class="mt-2 text-sm text-red-600"
                                 >
-                                    Please select a category
+                                    {{ t("categoryRequired") }}
                                 </p>
                             </div>
 
@@ -457,23 +528,29 @@
                                     for="brand_id"
                                     class="block text-sm font-semibold text-gray-700 mb-2"
                                 >
-                                    Brand*
+                                    {{ t("brand") }}*
                                 </label>
                                 <div class="relative">
                                     <div
                                         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                                     >
                                         <svg
-                                            class="w-5 h-5 text-gray-400"
+                                            xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
-                                            stroke="currentColor"
                                             viewBox="0 0 24 24"
+                                            stroke-width="1.5"
+                                            stroke="currentColor"
+                                            class="w-5 h-5 text-gray-400"
                                         >
                                             <path
                                                 stroke-linecap="round"
                                                 stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
+                                            />
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M6 6h.008v.008H6V6Z"
                                             />
                                         </svg>
                                     </div>
@@ -489,7 +566,7 @@
                                         required
                                     >
                                         <option value="" disabled>
-                                            Select a brand
+                                            {{ t("selectBrand") }}
                                         </option>
                                         <option
                                             v-for="brand in brands"
@@ -521,7 +598,7 @@
                                     v-if="isSubmitted && !productForm.brand_id"
                                     class="mt-2 text-sm text-red-600"
                                 >
-                                    Please select a brand
+                                    {{ t("brandRequired") }}
                                 </p>
                             </div>
 
@@ -530,7 +607,7 @@
                                     for="purchase_supplier_id"
                                     class="block text-sm font-semibold text-gray-700 mb-2"
                                 >
-                                    Supplier*
+                                    {{ t("supplier") }}*
                                 </label>
                                 <div class="relative">
                                     <div
@@ -562,7 +639,7 @@
                                         required
                                     >
                                         <option value="" disabled>
-                                            Select a supplier
+                                            {{ t("selectSupplier") }}
                                         </option>
                                         <option
                                             v-for="supplier in suppliers"
@@ -570,8 +647,10 @@
                                             :value="supplier.id"
                                         >
                                             {{ supplier.company_name }} (৳{{
-                                                supplier.remaining_deposit.toFixed(
-                                                    2
+                                                toBengaliNumber(
+                                                    supplier.remaining_deposit.toFixed(
+                                                        2
+                                                    )
                                                 )
                                             }})
                                         </option>
@@ -600,11 +679,10 @@
                                     "
                                     class="mt-2 text-sm text-red-600"
                                 >
-                                    Please select a supplier
+                                    {{ t("supplierRequired") }}
                                 </p>
                                 <p class="mt-2 text-sm text-gray-500">
-                                    Remaining deposit amount is shown in
-                                    parentheses
+                                    {{ t("remainingDepositNote") }}
                                 </p>
                             </div>
                         </div>
@@ -616,7 +694,7 @@
                     >
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-semibold text-gray-800">
-                                Product Variants
+                                {{ t("productVariants") }}
                             </h3>
                             <button
                                 @click="addVariant"
@@ -635,7 +713,7 @@
                                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                                     />
                                 </svg>
-                                Add Variant
+                                {{ t("addVariant") }}
                             </button>
                         </div>
 
@@ -651,13 +729,14 @@
                                     <h4
                                         class="text-md font-medium text-gray-700"
                                     >
-                                        Variant {{ index + 1 }}
+                                        {{ t("variant") }}
+                                        {{ toBengaliNumber(index + 1) }}
                                     </h4>
                                     <button
                                         v-if="productForm.variants.length > 1"
                                         @click="removeVariant(index)"
                                         class="text-red-600 hover:text-red-800 p-2 rounded-full transition duration-300 bg-red-100 hover:bg-red-200"
-                                        title="Remove Variant"
+                                        :title="t('removeVariant')"
                                     >
                                         <svg
                                             class="h-4 w-4"
@@ -683,7 +762,7 @@
                                             :for="'variant_' + index"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Variant Name*
+                                            {{ t("variantName") }}*
                                         </label>
                                         <div class="relative">
                                             <div
@@ -705,13 +784,32 @@
                                             </div>
                                             <input
                                                 v-model="variant.variant"
-                                                placeholder="e.g., 500ml, Large"
+                                                :placeholder="
+                                                    t('variantNamePlaceholder')
+                                                "
                                                 type="text"
                                                 :id="'variant_' + index"
                                                 class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                                                :class="{
+                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                                        isSubmitted &&
+                                                        !variant.variant,
+                                                }"
                                                 required
                                             />
                                         </div>
+                                        <p
+                                            v-if="
+                                                isSubmitted && !variant.variant
+                                            "
+                                            class="mt-2 text-sm text-red-600"
+                                        >
+                                            {{
+                                                t("variantNameRequired", {
+                                                    index: index + 1,
+                                                })
+                                            }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -719,7 +817,7 @@
                                             :for="'quantity_' + index"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Quantity*
+                                            {{ t("quantity") }}*
                                         </label>
                                         <div class="relative">
                                             <div
@@ -747,9 +845,30 @@
                                                 min="0"
                                                 :id="'quantity_' + index"
                                                 class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                                                :class="{
+                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                                        isSubmitted &&
+                                                        (!variant.quantity ||
+                                                            variant.quantity <=
+                                                                0),
+                                                }"
                                                 required
                                             />
                                         </div>
+                                        <p
+                                            v-if="
+                                                isSubmitted &&
+                                                (!variant.quantity ||
+                                                    variant.quantity <= 0)
+                                            "
+                                            class="mt-2 text-sm text-red-600"
+                                        >
+                                            {{
+                                                t("quantityRequired", {
+                                                    index: index + 1,
+                                                })
+                                            }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -757,7 +876,7 @@
                                             :for="'boxes_' + index"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Items per Box*
+                                            {{ t("itemsPerBox") }}*
                                         </label>
                                         <div class="relative">
                                             <div
@@ -785,9 +904,31 @@
                                                 min="1"
                                                 :id="'boxes_' + index"
                                                 class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                                                :class="{
+                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                                        isSubmitted &&
+                                                        (!variant.bottles_per_box ||
+                                                            variant.bottles_per_box <=
+                                                                0),
+                                                }"
                                                 required
                                             />
                                         </div>
+                                        <p
+                                            v-if="
+                                                isSubmitted &&
+                                                (!variant.bottles_per_box ||
+                                                    variant.bottles_per_box <=
+                                                        0)
+                                            "
+                                            class="mt-2 text-sm text-red-600"
+                                        >
+                                            {{
+                                                t("itemsPerBoxRequired", {
+                                                    index: index + 1,
+                                                })
+                                            }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -795,7 +936,7 @@
                                             :for="'free_bottles_' + index"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Total Free Items
+                                            {{ t("totalFreeItems") }}
                                         </label>
                                         <div class="relative">
                                             <div
@@ -832,7 +973,7 @@
                                             :for="'unit_price_' + index"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Unit Price (৳)*
+                                            {{ t("unitPrice") }} (৳)*
                                         </label>
                                         <div class="relative">
                                             <div
@@ -861,9 +1002,30 @@
                                                 min="0"
                                                 :id="'unit_price_' + index"
                                                 class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                                                :class="{
+                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                                        isSubmitted &&
+                                                        (!variant.unit_price ||
+                                                            variant.unit_price <=
+                                                                0),
+                                                }"
                                                 required
                                             />
                                         </div>
+                                        <p
+                                            v-if="
+                                                isSubmitted &&
+                                                (!variant.unit_price ||
+                                                    variant.unit_price <= 0)
+                                            "
+                                            class="mt-2 text-sm text-red-600"
+                                        >
+                                            {{
+                                                t("unitPriceRequired", {
+                                                    index: index + 1,
+                                                })
+                                            }}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -876,16 +1038,18 @@
                                 >
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600"
-                                            >Total Cost:</span
+                                            >{{ t("totalCost") }}:</span
                                         >
                                         <span
                                             class="font-semibold text-indigo-600"
                                         >
                                             ৳{{
-                                                (
-                                                    variant.quantity *
-                                                    variant.unit_price
-                                                ).toLocaleString()
+                                                toBengaliNumber(
+                                                    (
+                                                        variant.quantity *
+                                                        variant.unit_price
+                                                    ).toFixed(2)
+                                                )
                                             }}
                                         </span>
                                     </div>
@@ -894,13 +1058,44 @@
                                         class="flex justify-between text-sm mt-1"
                                     >
                                         <span class="text-gray-600"
-                                            >Total Boxes:</span
+                                            >{{ t("totalBoxes") }}:</span
                                         >
                                         <span class="font-medium">
                                             {{
-                                                Math.ceil(
-                                                    variant.quantity /
-                                                        variant.bottles_per_box
+                                                toBengaliNumber(
+                                                    Math.ceil(
+                                                        variant.quantity /
+                                                            variant.bottles_per_box
+                                                    )
+                                                )
+                                            }}
+                                        </span>
+                                    </div>
+                                    <div
+                                        v-if="productForm.supplier_id"
+                                        class="flex justify-between text-sm mt-1"
+                                    >
+                                        <span class="text-gray-600"
+                                            >{{ t("remainingDeposit") }}:</span
+                                        >
+                                        <span
+                                            class="font-semibold"
+                                            :class="{
+                                                'text-green-600':
+                                                    variantRemainingDeposit(
+                                                        index
+                                                    ) >= 0,
+                                                'text-red-600':
+                                                    variantRemainingDeposit(
+                                                        index
+                                                    ) < 0,
+                                            }"
+                                        >
+                                            ৳{{
+                                                toBengaliNumber(
+                                                    variantRemainingDeposit(
+                                                        index
+                                                    ).toFixed(2)
                                                 )
                                             }}
                                         </span>
@@ -931,7 +1126,7 @@
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
                                 />
                             </svg>
-                            Purchase Summary
+                            {{ t("purchaseSummary") }}
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div
@@ -952,12 +1147,12 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Items
+                                        {{ t("totalItems") }}
                                     </p>
                                     <p
                                         class="text-2xl font-bold text-indigo-600"
                                     >
-                                        {{ totalQuantity.toLocaleString() }}
+                                        {{ toBengaliNumber(totalQuantity) }}
                                     </p>
                                 </div>
                             </div>
@@ -979,12 +1174,16 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Variants
+                                        {{ t("totalVariants") }}
                                     </p>
                                     <p
                                         class="text-2xl font-bold text-orange-600"
                                     >
-                                        {{ productForm.variants.length }}
+                                        {{
+                                            toBengaliNumber(
+                                                productForm.variants.length
+                                            )
+                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -994,7 +1193,7 @@
                                 <svg
                                     class="w-5 h-5 text-blue-600 mr-2"
                                     fill="none"
-                                    stroke="current personally. I don't like it."
+                                    stroke="currentColor"
                                     viewBox="0 0 24 24"
                                 >
                                     <path
@@ -1006,10 +1205,10 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Boxes
+                                        {{ t("totalBoxes") }}
                                     </p>
                                     <p class="text-2xl font-bold text-blue-600">
-                                        {{ totalBoxes.toLocaleString() }}
+                                        {{ toBengaliNumber(totalBoxes) }}
                                     </p>
                                 </div>
                             </div>
@@ -1031,15 +1230,38 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-gray-600">
-                                        Total Cost
+                                        {{ t("totalCost") }}
                                     </p>
                                     <p
                                         class="text-2xl font-bold text-green-600"
                                     >
-                                        ৳{{ totalCost.toLocaleString() }}
+                                        ৳{{ toBengaliNumber(totalCost) }}
                                     </p>
                                 </div>
                             </div>
+                        </div>
+                        <div
+                            v-if="productForm.supplier_id"
+                            class="mt-4 flex justify-between items-center text-sm"
+                        >
+                            <span class="text-gray-600"
+                                >{{ t("remainingDeposit") }}:</span
+                            >
+                            <span
+                                class="font-semibold"
+                                :class="{
+                                    'text-green-600':
+                                        remainingDepositAfterPurchase >= 0,
+                                    'text-red-600':
+                                        remainingDepositAfterPurchase < 0,
+                                }"
+                            >
+                                ৳{{
+                                    toBengaliNumber(
+                                        remainingDepositAfterPurchase.toFixed(2)
+                                    )
+                                }}
+                            </span>
                         </div>
                     </div>
 
@@ -1064,12 +1286,12 @@
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                                 />
                             </svg>
-                            <span>Reset Form</span>
+                            <span>{{ t("resetForm") }}</span>
                         </button>
 
                         <button
                             @click="openModal"
-                            class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                             :disabled="isLoading"
                         >
                             <svg
@@ -1101,7 +1323,7 @@
                                 />
                             </svg>
                             <span>{{
-                                isLoading ? "Processing..." : "Add Purchase"
+                                isLoading ? t("processing") : t("addPurchase")
                             }}</span>
                         </button>
                     </div>
@@ -1150,6 +1372,117 @@ defineOptions({
     layout: Layout,
 });
 
+// Language handling
+const currentLanguage = ref(localStorage.getItem("language") || "en");
+
+const translations = {
+    en: {
+        languageLabel: "English",
+        purchaseManagement: "Purchase Management",
+        addNewPurchase: "Add New Purchase",
+        productInformation: "Product Information",
+        productName: "Product Name",
+        enterProductName: "Enter product name",
+        productNameRequired: "Product name is required",
+        category: "Category",
+        selectCategory: "Select a category",
+        categoryRequired: "Please select a category",
+        brand: "Brand",
+        selectBrand: "Select a brand",
+        brandRequired: "Please select a brand",
+        supplier: "Supplier",
+        selectSupplier: "Select a supplier",
+        supplierRequired: "Please select a supplier",
+        remainingDepositNote:
+            "Remaining deposit amount is shown in parentheses",
+        productVariants: "Product Variants",
+        addVariant: "Add Variant",
+        removeVariant: "Remove Variant",
+        variant: "Variant",
+        variantName: "Variant Name",
+        variantNamePlaceholder: "e.g., 500ml, Large",
+        variantNameRequired: "Variant {index}: Name is required",
+        quantity: "Quantity",
+        quantityRequired: "Variant {index}: Quantity must be greater than 0",
+        itemsPerBox: "Items per Box",
+        itemsPerBoxRequired:
+            "Variant {index}: Items per box must be greater than 0",
+        totalFreeItems: "Total Free Items",
+        unitPrice: "Unit Price",
+        unitPriceRequired: "Variant {index}: Unit price must be greater than 0",
+        totalCost: "Total Cost",
+        totalBoxes: "Total Boxes",
+        remainingDeposit: "Remaining Deposit",
+        purchaseSummary: "Purchase Summary",
+        totalItems: "Total Items",
+        totalVariants: "Total Variants",
+        confirmPurchase: "Confirm Purchase",
+        confirmPurchasePrompt: "Are you sure you want to add this purchase?",
+        cancel: "Cancel",
+        confirm: "Confirm",
+        resetForm: "Reset Form",
+        processing: "Processing...",
+        addPurchase: "Add Purchase",
+        formReset: "Form has been reset",
+        purchaseSuccess: "Purchase added successfully!",
+        purchaseError: "Please fix the following errors: {errors}",
+        insufficientDeposit:
+            "Purchase amount (৳{totalCost}) exceeds supplier's remaining deposit (৳{deposit})",
+    },
+    bn: {
+        languageLabel: "বাংলা",
+        purchaseManagement: "ক্রয় ব্যবস্থাপনা",
+        addNewPurchase: "নতুন ক্রয় যোগ করুন",
+        productInformation: "পণ্যের তথ্য",
+        productName: "পণ্যের নাম",
+        enterProductName: "পণ্যের নাম লিখুন",
+        productNameRequired: "পণ্যের নাম প্রয়োজন",
+        category: "বিভাগ",
+        selectCategory: "একটি বিভাগ নির্বাচন করুন",
+        categoryRequired: "অনুগ্রহ করে একটি বিভাগ নির্বাচন করুন",
+        brand: "ব্র্যান্ড",
+        selectBrand: "একটি ব্র্যান্ড নির্বাচন করুন",
+        brandRequired: "অনুগ্রহ করে একটি ব্র্যান্ড নির্বাচন করুন",
+        supplier: "সরবরাহকারী",
+        selectSupplier: "একটি সরবরাহকারী নির্বাচন করুন",
+        supplierRequired: "অনুগ্রহ করে একটি সরবরাহকারী নির্বাচন করুন",
+        remainingDepositNote: "বাকি আমানতের পরিমাণ বন্ধনীতে দেখানো হয়েছে",
+        productVariants: "পণ্যের ভেরিয়েন্ট",
+        addVariant: "ভেরিয়েন্ট যোগ করুন",
+        removeVariant: "ভেরিয়েন্ট সরান",
+        variant: "ভেরিয়েন্ট",
+        variantName: "ভেরিয়েন্টের নাম",
+        variantNamePlaceholder: "যেমন, ৫০০ মিলি, বড়",
+        variantNameRequired: "ভেরিয়েন্ট {index}: নাম প্রয়োজন",
+        quantity: "পরিমাণ",
+        quantityRequired: "ভেরিয়েন্ট {index}: পরিমাণ ০-এর বেশি হতে হবে",
+        itemsPerBox: "বক্স প্রতি আইটেম",
+        itemsPerBoxRequired:
+            "ভেরিয়েন্ট {index}: বক্স প্রতি আইটেম ০-এর বেশি হতে হবে",
+        totalFreeItems: "মোট বিনামূল্যে আইটেম",
+        unitPrice: "একক মূল্য",
+        unitPriceRequired: "ভেরিয়েন্ট {index}: একক মূল্য ০-এর বেশি হতে হবে",
+        totalCost: "মোট খরচ",
+        totalBoxes: "মোট বক্স",
+        remainingDeposit: "বাকি আমানত",
+        purchaseSummary: "ক্রয় সারাংশ",
+        totalItems: "মোট আইটেম",
+        totalVariants: "মোট ভেরিয়েন্ট",
+        confirmPurchase: "ক্রয় নিশ্চিত করুন",
+        confirmPurchasePrompt: "আপনি কি নিশ্চিতভাবে এই ক্রয়টি যোগ করতে চান?",
+        cancel: "বাতিল",
+        confirm: "নিশ্চিত করুন",
+        resetForm: "ফর্ম রিসেট করুন",
+        processing: "প্রক্রিয়াকরণ...",
+        addPurchase: "ক্রয় যোগ করুন",
+        formReset: "ফর্ম রিসেট করা হয়েছে",
+        purchaseSuccess: "ক্রয় সফলভাবে যোগ করা হয়েছে!",
+        purchaseError: "নিম্নলিখিত ত্রুটিগুলি ঠিক করুন: {errors}",
+        insufficientDeposit:
+            "ক্রয়ের পরিমাণ (৳{totalCost}) সরবরাহকারীর বাকি আমানত (৳{deposit}) অতিক্রম করেছে",
+    },
+};
+
 const productForm = ref({
     product_name: "",
     category_id: "",
@@ -1169,8 +1502,6 @@ const productForm = ref({
 const isSubmitted = ref(false);
 const isLoading = ref(false);
 const showModal = ref(false);
-
-// Toast state
 const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref("success");
@@ -1209,6 +1540,56 @@ const totalCost = computed(() => {
     );
 });
 
+const selectedSupplier = computed(() => {
+    return props.suppliers.find(
+        (supplier) => supplier.id === Number(productForm.value.supplier_id)
+    );
+});
+
+const remainingDepositAfterPurchase = computed(() => {
+    if (!selectedSupplier.value) return 0;
+    return selectedSupplier.value.remaining_deposit - totalCost.value;
+});
+
+const variantRemainingDeposit = (index: number) => {
+    if (!selectedSupplier.value) return 0;
+    let totalCostUpToIndex = 0;
+    for (let i = 0; i <= index; i++) {
+        const variant = productForm.value.variants[i];
+        totalCostUpToIndex +=
+            (variant.quantity || 0) * (variant.unit_price || 0);
+    }
+    return selectedSupplier.value.remaining_deposit - totalCostUpToIndex;
+};
+
+// Translation function
+const t = computed(() => (key: string, params: Record<string, any> = {}) => {
+    let translation = translations[currentLanguage.value][key] || key;
+    for (const [param, value] of Object.entries(params)) {
+        translation = translation.replace(`{${param}}`, value);
+    }
+    return translation;
+});
+
+// Function to convert numbers to Bengali
+const toBengaliNumber = (num: number | string) => {
+    if (num === null || num === undefined || num === "") return "";
+    if (typeof num !== "number" && typeof num !== "string") return num;
+    if (currentLanguage.value !== "bn") return num.toString();
+
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return num
+        .toString()
+        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+};
+
+// Change language
+const changeLanguage = (lang: string) => {
+    currentLanguage.value = lang;
+    localStorage.setItem("language", lang);
+    document.documentElement.lang = lang;
+};
+
 const showToastWithType = (message: string, type: string = "success") => {
     toastMessage.value = message;
     toastType.value = type;
@@ -1227,16 +1608,34 @@ const openModal = () => {
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
         showToastWithType(
-            `Please fix the following errors: ${validationErrors.join(", ")}`,
+            t.value("purchaseError", { errors: validationErrors.join(", ") }),
             "error"
         );
         return;
     }
+
+    if (
+        selectedSupplier.value &&
+        totalCost.value > selectedSupplier.value.remaining_deposit
+    ) {
+        showToastWithType(
+            t.value("insufficientDeposit", {
+                totalCost: toBengaliNumber(totalCost.value.toFixed(2)),
+                deposit: toBengaliNumber(
+                    selectedSupplier.value.remaining_deposit.toFixed(2)
+                ),
+            }),
+            "error"
+        );
+        return;
+    }
+
     showModal.value = true;
 };
 
 const closeModal = () => {
     showModal.value = false;
+    isSubmitted.value = false; // Reset isSubmitted when closing modal
 };
 
 const addVariant = () => {
@@ -1247,10 +1646,12 @@ const addVariant = () => {
         free_bottles: 0,
         unit_price: 0,
     });
+    isSubmitted.value = false; // Reset isSubmitted when adding a new variant
 };
 
 const removeVariant = (index: number) => {
     productForm.value.variants.splice(index, 1);
+    isSubmitted.value = false; // Reset isSubmitted when removing a variant
 };
 
 const resetForm = () => {
@@ -1270,39 +1671,52 @@ const resetForm = () => {
         ],
     };
     isSubmitted.value = false;
-    showToastWithType("Form has been reset", "success");
+    showToastWithType(t.value("formReset"), "success");
 };
 
 const validateForm = () => {
     const errors = [];
 
     if (!productForm.value.product_name)
-        errors.push("Product name is required");
-    if (!productForm.value.category_id) errors.push("Category is required");
-    if (!productForm.value.brand_id) errors.push("Brand is required");
-    if (!productForm.value.supplier_id) errors.push("Supplier is required");
+        errors.push(t.value("productNameRequired"));
+    if (!productForm.value.category_id)
+        errors.push(t.value("categoryRequired"));
+    if (!productForm.value.brand_id) errors.push(t.value("brandRequired"));
+    if (!productForm.value.supplier_id)
+        errors.push(t.value("supplierRequired"));
 
     productForm.value.variants.forEach((variant, index) => {
         if (!variant.variant)
-            errors.push(`Variant ${index + 1}: Name is required`);
+            errors.push(t.value("variantNameRequired", { index: index + 1 }));
         if (!variant.quantity || variant.quantity <= 0)
-            errors.push(
-                `Variant ${index + 1}: Quantity must be greater than 0`
-            );
+            errors.push(t.value("quantityRequired", { index: index + 1 }));
         if (!variant.bottles_per_box || variant.bottles_per_box <= 0)
-            errors.push(
-                `Variant ${index + 1}: Items per box must be greater than 0`
-            );
+            errors.push(t.value("itemsPerBoxRequired", { index: index + 1 }));
         if (!variant.unit_price || variant.unit_price <= 0)
-            errors.push(
-                `Variant ${index + 1}: Unit price must be greater than 0`
-            );
+            errors.push(t.value("unitPriceRequired", { index: index + 1 }));
     });
 
     return errors;
 };
 
 const confirmPurchase = () => {
+    if (
+        selectedSupplier.value &&
+        totalCost.value > selectedSupplier.value.remaining_deposit
+    ) {
+        showToastWithType(
+            t.value("insufficientDeposit", {
+                totalCost: toBengaliNumber(totalCost.value.toFixed(2)),
+                deposit: toBengaliNumber(
+                    selectedSupplier.value.remaining_deposit.toFixed(2)
+                ),
+            }),
+            "error"
+        );
+        closeModal();
+        return;
+    }
+
     isLoading.value = true;
     closeModal();
     console.log("Submitting product:", productForm.value);
@@ -1310,13 +1724,15 @@ const confirmPurchase = () => {
     router.post("/products-store", productForm.value, {
         onSuccess: () => {
             resetForm();
-            showToastWithType("Purchase added successfully!", "success");
+            showToastWithType(t.value("purchaseSuccess"), "success");
             console.log("Product submitted successfully");
         },
         onError: (errors) => {
             console.error("Product submission errors:", errors);
             showToastWithType(
-                "Failed to add purchase. Please check your inputs.",
+                t.value("purchaseError", {
+                    errors: Object.values(errors).join(", "),
+                }),
                 "error"
             );
         },
@@ -1330,11 +1746,27 @@ console.log("Purchase.vue component loaded");
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+/* Import Kalpurush font from provided CDN */
+@import url("https://fonts.maateen.me/kalpurush/font.css");
 
-body,
-html {
-    font-family: "Noto Serif Bengali", Arial, sans-serif;
+/* Fallback to Noto Sans Bengali if Kalpurush fails */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap");
+
+/* Apply Kalpurush font for Bangla text */
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
+}
+
+/* Ensure specific elements use Kalpurush for Bangla */
+.bangla-font h1,
+.bangla-font h2,
+.bangla-font h3,
+.bangla-font h4,
+.bangla-font p,
+.bangla-font span,
+.bangla-font button,
+.bangla-font input::placeholder {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
 @keyframes fadeIn {
@@ -1416,3 +1848,4 @@ input[type="number"] {
     transition-duration: 300ms;
 }
 </style>
+```

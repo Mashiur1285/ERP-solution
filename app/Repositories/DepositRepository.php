@@ -16,28 +16,23 @@ class DepositRepository extends BaseRepository implements DepositContract
         parent::__construct($model);
     }
 
-    /**
-     * Retrieve the deposit history with relevant supplier details.
-     *
-     * This method joins the deposits table with the suppliers table to fetch
-     * the supplier's company name, deposit amount, remaining balance, and deposit date.
-     * Results are ordered by deposit date in descending order.
-     *
-     * @return Collection A collection of deposit history records
-     */
+
     public function depositHistory(): Collection
     {
         return $this->model
             ->select(
                 'suppliers.company_name as name',
+                'suppliers.phone_number as phone_number',
                 'deposits.balance_deposited as deposit_amount',
                 'deposits.balance_remaining as remaining_amount',
+                'deposits.balance_used as balance_used',
                 'deposits.deposit_date as date'
             )
             ->join('suppliers', 'deposits.supplier_id', 'suppliers.id')
-            ->orderBy('deposits.deposit_date', 'desc')
+            ->orderBy('deposits.deposit_date', 'desc') // Only this needed
             ->get();
     }
+
 
     /**
      * update the balance_remaining field with new purchase amount
@@ -45,7 +40,8 @@ class DepositRepository extends BaseRepository implements DepositContract
     public function updateDepositTable(int $purchaseAmount, Model $deposit): void
     {
         $deposit->balance_remaining -= $purchaseAmount;
-        $deposit->is_used = true;
+        $deposit->balance_used = $deposit->balance_deposited - $deposit->balance_remaining;
+        $deposit->is_used = $deposit->balance_remaining <= 0;
         $deposit->save();
     }
 

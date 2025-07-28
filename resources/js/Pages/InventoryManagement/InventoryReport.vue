@@ -1,5 +1,4 @@
 <template>
-    <div>{{ inventoryStock }}</div>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
     >
