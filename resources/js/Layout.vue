@@ -1,22 +1,23 @@
-```vue
 <template>
     <div class="min-h-screen bg-gray-50 p-4">
         <div
-            class="flex h-[calc(100vh-2rem)] bg-white rounded-xl shadow-lg overflow-hidden"
+            class="flex h-[calc(100vh-2rem)] bg-white rounded-xl shadow-md overflow-hidden"
         >
             <!-- Sidebar -->
             <div
                 :class="[
-                    'relative bg-gradient-to-b from-purple-700 to-indigo-700 text-white rounded-l-xl flex flex-col transition-all duration-300',
+                    'relative bg-gradient-to-b from-purple-50 to-indigo-50 text-gray-900 rounded-l-xl flex flex-col transition-all duration-300',
                     collapsed ? 'w-20' : 'w-64',
                 ]"
             >
                 <!-- Header: Logo and Collapse Button -->
                 <div class="pt-10 px-4 flex-shrink-0">
-                    <h1 v-if="!collapsed" class="text-2xl font-bold">WMS</h1>
+                    <h1 v-if="!collapsed" class="text-2xl font-semibold">
+                        WMS
+                    </h1>
                     <button
                         @click="collapsed = !collapsed"
-                        class="absolute top-4 right-2 z-50 text-white hover:text-gray-300 transition"
+                        class="absolute top-4 right-2 z-50 text-gray-600 hover:text-gray-800 transition"
                     >
                         <svg
                             v-if="!collapsed"
@@ -50,19 +51,19 @@
                 </div>
 
                 <!-- Scrollable Nav -->
-                <nav class="mt-4 flex-1 px-2 overflow-y-auto">
+                <nav class="mt-6 flex-1 px-3 overflow-y-auto">
                     <!-- Dashboard -->
                     <Link
                         href="/"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-purple-600 transition duration-200"
-                        :class="{ 'bg-indigo-600': $page.url === '/' }"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105"
+                        :class="{ 'bg-indigo-300': $page.url === '/' }"
                         @click.stop="logNavigation('/')"
                         :preserveState="true"
                         :preserveScroll="true"
                         @error="handleNavigationError"
                     >
                         <svg
-                            class="w-5 h-5 mr-2 shrink-0"
+                            class="w-5 h-5 mr-3 shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -74,16 +75,18 @@
                                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                             />
                         </svg>
-                        <span v-if="!collapsed">Dashboard</span>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Dashboard</span
+                        >
                     </Link>
 
                     <!-- Suppliers Menu -->
                     <button
                         @click="toggleSuppliersMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-purple-600 transition duration-200"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105"
                     >
                         <svg
-                            class="w-5 h-5 mr-2 shrink-0"
+                            class="w-5 h-5 mr-3 shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -95,7 +98,9 @@
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"
                             />
                         </svg>
-                        <span v-if="!collapsed">Suppliers</span>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Suppliers</span
+                        >
                         <svg
                             v-if="!collapsed"
                             class="w-4 h-4 ml-auto transition-transform duration-200"
@@ -114,13 +119,13 @@
                     </button>
                     <div
                         v-if="suppliersMenuOpen && !collapsed"
-                        class="pl-6 mt-2 space-y-1"
+                        class="pl-8 mt-2 space-y-2"
                     >
                         <Link
                             href="/suppliers/create"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/suppliers/create'),
                             }"
                             @click.stop="logNavigation('/suppliers/create')"
@@ -145,9 +150,9 @@
                         </Link>
                         <Link
                             href="/suppliers/index"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/suppliers/index'),
                             }"
                             @click.stop="logNavigation('/suppliers/index')"
@@ -175,10 +180,10 @@
                     <!-- Purchase Management Menu -->
                     <button
                         @click="toggleDepositsMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-purple-600 transition duration-200"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105"
                     >
                         <svg
-                            class="w-5 h-5 mr-2 shrink-0"
+                            class="w-5 h-5 mr-3 shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -190,7 +195,9 @@
                                 d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                             />
                         </svg>
-                        <span v-if="!collapsed">Purchase Management</span>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Purchase Management</span
+                        >
                         <svg
                             v-if="!collapsed"
                             class="w-4 h-4 ml-auto transition-transform duration-200"
@@ -209,13 +216,13 @@
                     </button>
                     <div
                         v-if="depositsMenuOpen && !collapsed"
-                        class="pl-6 mt-2 space-y-1"
+                        class="pl-8 mt-2 space-y-2"
                     >
                         <Link
                             href="/deposits"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/deposits'),
                             }"
                             @click.stop="logNavigation('/deposits')"
@@ -240,9 +247,9 @@
                         </Link>
                         <Link
                             href="/categories/index"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/categories/index'),
                             }"
                             @click.stop="logNavigation('/categories/index')"
@@ -267,9 +274,9 @@
                         </Link>
                         <Link
                             href="/brands/index"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/brands'),
                             }"
                             @click.stop="logNavigation('/brands')"
@@ -294,9 +301,9 @@
                         </Link>
                         <Link
                             href="/purchases"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/purchases') &&
                                     !$page.url.includes('/purchases/report'),
                             }"
@@ -322,9 +329,9 @@
                         </Link>
                         <Link
                             href="/purchases/report"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/purchases/report'),
                             }"
                             @click.stop="logNavigation('/purchases/report')"
@@ -352,10 +359,10 @@
                     <!-- Sales Management Menu -->
                     <button
                         @click="toggleSalesMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-purple-600 transition duration-200"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105"
                     >
                         <svg
-                            class="w-5 h-5 mr-2 shrink-0"
+                            class="w-5 h-5 mr-3 shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -367,7 +374,9 @@
                                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                             />
                         </svg>
-                        <span v-if="!collapsed">Sales Management</span>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Sales Management</span
+                        >
                         <svg
                             v-if="!collapsed"
                             class="w-4 h-4 ml-auto transition-transform duration-200"
@@ -386,13 +395,13 @@
                     </button>
                     <div
                         v-if="salesMenuOpen && !collapsed"
-                        class="pl-6 mt-2 space-y-1"
+                        class="pl-8 mt-2 space-y-2"
                     >
                         <Link
                             href="/shops/create"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/shops/create'),
                             }"
                             @click.stop="logNavigation('/shops/create')"
@@ -417,9 +426,9 @@
                         </Link>
                         <Link
                             href="/shops"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600': $page.url.startsWith('/shops'),
+                                'bg-indigo-300': $page.url.startsWith('/shops'),
                             }"
                             @click.stop="logNavigation('/shops')"
                             :preserveState="true"
@@ -443,9 +452,9 @@
                         </Link>
                         <Link
                             href="/sales"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/sales') &&
                                     !$page.url.includes('/sales/report'),
                             }"
@@ -471,9 +480,9 @@
                         </Link>
                         <Link
                             href="/sales/report"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/sales/report'),
                             }"
                             @click.stop="logNavigation('/sales/report')"
@@ -501,10 +510,10 @@
                     <!-- Inventory Management Menu -->
                     <button
                         @click="toggleInventoryMenu"
-                        class="w-full flex items-center px-2 py-3 text-left rounded-md hover:bg-purple-600 transition duration-200"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105"
                     >
                         <svg
-                            class="w-5 h-5 mr-2 shrink-0"
+                            class="w-5 h-5 mr-3 shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -516,7 +525,9 @@
                                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                             />
                         </svg>
-                        <span v-if="!collapsed">Inventory Management</span>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Inventory Management</span
+                        >
                         <svg
                             v-if="!collapsed"
                             class="w-4 h-4 ml-auto transition-transform duration-200"
@@ -535,13 +546,13 @@
                     </button>
                     <div
                         v-if="inventoryMenuOpen && !collapsed"
-                        class="pl-6 mt-2 space-y-1"
+                        class="pl-8 mt-2 space-y-2"
                     >
                         <Link
                             href="/inventory/report"
-                            class="block px-4 py-2 text-sm rounded-md hover:bg-purple-600 transition duration-200 flex items-center"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
                             :class="{
-                                'bg-indigo-600':
+                                'bg-indigo-300':
                                     $page.url.startsWith('/inventory/report'),
                             }"
                             @click.stop="logNavigation('/inventory/report')"
@@ -667,29 +678,30 @@ watch(
 </script>
 
 <style scoped>
-.shadow-xl:hover {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgb(99, 102, 241);
+/* Hover shadow effect */
+nav a:hover,
+nav button:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Ensure smooth scrolling and scrollbar styling */
+/* Smooth scrolling and scrollbar styling */
 nav {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.5) rgba(0, 0, 0, 0.1);
+    scrollbar-color: rgba(107, 114, 128, 0.5) rgba(0, 0, 0, 0.05);
 }
 nav::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 nav::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     border-radius: 4px;
 }
 nav::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(107, 114, 128, 0.5);
     border-radius: 4px;
 }
 nav::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(107, 114, 128, 0.7);
 }
 </style>
-```

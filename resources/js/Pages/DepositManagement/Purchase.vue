@@ -5,345 +5,42 @@
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Toast Notification -->
-        <div
-            v-if="showToast"
-            class="fixed top-6 right-6 px-7 py-5 rounded-lg shadow-lg flex items-center space-x-3 animate-toast-in z-50"
-            :class="toastClasses"
-            role="alert"
-        >
-            <svg
-                class="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
-                <path
-                    v-if="toastType === 'success'"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                />
-                <path
-                    v-else-if="toastType === 'warning'"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-                <path
-                    v-else
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-            </svg>
-            <span class="font-medium text-white">{{ t(toastMessage) }}</span>
-            <button
-                @click="closeToast"
-                class="ml-2 text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
-                aria-label="Close notification"
-            >
-                <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                    />
-                </svg>
-            </button>
-        </div>
+        <ToastNotification
+            :show="showToast"
+            :message="toastMessage"
+            :type="toastType"
+            :t="t"
+            @close="closeToast"
+        />
 
         <!-- Confirmation Modal -->
-        <div
-            v-if="showModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            role="dialog"
-            aria-labelledby="modal-title"
-        >
-            <div
-                class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-xl animate-fade-in"
-            >
-                <div class="flex items-center justify-between mb-4">
-                    <h3
-                        id="modal-title"
-                        class="text-lg font-semibold text-gray-800 flex items-center"
-                    >
-                        <svg
-                            class="w-6 h-6 text-indigo-600 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                        {{ t("confirmPurchase") }}
-                    </h3>
-                    <button
-                        @click="closeModal"
-                        class="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        aria-label="Close modal"
-                    >
-                        <svg
-                            class="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
-                <div class="mb-6">
-                    <p class="text-gray-600 mb-4">
-                        {{ t("confirmPurchasePrompt") }}
-                    </p>
-                    <div
-                        class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-xl border border-indigo-200"
-                    >
-                        <h4 class="text-md font-semibold text-gray-800 mb-3">
-                            {{ t("purchaseSummary") }}
-                        </h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="flex items-center">
-                                <svg
-                                    class="w-5 h-5 text-indigo-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M20 7l-8-4-8 4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0l-8 4m0 0l-8-4m8 4v10"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalItems") }}
-                                    </p>
-                                    <p class="font-bold text-indigo-600">
-                                        {{ toBengaliNumber(totalQuantity) }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <svg
-                                    class="w-5 h-5 text-orange-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalVariants") }}
-                                    </p>
-                                    <p class="font-bold text-orange-600">
-                                        {{
-                                            toBengaliNumber(
-                                                productForm.variants.length
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <svg
-                                    class="w-5 h-5 text-blue-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalBoxes") }}
-                                    </p>
-                                    <p class="font-bold text-blue-600">
-                                        {{ toBengaliNumber(totalBoxes) }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <svg
-                                    class="w-5 h-5 text-green-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalCost") }}
-                                    </p>
-                                    <p class="font-bold text-green-600">
-                                        ৳{{ toBengaliNumber(totalCost) }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center col-span-2">
-                                <svg
-                                    class="w-5 h-5 text-purple-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("remainingDeposit") }}
-                                    </p>
-                                    <p
-                                        class="text-lg font-bold"
-                                        :class="{
-                                            'text-green-600':
-                                                remainingDepositAfterPurchase >=
-                                                0,
-                                            'text-red-600':
-                                                remainingDepositAfterPurchase <
-                                                0,
-                                        }"
-                                    >
-                                        ৳{{
-                                            toBengaliNumber(
-                                                remainingDepositAfterPurchase.toFixed(
-                                                    2
-                                                )
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button
-                        @click="closeModal"
-                        class="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
-                    >
-                        {{ t("cancel") }}
-                    </button>
-                    <button
-                        @click="confirmPurchase"
-                        class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2"
-                        :disabled="
-                            isLoading || remainingDepositAfterPurchase < 0
-                        "
-                    >
-                        <svg
-                            class="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 13l4 4L19 7"
-                            />
-                        </svg>
-                        <span>{{ t("confirm") }}</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        <ConfirmationModal
+            :show="showModal"
+            :total-bottles="totalBottles"
+            :total-variants="productForm.variants.length"
+            :total-cases="totalCases"
+            :total-cost="totalCost"
+            :total-purchased-bottles="totalPurchasedBottles"
+            :total-free-bottles="totalFreeBottles"
+            :total-extra-free-bottles="totalExtraFreeBottles"
+            :total-purchased-cases="totalPurchasedCases"
+            :total-cases-from-free="totalCasesFromFree"
+            :remaining-deposit-after-purchase="remainingDepositAfterPurchase"
+            :is-loading="isLoading"
+            :current-language="currentLanguage"
+            :t="t"
+            :to-bengali-number="toBengaliNumber"
+            @close="closeModal"
+            @confirm="confirmPurchase"
+        />
 
         <!-- Header -->
-        <div
-            class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"
-        >
-            <h1
-                class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
-            >
-                <div
-                    class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
-                >
-                    <svg
-                        class="w-8 h-8 text-indigo-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                        />
-                    </svg>
-                </div>
-                {{ t("purchaseManagement") }}
-            </h1>
-            <div class="flex space-x-2">
-                <button
-                    @click="changeLanguage('en')"
-                    :class="[
-                        'px-4 py-2 rounded-md font-medium transition-colors',
-                        currentLanguage === 'en'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                    ]"
-                >
-                    {{ translations.en.languageLabel }}
-                </button>
-                <button
-                    @click="changeLanguage('bn')"
-                    :class="[
-                        'px-4 py-2 rounded-md font-medium transition-colors',
-                        currentLanguage === 'bn'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                    ]"
-                >
-                    {{ translations.bn.languageLabel }}
-                </button>
-            </div>
-        </div>
+        <Header
+            :current-language="currentLanguage"
+            :translations="translations"
+            :t="t"
+            @change-language="changeLanguage"
+        />
 
         <!-- Main Form Container -->
         <div
@@ -390,943 +87,129 @@
                 </div>
 
                 <!-- Product Information Section -->
-                <div class="space-y-8">
-                    <div
-                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
+                <div class="mb-8">
+                    <ProductInformation
+                        :product-form="productForm"
+                        :suppliers="props.suppliers"
+                        :categories="props.categories"
+                        :brands="props.brands"
+                        :is-submitted="isSubmitted"
+                        :current-language="currentLanguage"
+                        :t="t"
+                        :to-bengali-number="toBengaliNumber"
+                    />
+                </div>
+
+                <!-- Variants Section -->
+                <div class="mb-8">
+                    <VariantsSection
+                        :product-form="productForm"
+                        :is-submitted="isSubmitted"
+                        :current-language="currentLanguage"
+                        :t="t"
+                        :to-bengali-number="toBengaliNumber"
+                        :get-variant-total-bottles="getVariantTotalBottles"
+                        :get-variant-total-free-bottles="
+                            getVariantTotalFreeBottles
+                        "
+                        :get-variant-total-cost="getVariantTotalCost"
+                        :get-actual-rate-per-bottle="getActualRatePerBottle"
+                        :get-actual-rate-per-case="getActualRatePerCase"
+                        :get-cases-with-free-bottles="getCasesWithFreeBottles"
+                        :get-cases-without-free-bottles="
+                            getCasesWithoutFreeBottles
+                        "
+                        :get-extra-free-bottles="getExtraFreeBottles"
+                        :variant-remaining-deposit="variantRemainingDeposit"
+                        :variant-options="variantOptions"
+                        @add-variant="addVariant"
+                        @remove-variant="removeVariant"
+                        @variant-change="handleVariantChange"
+                    />
+                </div>
+
+                <!-- Total Summary -->
+                <div class="mb-8">
+                    <TotalSummary
+                        :product-form="productForm"
+                        :total-bottles="totalBottles"
+                        :total-variants="productForm.variants.length"
+                        :total-cases="totalCases"
+                        :total-purchased-cases="totalPurchasedCases"
+                        :total-purchased-bottles="totalPurchasedBottles"
+                        :total-free-bottles="totalFreeBottles"
+                        :total-cases-from-free="totalCasesFromFree"
+                        :total-extra-free-bottles="totalExtraFreeBottles"
+                        :total-cost="totalCost"
+                        :remaining-deposit-after-purchase="
+                            remainingDepositAfterPurchase
+                        "
+                        :current-language="currentLanguage"
+                        :t="t"
+                        :to-bengali-number="toBengaliNumber"
+                    />
+                </div>
+
+                <!-- Action Buttons -->
+                <div
+                    class="flex justify-end space-x-4 pt-6 border-t border-gray-200"
+                >
+                    <button
+                        @click="resetForm"
+                        class="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center space-x-2"
                     >
-                        <h3 class="text-lg font-semibold text-gray-800 mb-6">
-                            {{ t("productInformation") }}
-                        </h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label
-                                    for="product_name"
-                                    class="block text-sm font-semibold text-gray-700 mb-2"
-                                >
-                                    {{ t("productName") }}*
-                                </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <input
-                                        v-model="productForm.product_name"
-                                        id="product_name"
-                                        type="text"
-                                        :placeholder="t('enterProductName')"
-                                        class="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
-                                        :class="{
-                                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                isSubmitted &&
-                                                !productForm.product_name,
-                                        }"
-                                        required
-                                    />
-                                </div>
-                                <p
-                                    v-if="
-                                        isSubmitted && !productForm.product_name
-                                    "
-                                    class="mt-2 text-sm text-red-600"
-                                >
-                                    {{ t("productNameRequired") }}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label
-                                    for="category_id"
-                                    class="block text-sm font-semibold text-gray-700 mb-2"
-                                >
-                                    {{ t("category") }}*
-                                </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h10a2 2 0 012 2v2"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <select
-                                        v-model="productForm.category_id"
-                                        id="category_id"
-                                        class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 appearance-none"
-                                        :class="{
-                                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                isSubmitted &&
-                                                !productForm.category_id,
-                                        }"
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            {{ t("selectCategory") }}
-                                        </option>
-                                        <option
-                                            v-for="category in categories"
-                                            :key="category.id"
-                                            :value="category.id"
-                                        >
-                                            {{ category.name }}
-                                        </option>
-                                    </select>
-                                    <div
-                                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 9l-7 7-7-7"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <p
-                                    v-if="
-                                        isSubmitted && !productForm.category_id
-                                    "
-                                    class="mt-2 text-sm text-red-600"
-                                >
-                                    {{ t("categoryRequired") }}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label
-                                    for="brand_id"
-                                    class="block text-sm font-semibold text-gray-700 mb-2"
-                                >
-                                    {{ t("brand") }}*
-                                </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="1.5"
-                                            stroke="currentColor"
-                                            class="w-5 h-5 text-gray-400"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
-                                            />
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M6 6h.008v.008H6V6Z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <select
-                                        v-model="productForm.brand_id"
-                                        id="brand_id"
-                                        class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 appearance-none"
-                                        :class="{
-                                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                isSubmitted &&
-                                                !productForm.brand_id,
-                                        }"
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            {{ t("selectBrand") }}
-                                        </option>
-                                        <option
-                                            v-for="brand in brands"
-                                            :key="brand.id"
-                                            :value="brand.id"
-                                        >
-                                            {{ brand.brand_name }}
-                                        </option>
-                                    </select>
-                                    <div
-                                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 9l-7 7-7-7"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <p
-                                    v-if="isSubmitted && !productForm.brand_id"
-                                    class="mt-2 text-sm text-red-600"
-                                >
-                                    {{ t("brandRequired") }}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label
-                                    for="purchase_supplier_id"
-                                    class="block text-sm font-semibold text-gray-700 mb-2"
-                                >
-                                    {{ t("supplier") }}*
-                                </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m6 10a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <select
-                                        v-model="productForm.supplier_id"
-                                        id="purchase_supplier_id"
-                                        class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 appearance-none"
-                                        :class="{
-                                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                isSubmitted &&
-                                                !productForm.supplier_id,
-                                        }"
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            {{ t("selectSupplier") }}
-                                        </option>
-                                        <option
-                                            v-for="supplier in suppliers"
-                                            :key="supplier.id"
-                                            :value="supplier.id"
-                                        >
-                                            {{ supplier.company_name }} (৳{{
-                                                toBengaliNumber(
-                                                    supplier.remaining_deposit.toFixed(
-                                                        2
-                                                    )
-                                                )
-                                            }})
-                                        </option>
-                                    </select>
-                                    <div
-                                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 9l-7 7-7-7"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <p
-                                    v-if="
-                                        isSubmitted && !productForm.supplier_id
-                                    "
-                                    class="mt-2 text-sm text-red-600"
-                                >
-                                    {{ t("supplierRequired") }}
-                                </p>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    {{ t("remainingDepositNote") }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Variants Section -->
-                    <div
-                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
+                        <svg
+                            class="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                        <span>{{ t("resetForm") }}</span>
+                    </button>
+                    <button
+                        @click="openModal"
+                        class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                        :disabled="isLoading"
                     >
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800">
-                                {{ t("productVariants") }}
-                            </h3>
-                            <button
-                                @click="addVariant"
-                                class="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
-                            >
-                                <svg
-                                    class="w-4 h-4 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                    />
-                                </svg>
-                                {{ t("addVariant") }}
-                            </button>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div
-                                v-for="(variant, index) in productForm.variants"
-                                :key="index"
-                                class="bg-white p-6 rounded-lg border border-gray-200 relative"
-                            >
-                                <div
-                                    class="flex justify-between items-center mb-4"
-                                >
-                                    <h4
-                                        class="text-md font-medium text-gray-700"
-                                    >
-                                        {{ t("variant") }}
-                                        {{ toBengaliNumber(index + 1) }}
-                                    </h4>
-                                    <button
-                                        v-if="productForm.variants.length > 1"
-                                        @click="removeVariant(index)"
-                                        class="text-red-600 hover:text-red-800 p-2 rounded-full transition duration-300 bg-red-100 hover:bg-red-200"
-                                        :title="t('removeVariant')"
-                                    >
-                                        <svg
-                                            class="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <div
-                                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
-                                >
-                                    <div>
-                                        <label
-                                            :for="'variant_' + index"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            {{ t("variantName") }}*
-                                        </label>
-                                        <div class="relative">
-                                            <div
-                                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-gray-400"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <input
-                                                v-model="variant.variant"
-                                                :placeholder="
-                                                    t('variantNamePlaceholder')
-                                                "
-                                                type="text"
-                                                :id="'variant_' + index"
-                                                class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                                                :class="{
-                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                        isSubmitted &&
-                                                        !variant.variant,
-                                                }"
-                                                required
-                                            />
-                                        </div>
-                                        <p
-                                            v-if="
-                                                isSubmitted && !variant.variant
-                                            "
-                                            class="mt-2 text-sm text-red-600"
-                                        >
-                                            {{
-                                                t("variantNameRequired", {
-                                                    index: index + 1,
-                                                })
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            :for="'quantity_' + index"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            {{ t("quantity") }}*
-                                        </label>
-                                        <div class="relative">
-                                            <div
-                                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-gray-400"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M20 7l-8-4-8 4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0l-8 4m0 0l-8-4m8 4v10"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <input
-                                                v-model.number="
-                                                    variant.quantity
-                                                "
-                                                type="number"
-                                                min="0"
-                                                :id="'quantity_' + index"
-                                                class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                                                :class="{
-                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                        isSubmitted &&
-                                                        (!variant.quantity ||
-                                                            variant.quantity <=
-                                                                0),
-                                                }"
-                                                required
-                                            />
-                                        </div>
-                                        <p
-                                            v-if="
-                                                isSubmitted &&
-                                                (!variant.quantity ||
-                                                    variant.quantity <= 0)
-                                            "
-                                            class="mt-2 text-sm text-red-600"
-                                        >
-                                            {{
-                                                t("quantityRequired", {
-                                                    index: index + 1,
-                                                })
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            :for="'boxes_' + index"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            {{ t("itemsPerBox") }}*
-                                        </label>
-                                        <div class="relative">
-                                            <div
-                                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-gray-400"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <input
-                                                v-model.number="
-                                                    variant.bottles_per_box
-                                                "
-                                                type="number"
-                                                min="1"
-                                                :id="'boxes_' + index"
-                                                class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                                                :class="{
-                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                        isSubmitted &&
-                                                        (!variant.bottles_per_box ||
-                                                            variant.bottles_per_box <=
-                                                                0),
-                                                }"
-                                                required
-                                            />
-                                        </div>
-                                        <p
-                                            v-if="
-                                                isSubmitted &&
-                                                (!variant.bottles_per_box ||
-                                                    variant.bottles_per_box <=
-                                                        0)
-                                            "
-                                            class="mt-2 text-sm text-red-600"
-                                        >
-                                            {{
-                                                t("itemsPerBoxRequired", {
-                                                    index: index + 1,
-                                                })
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            :for="'free_bottles_' + index"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            {{ t("totalFreeItems") }}
-                                        </label>
-                                        <div class="relative">
-                                            <div
-                                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-gray-400"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <input
-                                                v-model.number="
-                                                    variant.free_bottles
-                                                "
-                                                type="number"
-                                                min="0"
-                                                :id="'free_bottles_' + index"
-                                                class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            :for="'unit_price_' + index"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            {{ t("unitPrice") }} (৳)*
-                                        </label>
-                                        <div class="relative">
-                                            <div
-                                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-gray-400"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <input
-                                                v-model.number="
-                                                    variant.unit_price
-                                                "
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                :id="'unit_price_' + index"
-                                                class="w-full pl-10 pr-3 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                                                :class="{
-                                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                                        isSubmitted &&
-                                                        (!variant.unit_price ||
-                                                            variant.unit_price <=
-                                                                0),
-                                                }"
-                                                required
-                                            />
-                                        </div>
-                                        <p
-                                            v-if="
-                                                isSubmitted &&
-                                                (!variant.unit_price ||
-                                                    variant.unit_price <= 0)
-                                            "
-                                            class="mt-2 text-sm text-red-600"
-                                        >
-                                            {{
-                                                t("unitPriceRequired", {
-                                                    index: index + 1,
-                                                })
-                                            }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Variant Summary -->
-                                <div
-                                    v-if="
-                                        variant.quantity && variant.unit_price
-                                    "
-                                    class="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200"
-                                >
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600"
-                                            >{{ t("totalCost") }}:</span
-                                        >
-                                        <span
-                                            class="font-semibold text-indigo-600"
-                                        >
-                                            ৳{{
-                                                toBengaliNumber(
-                                                    (
-                                                        variant.quantity *
-                                                        variant.unit_price
-                                                    ).toFixed(2)
-                                                )
-                                            }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        v-if="variant.bottles_per_box"
-                                        class="flex justify-between text-sm mt-1"
-                                    >
-                                        <span class="text-gray-600"
-                                            >{{ t("totalBoxes") }}:</span
-                                        >
-                                        <span class="font-medium">
-                                            {{
-                                                toBengaliNumber(
-                                                    Math.ceil(
-                                                        variant.quantity /
-                                                            variant.bottles_per_box
-                                                    )
-                                                )
-                                            }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        v-if="productForm.supplier_id"
-                                        class="flex justify-between text-sm mt-1"
-                                    >
-                                        <span class="text-gray-600"
-                                            >{{ t("remainingDeposit") }}:</span
-                                        >
-                                        <span
-                                            class="font-semibold"
-                                            :class="{
-                                                'text-green-600':
-                                                    variantRemainingDeposit(
-                                                        index
-                                                    ) >= 0,
-                                                'text-red-600':
-                                                    variantRemainingDeposit(
-                                                        index
-                                                    ) < 0,
-                                            }"
-                                        >
-                                            ৳{{
-                                                toBengaliNumber(
-                                                    variantRemainingDeposit(
-                                                        index
-                                                    ).toFixed(2)
-                                                )
-                                            }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Total Summary -->
-                    <div
-                        v-if="totalCost > 0"
-                        class="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-200"
-                    >
-                        <h3
-                            class="text-lg font-semibold text-gray-800 mb-4 flex items-center"
+                        <svg
+                            v-if="isLoading"
+                            class="w-5 h-5 animate-spin"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            <svg
-                                class="w-6 h-6 text-indigo-600 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
-                                />
-                            </svg>
-                            {{ t("purchaseSummary") }}
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div
-                                class="text-center flex items-center justify-center"
-                            >
-                                <svg
-                                    class="w-5 h-5 text-indigo-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M20 7l-8-4-8 4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0l-8 4m0 0l-8-4m8 4v10"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalItems") }}
-                                    </p>
-                                    <p
-                                        class="text-2xl font-bold text-indigo-600"
-                                    >
-                                        {{ toBengaliNumber(totalQuantity) }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="text-center flex items-center justify-center"
-                            >
-                                <svg
-                                    class="w-5 h-5 text-orange-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalVariants") }}
-                                    </p>
-                                    <p
-                                        class="text-2xl font-bold text-orange-600"
-                                    >
-                                        {{
-                                            toBengaliNumber(
-                                                productForm.variants.length
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="text-center flex items-center justify-center"
-                            >
-                                <svg
-                                    class="w-5 h-5 text-blue-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalBoxes") }}
-                                    </p>
-                                    <p class="text-2xl font-bold text-blue-600">
-                                        {{ toBengaliNumber(totalBoxes) }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="text-center flex items-center justify-center"
-                            >
-                                <svg
-                                    class="w-5 h-5 text-green-600 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                                <div>
-                                    <p class="text-sm text-gray-600">
-                                        {{ t("totalCost") }}
-                                    </p>
-                                    <p
-                                        class="text-2xl font-bold text-green-600"
-                                    >
-                                        ৳{{ toBengaliNumber(totalCost) }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            v-if="productForm.supplier_id"
-                            class="mt-4 flex justify-between items-center text-sm"
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                        <svg
+                            v-else
+                            class="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            <span class="text-gray-600"
-                                >{{ t("remainingDeposit") }}:</span
-                            >
-                            <span
-                                class="font-semibold"
-                                :class="{
-                                    'text-green-600':
-                                        remainingDepositAfterPurchase >= 0,
-                                    'text-red-600':
-                                        remainingDepositAfterPurchase < 0,
-                                }"
-                            >
-                                ৳{{
-                                    toBengaliNumber(
-                                        remainingDepositAfterPurchase.toFixed(2)
-                                    )
-                                }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div
-                        class="flex justify-end space-x-4 pt-6 border-t border-gray-200"
-                    >
-                        <button
-                            @click="resetForm"
-                            class="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center space-x-2"
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                            </svg>
-                            <span>{{ t("resetForm") }}</span>
-                        </button>
-
-                        <button
-                            @click="openModal"
-                            class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-                            :disabled="isLoading"
-                        >
-                            <svg
-                                v-if="isLoading"
-                                class="w-5 h-5 animate-spin"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                            </svg>
-                            <svg
-                                v-else
-                                class="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                                />
-                            </svg>
-                            <span>{{
-                                isLoading ? t("processing") : t("addPurchase")
-                            }}</span>
-                        </button>
-                    </div>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                        </svg>
+                        <span>{{
+                            isLoading ? t("processing") : t("addPurchase")
+                        }}</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1337,6 +220,12 @@
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
+import ToastNotification from "./partials/purchasePartials/ToastNotification.vue";
+import ConfirmationModal from "./partials/purchasePartials/ConfirmationModal.vue";
+import Header from "./partials/purchasePartials/Header.vue";
+import ProductInformation from "./partials/purchasePartials/ProductInformation.vue";
+import VariantsSection from "./partials/purchasePartials/VariantsSection.vue";
+import TotalSummary from "./partials/purchasePartials/TotalSummary.vue";
 
 interface Supplier {
     id: number;
@@ -1356,10 +245,16 @@ interface Brand {
 
 interface ProductVariant {
     variant: string;
-    quantity: number;
-    bottles_per_box: number;
-    free_bottles: number;
-    unit_price: number;
+    number_of_cases: number;
+    case_buying_price: number;
+    bottles_per_case: number;
+    free_bottles_per_case: number;
+}
+
+interface VariantOption {
+    value: string;
+    label: string;
+    bottles_per_case: number;
 }
 
 const props = defineProps<{
@@ -1374,6 +269,14 @@ defineOptions({
 
 // Language handling
 const currentLanguage = ref(localStorage.getItem("language") || "en");
+
+// Variant options with predefined bottle counts
+const variantOptions: VariantOption[] = [
+    { value: "250ml", label: "250 ml", bottles_per_case: 24 },
+    { value: "500ml", label: "500 ml", bottles_per_case: 24 },
+    { value: "1000ml", label: "1000 ml", bottles_per_case: 12 },
+    { value: "2000ml", label: "2000 ml", bottles_per_case: 6 },
+];
 
 const translations = {
     en: {
@@ -1399,22 +302,52 @@ const translations = {
         addVariant: "Add Variant",
         removeVariant: "Remove Variant",
         variant: "Variant",
-        variantName: "Variant Name",
-        variantNamePlaceholder: "e.g., 500ml, Large",
-        variantNameRequired: "Variant {index}: Name is required",
-        quantity: "Quantity",
-        quantityRequired: "Variant {index}: Quantity must be greater than 0",
-        itemsPerBox: "Items per Box",
-        itemsPerBoxRequired:
-            "Variant {index}: Items per box must be greater than 0",
-        totalFreeItems: "Total Free Items",
-        unitPrice: "Unit Price",
-        unitPriceRequired: "Variant {index}: Unit price must be greater than 0",
+        variantName: "Variant Size",
+        selectVariant: "Select variant size",
+        variantNameRequired: "Variant {index}: Size is required",
+        numberOfCases: "Number of Cases",
+        numberOfCasesRequired:
+            "Variant {index}: Number of cases must be greater than 0",
+        caseBuyingPrice: "Case Buying Price",
+        caseBuyingPriceRequired:
+            "Variant {index}: Case buying price must be greater than 0",
+        bottlesPerCase: "Bottles per Case",
+        bottlesPerCaseRequired:
+            "Variant {index}: Bottles per case must be greater than 0",
+        freeBottlesPerCase: "Free Bottles per Case",
+        casesWithFreeBottles: "Cases with Free Bottles",
+        casesWithoutFreeBottles: "Cases without Free Bottles",
+        extraFreeBottles: "Extra Free Bottles",
+        totalBottlesInVariant: "Total Bottles",
+        totalCasesInVariant: "Total Cases",
+        totalFreeBottles: "Total Free Bottles",
         totalCost: "Total Cost",
-        totalBoxes: "Total Boxes",
+        totalCases: "Total Cases",
+        totalNumberOfCases: "Total Number of Cases",
+        totalBottles: "Total Bottles",
+        purchasedPlusFree: "Purchased + Free",
+        bottlesBreakdown: "Bottles Breakdown",
+        casesBreakdown: "Cases Breakdown",
+        purchasedBottles: "Purchased Bottles",
+        freeBottles: "Free Bottles",
+        purchasedCases: "Purchased Cases",
+        casesFromFree: "Cases from Free",
+        selectVariant: "Select variant size",
+        actualRatePerBottle: "Actual Rate per Bottle",
+        actualRatePerCase: "Actual Rate per Case",
         remainingDeposit: "Remaining Deposit",
+        afterPurchase: "After Purchase",
+        insufficientFunds: "Insufficient Funds",
+        availableBalance: "Available Balance",
+        avgCostPerBottle: "Avg Cost per Bottle",
+        avgCostPerCase: "Avg Cost per Case",
+        avgBottlesPerCase: "Avg Bottles per Case",
+        freeBottlesBreakdown: "Free Bottles Breakdown",
+        costAnalysis: "Cost Analysis",
+        afterThisVariant: "After This Variant",
+        sufficient: "Sufficient",
+        insufficient: "Insufficient",
         purchaseSummary: "Purchase Summary",
-        totalItems: "Total Items",
         totalVariants: "Total Variants",
         confirmPurchase: "Confirm Purchase",
         confirmPurchasePrompt: "Are you sure you want to add this purchase?",
@@ -1451,22 +384,52 @@ const translations = {
         addVariant: "ভেরিয়েন্ট যোগ করুন",
         removeVariant: "ভেরিয়েন্ট সরান",
         variant: "ভেরিয়েন্ট",
-        variantName: "ভেরিয়েন্টের নাম",
-        variantNamePlaceholder: "যেমন, ৫০০ মিলি, বড়",
-        variantNameRequired: "ভেরিয়েন্ট {index}: নাম প্রয়োজন",
-        quantity: "পরিমাণ",
-        quantityRequired: "ভেরিয়েন্ট {index}: পরিমাণ ০-এর বেশি হতে হবে",
-        itemsPerBox: "বক্স প্রতি আইটেম",
-        itemsPerBoxRequired:
-            "ভেরিয়েন্ট {index}: বক্স প্রতি আইটেম ০-এর বেশি হতে হবে",
-        totalFreeItems: "মোট বিনামূল্যে আইটেম",
-        unitPrice: "একক মূল্য",
-        unitPriceRequired: "ভেরিয়েন্ট {index}: একক মূল্য ০-এর বেশি হতে হবে",
+        variantName: "ভেরিয়েন্টের আকার",
+        selectVariant: "ভেরিয়েন্টের আকার নির্বাচন করুন",
+        variantNameRequired: "ভেরিয়েন্ট {index}: আকার প্রয়োজন",
+        numberOfCases: "কেস সংখ্যা",
+        numberOfCasesRequired:
+            "ভেরিয়েন্ট {index}: কেস সংখ্যা ০-এর বেশি হতে হবে",
+        caseBuyingPrice: "কেস ক্রয় মূল্য",
+        caseBuyingPriceRequired:
+            "ভেরিয়েন্ট {index}: কেস ক্রয় মূল্য ০-এর বেশি হতে হবে",
+        bottlesPerCase: "কেস প্রতি বোতল",
+        bottlesPerCaseRequired:
+            "ভেরিয়েন্ট {index}: কেস প্রতি বোতল ০-এর বেশি হতে হবে",
+        freeBottlesPerCase: "কেস প্রতি বিনামূল্যে বোতল",
+        casesWithFreeBottles: "বিনামূল্যে বোতল সহ কেস",
+        casesWithoutFreeBottles: "বিনামূল্যে বোতল ছাড়া কেস",
+        extraFreeBottles: "অতিরিক্ত বিনামূল্যে বোতল",
+        totalBottlesInVariant: "মোট বোতল",
+        totalCasesInVariant: "মোট কেস",
+        totalFreeBottles: "মোট বিনামূল্যে বোতল",
         totalCost: "মোট খরচ",
-        totalBoxes: "মোট বক্স",
+        totalCases: "মোট কেস",
+        totalNumberOfCases: "মোট কেস সংখ্যা",
+        totalBottles: "মোট বোতল",
+        purchasedPlusFree: "ক্রয়কৃত + বিনামূল্যে",
+        bottlesBreakdown: "বোতলের বিবরণ",
+        casesBreakdown: "কেসের বিবরণ",
+        purchasedBottles: "ক্রয়কৃত বোতল",
+        freeBottles: "বিনামূল্যে বোতল",
+        purchasedCases: "ক্রয়কৃত কেস",
+        casesFromFree: "বিনামূল্যে থেকে কেস",
+        selectVariant: "ভেরিয়েন্টের আকার নির্বাচন করুন",
+        actualRatePerBottle: "প্রকৃত হার প্রতি বোতল",
+        actualRatePerCase: "প্রকৃত হার প্রতি কেস",
         remainingDeposit: "বাকি আমানত",
+        afterPurchase: "ক্রয়ের পর",
+        insufficientFunds: "অপর্যাপ্ত তহবিল",
+        availableBalance: "উপলব্ধ ব্যালেন্স",
+        avgCostPerBottle: "গড় খরচ প্রতি বোতল",
+        avgCostPerCase: "গড় খরচ প্রতি কেস",
+        avgBottlesPerCase: "গড় বোতল প্রতি কেস",
+        freeBottlesBreakdown: "বিনামূল্যে বোতলের বিবরণ",
+        costAnalysis: "খরচ বিশ্লেষণ",
+        afterThisVariant: "এই ভেরিয়েন্টের পর",
+        sufficient: "যথেষ্ট",
+        insufficient: "অপর্যাপ্ত",
         purchaseSummary: "ক্রয় সারাংশ",
-        totalItems: "মোট আইটেম",
         totalVariants: "মোট ভেরিয়েন্ট",
         confirmPurchase: "ক্রয় নিশ্চিত করুন",
         confirmPurchasePrompt: "আপনি কি নিশ্চিতভাবে এই ক্রয়টি যোগ করতে চান?",
@@ -1491,10 +454,10 @@ const productForm = ref({
     variants: [
         {
             variant: "",
-            quantity: 0,
-            bottles_per_box: 0,
-            free_bottles: 0,
-            unit_price: 0,
+            number_of_cases: 0,
+            case_buying_price: 0,
+            bottles_per_case: 0,
+            free_bottles_per_case: 0,
         },
     ],
 });
@@ -1506,36 +469,116 @@ const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref("success");
 
-const toastClasses = computed(() => ({
-    "bg-green-500": toastType.value === "success",
-    "bg-orange-500": toastType.value === "warning",
-    "bg-red-500": toastType.value === "error",
-    "text-white": true,
-}));
+// Helper functions for calculations
+const getVariantTotalBottles = (variant: ProductVariant) => {
+    const purchasedBottles =
+        (variant.number_of_cases || 0) * (variant.bottles_per_case || 0);
+    const freeBottles = getVariantTotalFreeBottles(variant);
+    return purchasedBottles + freeBottles;
+};
+
+const getVariantTotalFreeBottles = (variant: ProductVariant) => {
+    return (
+        (variant.number_of_cases || 0) * (variant.free_bottles_per_case || 0)
+    );
+};
+
+const getVariantTotalCost = (variant: ProductVariant) => {
+    return (variant.number_of_cases || 0) * (variant.case_buying_price || 0);
+};
+
+const getActualRatePerBottle = (variant: ProductVariant) => {
+    const totalBottles = getVariantTotalBottles(variant);
+    const totalCost = getVariantTotalCost(variant);
+    if (totalBottles === 0) return "0.00";
+    return (totalCost / totalBottles).toFixed(2);
+};
+
+const getActualRatePerCase = (variant: ProductVariant) => {
+    return (variant.case_buying_price || 0).toFixed(2);
+};
+
+const getCasesWithFreeBottles = (variant: ProductVariant) => {
+    if (variant.free_bottles_per_case && variant.free_bottles_per_case > 0) {
+        const totalFreeBottles = getVariantTotalFreeBottles(variant);
+        return Math.floor(totalFreeBottles / (variant.bottles_per_case || 1));
+    }
+    return 0;
+};
+
+const getExtraFreeBottles = (variant: ProductVariant) => {
+    if (variant.free_bottles_per_case && variant.free_bottles_per_case > 0) {
+        const totalFreeBottles = getVariantTotalFreeBottles(variant);
+        const completeCasesFromFreeBottles = getCasesWithFreeBottles(variant);
+        return (
+            totalFreeBottles -
+            completeCasesFromFreeBottles * (variant.bottles_per_case || 1)
+        );
+    }
+    return 0;
+};
+
+const getCasesWithoutFreeBottles = (variant: ProductVariant) => {
+    const casesWithFreeBottles = getCasesWithFreeBottles(variant);
+    return (variant.number_of_cases || 0) - casesWithFreeBottles;
+};
 
 // Computed properties for summary
-const totalQuantity = computed(() => {
+const totalBottles = computed(() => {
     return productForm.value.variants.reduce(
-        (sum, variant) => sum + (variant.quantity || 0),
+        (sum, variant) => sum + getVariantTotalBottles(variant),
         0
     );
 });
 
-const totalBoxes = computed(() => {
+const totalPurchasedBottles = computed(() => {
     return productForm.value.variants.reduce(
         (sum, variant) =>
             sum +
-            (variant.bottles_per_box
-                ? Math.ceil(variant.quantity / variant.bottles_per_box)
-                : 0),
+            (variant.number_of_cases || 0) * (variant.bottles_per_case || 0),
+        0
+    );
+});
+
+const totalFreeBottles = computed(() => {
+    return productForm.value.variants.reduce(
+        (sum, variant) => sum + getVariantTotalFreeBottles(variant),
+        0
+    );
+});
+
+const totalExtraFreeBottles = computed(() => {
+    return productForm.value.variants.reduce(
+        (sum, variant) => sum + getExtraFreeBottles(variant),
+        0
+    );
+});
+
+const totalCases = computed(() => {
+    return productForm.value.variants.reduce((sum, variant) => {
+        const purchasedCases = variant.number_of_cases || 0;
+        const freeCases = getCasesWithFreeBottles(variant);
+        return sum + purchasedCases + freeCases;
+    }, 0);
+});
+
+const totalPurchasedCases = computed(() => {
+    return productForm.value.variants.reduce(
+        (sum, variant) => sum + (variant.number_of_cases || 0),
+        0
+    );
+});
+
+const totalCasesFromFree = computed(() => {
+    return productForm.value.variants.reduce(
+        (sum, variant) => sum + getCasesWithFreeBottles(variant),
         0
     );
 });
 
 const totalCost = computed(() => {
     return productForm.value.variants.reduce(
-        (sum, variant) =>
-            sum + (variant.quantity || 0) * (variant.unit_price || 0),
+        (sum, variant) => sum + getVariantTotalCost(variant),
         0
     );
 });
@@ -1556,104 +599,48 @@ const variantRemainingDeposit = (index: number) => {
     let totalCostUpToIndex = 0;
     for (let i = 0; i <= index; i++) {
         const variant = productForm.value.variants[i];
-        totalCostUpToIndex +=
-            (variant.quantity || 0) * (variant.unit_price || 0);
+        totalCostUpToIndex += getVariantTotalCost(variant);
     }
     return selectedSupplier.value.remaining_deposit - totalCostUpToIndex;
 };
 
 // Translation function
-const t = computed(() => (key: string, params: Record<string, any> = {}) => {
+const t = (key: string, params: Record<string, any> = {}) => {
     let translation = translations[currentLanguage.value][key] || key;
     for (const [param, value] of Object.entries(params)) {
         translation = translation.replace(`{${param}}`, value);
     }
     return translation;
-});
-
-// Function to convert numbers to Bengali
-const toBengaliNumber = (num: number | string) => {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num.toString();
-
-    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
 };
 
-// Change language
+// Utility function to convert numbers to Bengali digits
+const toBengaliNumber = (num: number | string): string => {
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return String(num).replace(
+        /[0-9]/g,
+        (digit) => bengaliDigits[parseInt(digit)]
+    );
+};
+
+// Language change handler
 const changeLanguage = (lang: string) => {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
-    document.documentElement.lang = lang;
 };
 
-const showToastWithType = (message: string, type: string = "success") => {
-    toastMessage.value = message;
-    toastType.value = type;
-    showToast.value = true;
-    setTimeout(() => {
-        showToast.value = false;
-    }, 5000);
-};
-
-const closeToast = () => {
-    showToast.value = false;
-};
-
-const openModal = () => {
-    isSubmitted.value = true;
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-        showToastWithType(
-            t.value("purchaseError", { errors: validationErrors.join(", ") }),
-            "error"
-        );
-        return;
+// Variant change handler
+const handleVariantChange = (index: number, variantValue: string) => {
+    const selectedVariant = variantOptions.find(
+        (option) => option.value === variantValue
+    );
+    if (selectedVariant) {
+        productForm.value.variants[index].variant = variantValue;
+        productForm.value.variants[index].bottles_per_case =
+            selectedVariant.bottles_per_case;
     }
-
-    if (
-        selectedSupplier.value &&
-        totalCost.value > selectedSupplier.value.remaining_deposit
-    ) {
-        showToastWithType(
-            t.value("insufficientDeposit", {
-                totalCost: toBengaliNumber(totalCost.value.toFixed(2)),
-                deposit: toBengaliNumber(
-                    selectedSupplier.value.remaining_deposit.toFixed(2)
-                ),
-            }),
-            "error"
-        );
-        return;
-    }
-
-    showModal.value = true;
 };
 
-const closeModal = () => {
-    showModal.value = false;
-    isSubmitted.value = false; // Reset isSubmitted when closing modal
-};
-
-const addVariant = () => {
-    productForm.value.variants.push({
-        variant: "",
-        quantity: 0,
-        bottles_per_box: 0,
-        free_bottles: 0,
-        unit_price: 0,
-    });
-    isSubmitted.value = false; // Reset isSubmitted when adding a new variant
-};
-
-const removeVariant = (index: number) => {
-    productForm.value.variants.splice(index, 1);
-    isSubmitted.value = false; // Reset isSubmitted when removing a variant
-};
-
+// Form reset handler
 const resetForm = () => {
     productForm.value = {
         product_name: "",
@@ -1663,159 +650,177 @@ const resetForm = () => {
         variants: [
             {
                 variant: "",
-                quantity: 0,
-                bottles_per_box: 0,
-                free_bottles: 0,
-                unit_price: 0,
+                number_of_cases: 0,
+                case_buying_price: 0,
+                bottles_per_case: 0,
+                free_bottles_per_case: 0,
             },
         ],
     };
     isSubmitted.value = false;
-    showToastWithType(t.value("formReset"), "success");
+    showToast.value = true;
+    toastMessage.value = "formReset";
+    toastType.value = "success";
+    setTimeout(() => {
+        showToast.value = false;
+    }, 3000);
 };
 
-const validateForm = () => {
-    const errors = [];
-
-    if (!productForm.value.product_name)
-        errors.push(t.value("productNameRequired"));
-    if (!productForm.value.category_id)
-        errors.push(t.value("categoryRequired"));
-    if (!productForm.value.brand_id) errors.push(t.value("brandRequired"));
-    if (!productForm.value.supplier_id)
-        errors.push(t.value("supplierRequired"));
-
-    productForm.value.variants.forEach((variant, index) => {
-        if (!variant.variant)
-            errors.push(t.value("variantNameRequired", { index: index + 1 }));
-        if (!variant.quantity || variant.quantity <= 0)
-            errors.push(t.value("quantityRequired", { index: index + 1 }));
-        if (!variant.bottles_per_box || variant.bottles_per_box <= 0)
-            errors.push(t.value("itemsPerBoxRequired", { index: index + 1 }));
-        if (!variant.unit_price || variant.unit_price <= 0)
-            errors.push(t.value("unitPriceRequired", { index: index + 1 }));
+// Add variant handler
+const addVariant = () => {
+    productForm.value.variants.push({
+        variant: "",
+        number_of_cases: 0,
+        case_buying_price: 0,
+        bottles_per_case: 0,
+        free_bottles_per_case: 0,
     });
-
-    return errors;
 };
 
-const confirmPurchase = () => {
-    if (
-        selectedSupplier.value &&
-        totalCost.value > selectedSupplier.value.remaining_deposit
-    ) {
-        showToastWithType(
-            t.value("insufficientDeposit", {
-                totalCost: toBengaliNumber(totalCost.value.toFixed(2)),
-                deposit: toBengaliNumber(
-                    selectedSupplier.value.remaining_deposit.toFixed(2)
-                ),
-            }),
-            "error"
+// Remove variant handler
+const removeVariant = (index: number) => {
+    if (productForm.value.variants.length > 1) {
+        productForm.value.variants.splice(index, 1);
+    }
+};
+
+// Open confirmation modal
+const openModal = () => {
+    isSubmitted.value = true;
+
+    // Validate form
+    const isFormValid =
+        productForm.value.product_name &&
+        productForm.value.category_id &&
+        productForm.value.brand_id &&
+        productForm.value.supplier_id &&
+        productForm.value.variants.every(
+            (variant) =>
+                variant.variant &&
+                variant.number_of_cases > 0 &&
+                variant.case_buying_price > 0 &&
+                variant.bottles_per_case > 0 &&
+                variant.free_bottles_per_case >= 0
         );
-        closeModal();
+
+    if (!isFormValid) {
+        showToast.value = true;
+        toastMessage.value = t("purchaseError", {
+            errors: t("purchaseError"),
+        });
+        toastType.value = "error";
+        setTimeout(() => {
+            showToast.value = false;
+        }, 3000);
         return;
     }
 
-    isLoading.value = true;
-    closeModal();
-    console.log("Submitting product:", productForm.value);
+    // Check if purchase amount exceeds supplier's deposit
+    if (remainingDepositAfterPurchase.value < 0) {
+        showToast.value = true;
+        toastMessage.value = t("insufficientDeposit", {
+            totalCost: toBengaliNumber(totalCost.value.toFixed(2)),
+            deposit: toBengaliNumber(
+                selectedSupplier.value?.remaining_deposit.toFixed(2) || "0.00"
+            ),
+        });
+        toastType.value = "error";
+        setTimeout(() => {
+            showToast.value = false;
+        }, 3000);
+        return;
+    }
 
-    router.post("/products-store", productForm.value, {
+    showModal.value = true;
+};
+
+// Close confirmation modal
+const closeModal = () => {
+    showModal.value = false;
+};
+
+// Close toast notification
+const closeToast = () => {
+    showToast.value = false;
+};
+
+// Confirm purchase handler
+const confirmPurchase = () => {
+    isLoading.value = true;
+    const purchaseData = {
+        product_name: productForm.value.product_name,
+        category_id: productForm.value.category_id,
+        brand_id: productForm.value.brand_id,
+        supplier_id: productForm.value.supplier_id,
+        total_bottles: totalBottles.value,
+        total_purchased_bottles: totalPurchasedBottles.value,
+        total_free_bottles: totalFreeBottles.value,
+        total_extra_free_bottles: totalExtraFreeBottles.value,
+        total_cases: totalCases.value,
+        total_purchased_cases: totalPurchasedCases.value,
+        total_cases_from_free: totalCasesFromFree.value,
+        total_cost: totalCost.value,
+        remaining_deposit_after_purchase: remainingDepositAfterPurchase.value,
+        variants: productForm.value.variants.map((variant) => ({
+            variant: variant.variant,
+            number_of_cases: variant.number_of_cases,
+            case_buying_price: variant.case_buying_price,
+            bottles_per_case: variant.bottles_per_case,
+            free_bottles_per_case: variant.free_bottles_per_case,
+            total_bottles: getVariantTotalBottles(variant),
+            total_free_bottles: getVariantTotalFreeBottles(variant),
+            total_cost: getVariantTotalCost(variant),
+            actual_rate_per_bottle: parseFloat(getActualRatePerBottle(variant)),
+            actual_rate_per_case: parseFloat(getActualRatePerCase(variant)),
+            cases_with_free_bottles: getCasesWithFreeBottles(variant),
+            cases_without_free_bottles: getCasesWithoutFreeBottles(variant),
+            extra_free_bottles: getExtraFreeBottles(variant),
+        })),
+    };
+
+    router.post("/products-store", purchaseData, {
         onSuccess: () => {
-            resetForm();
-            showToastWithType(t.value("purchaseSuccess"), "success");
-            console.log("Product submitted successfully");
-        },
-        onError: (errors) => {
-            console.error("Product submission errors:", errors);
-            showToastWithType(
-                t.value("purchaseError", {
-                    errors: Object.values(errors).join(", "),
-                }),
-                "error"
-            );
-        },
-        onFinish: () => {
+            showModal.value = false;
             isLoading.value = false;
+            resetForm();
+            showToast.value = true;
+            toastMessage.value = "purchaseSuccess";
+            toastType.value = "success";
+            setTimeout(() => {
+                showToast.value = false;
+            }, 3000);
+        },
+        onError: (errors: any) => {
+            showModal.value = false;
+            isLoading.value = false;
+            showToast.value = true;
+            toastMessage.value = t("purchaseError", {
+                errors: Object.values(errors).join(", "),
+            });
+            toastType.value = "error";
+            setTimeout(() => {
+                showToast.value = false;
+            }, 3000);
         },
     });
 };
-
-console.log("Purchase.vue component loaded");
 </script>
 
 <style scoped>
-/* Import Kalpurush font from provided CDN */
-@import url("https://fonts.maateen.me/kalpurush/font.css");
-
-/* Fallback to Noto Sans Bengali if Kalpurush fails */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap");
-
-/* Apply Kalpurush font for Bangla text */
 .bangla-font {
     font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
-/* Ensure specific elements use Kalpurush for Bangla */
-.bangla-font h1,
-.bangla-font h2,
-.bangla-font h3,
-.bangla-font h4,
-.bangla-font p,
-.bangla-font span,
-.bangla-font button,
-.bangla-font input::placeholder {
-    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes toast-in {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeIn 1s ease-out;
-}
-
-.animate-toast-in {
-    animation: toast-in 0.3s ease-out forwards;
-}
-
-/* Enhanced focus states */
 input:focus,
 select:focus {
     outline: none;
     transform: translateY(-1px);
 }
 
-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-}
-
-/* Custom select styling */
 select {
     background-image: none;
 }
 
-/* Number input styling */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -1824,28 +829,6 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type="number"] {
     -moz-appearance: textfield;
-}
-
-/* Responsive grid adjustments */
-@media (max-width: 768px) {
-    .grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Enhanced shadow effects */
-.shadow-xl:hover {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgba(79, 70, 229, 0.1);
-}
-
-/* Smooth transitions */
-* {
-    transition-property: color, background-color, border-color,
-        text-decoration-color, fill, stroke, opacity, box-shadow, transform,
-        filter, backdrop-filter;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
 }
 </style>
 ```

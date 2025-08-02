@@ -71,7 +71,7 @@ class ProductPurchaseController extends Controller
         ]);
     }
 
-    public function storeProductPurchase(storeProductPurchaseRequest $request)
+    public function storeProductPurchase(Request $request)
     {
         $data = [
             'name' => $request->product_name,
@@ -82,9 +82,8 @@ class ProductPurchaseController extends Controller
             'date' => now(),
         ];
 
-        $totalAmountForAllVariants = collect($data['metadata'])->sum(function ($variant) {
-            return $variant['quantity'] * $variant['unit_price'];
-        });
+        $totalAmountForAllVariants = collect($data['metadata'])->sum('total_cost');
+
         //format the metadata to variants for the jsonb format
         $data['metadata'] = ['variants' => $data['metadata']];
 

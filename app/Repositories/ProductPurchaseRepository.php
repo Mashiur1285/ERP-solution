@@ -18,7 +18,6 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
     public function purchaseHistory(): Collection
     {
-        // Existing purchaseHistory method remains unchanged
         $query = "
             SELECT
                 suppliers.company_name as supplier_name,
@@ -34,15 +33,30 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
         return collect(DB::select($query))->map(function ($purchase) {
             $variant = json_decode($purchase->variant_data, true) ?: [];
+            $total_bottles = $variant['total_bottles'] ?? 0;
+            $total_free_bottles = $variant['total_free_bottles'] ?? 0;
+            $extra_free_bottles = $variant['extra_free_bottles'] ?? 0;
+            $quantity = $total_bottles - $total_free_bottles - $extra_free_bottles; // Purchased bottles
+            $bottles_per_case = isset($variant['bottles_per_case']) && is_numeric($variant['bottles_per_case']) && $variant['bottles_per_case'] > 0
+                ? $variant['bottles_per_case']
+                : null;
+            $total_cases = $bottles_per_case ? floor($total_bottles / $bottles_per_case) : 0;
+            $purchased_cases = $variant['cases_without_free_bottles'] ?? 0;
+            $cases_from_free = $variant['cases_with_free_bottles'] ?? 0;
+
             return [
                 'supplier_name' => $purchase->supplier_name,
                 'product_name' => $purchase->product_name,
                 'variant' => $variant['variant'] ?? 'N/A',
-                'bottles_per_box' => $variant['bottles_per_box'] ?? 0,
-                'quantity' => $variant['quantity'] ?? 0,
-                'free_bottles' => $variant['free_bottles'] ?? 0,
-                'unit_price' => $variant['unit_price'] ?? 0,
-                'total_value' => ($variant['quantity'] ?? 0) * ($variant['unit_price'] ?? 0),
+                'bottles_per_case' => $bottles_per_case ?? 0,
+                'quantity' => $quantity,
+                'free_bottles' => $total_free_bottles,
+                'extra_free_bottles' => $extra_free_bottles,
+                'total_bottles' => $total_bottles,
+                'purchased_cases' => $purchased_cases,
+                'cases_from_free' => $cases_from_free,
+                'unit_price' => floatval($variant['actual_rate_per_bottle'] ?? 0),
+                'total_value' => floatval($variant['total_cost'] ?? 0),
                 'purchase_date' => $purchase->purchase_date,
             ];
         });
