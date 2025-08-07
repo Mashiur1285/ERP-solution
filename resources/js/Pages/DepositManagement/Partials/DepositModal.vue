@@ -1,3 +1,4 @@
+```vue
 <template>
     <div
         class="fixed inset-0 z-50 overflow-y-auto"
@@ -7,7 +8,7 @@
     >
         <!-- Background overlay -->
         <div
-            class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
+            class="fixed inset-0 bg-black bg-opacity-30 transition-opacity duration-300"
             @click="$emit('close')"
         ></div>
 
@@ -19,18 +20,18 @@
             >
                 <!-- Modal header -->
                 <div
-                    class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4"
+                    class="bg-gradient-to-r from-indigo-200 to-purple-200 px-6 py-4"
                 >
                     <div class="flex items-center justify-between">
                         <h3
                             id="modal-title"
-                            class="text-xl font-semibold text-white flex items-center"
+                            class="text-xl font-semibold text-gray-800 flex items-center"
                         >
                             <div
                                 class="p-2 bg-white bg-opacity-20 rounded-full mr-3"
                             >
                                 <svg
-                                    class="w-6 h-6 text-white"
+                                    class="w-6 h-6 text-indigo-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -47,7 +48,7 @@
                         </h3>
                         <button
                             @click="$emit('close')"
-                            class="text-white hover:text-gray-200 transition-colors p-2 rounded-full hover:bg-white hover:bg-opacity-20"
+                            class="text-gray-800 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-white hover:bg-opacity-20"
                             aria-label="Close modal"
                         >
                             <svg
@@ -78,7 +79,7 @@
                             >
                                 <div class="flex items-center">
                                     <svg
-                                        class="w-4 h-4 mr-2 text-indigo-600"
+                                        class="w-4 h-4 mr-2 text-indigo-400"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -97,7 +98,7 @@
                                 <select
                                     v-model="depositForm.supplier_id"
                                     id="supplier_id"
-                                    class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300 appearance-none"
+                                    class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200 appearance-none"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             isSubmitted &&
@@ -150,7 +151,7 @@
                             >
                                 <div class="flex items-center">
                                     <svg
-                                        class="w-4 h-4 mr-2 text-indigo-600"
+                                        class="w-4 h-4 mr-2 text-indigo-400"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -184,7 +185,7 @@
                                     step="0.01"
                                     min="0"
                                     id="balance_deposited"
-                                    class="w-full pl-8 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                                    class="w-full pl-8 pr-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             isSubmitted &&
@@ -214,13 +215,13 @@
                                 depositForm.supplier_id &&
                                 depositForm.balance_deposited > 0
                             "
-                            class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200"
+                            class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100"
                         >
                             <h4
                                 class="text-sm font-semibold text-gray-800 mb-3 flex items-center"
                             >
                                 <svg
-                                    class="w-4 h-4 mr-2 text-indigo-600"
+                                    class="w-4 h-4 mr-2 text-indigo-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -270,7 +271,7 @@
                 >
                     <button
                         @click="$emit('close')"
-                        class="w-full sm:w-auto px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all duration-300 flex items-center justify-center space-x-2"
+                        class="w-full sm:w-auto px-6 py-3 border-2 border-indigo-100 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2"
                     >
                         <svg
                             class="w-5 h-5"
@@ -289,7 +290,7 @@
                     </button>
                     <button
                         @click="submit"
-                        class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                        class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-200 to-purple-200 text-gray-800 font-semibold rounded-xl hover:from-indigo-300 hover:to-purple-300 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
                         :disabled="isLoading"
                     >
                         <svg
@@ -412,7 +413,7 @@ const toBengaliNumber = (num: number | string) => {
     if (typeof num !== "number" && typeof num !== "string") return num;
     if (currentLanguage.value !== "bn") return num.toString();
 
-    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "ৈ", "৯"];
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
     return num
         .toString()
         .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
@@ -511,4 +512,38 @@ input[type="number"] {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
 }
+
+/* Custom Tailwind color definitions */
+.from-indigo-50 {
+    --tw-gradient-from: #eef2ff;
+}
+
+.to-purple-50 {
+    --tw-gradient-to: #f5f3ff;
+}
+
+.from-indigo-100 {
+    --tw-gradient-from: #e0e7ff;
+}
+
+.to-purple-100 {
+    --tw-gradient-to: #ede9fe;
+}
+
+.from-indigo-200 {
+    --tw-gradient-from: #c7d2fe;
+}
+
+.to-purple-200 {
+    --tw-gradient-to: #ddd6fe;
+}
+
+.from-indigo-300 {
+    --tw-gradient-from: #a5b4fc;
+}
+
+.to-purple-300 {
+    --tw-gradient-to: #c4b5fd;
+}
 </style>
+```

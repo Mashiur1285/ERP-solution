@@ -40,17 +40,6 @@ class SalesController extends Controller
             ];
         });
 
-        $products = $this->productPurchaseRepository->all()->map(function ($product) {
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'category_id' => $product->category_id,
-                'brand_id' => $product->brand_id,
-                'supplier_id' => $product->supplier_id,
-                'metadata' => $product->metadata,
-            ];
-        });
-
         $suppliers = $this->supplierRepository->all()->map(function ($supplier) {
             return [
                 'id' => $supplier->id,
@@ -58,81 +47,167 @@ class SalesController extends Controller
             ];
         });
 
-        $categories = $this->categoryRepository->all()->map(function ($category) {
-            return [
-                'id' => $category->id,
-                'name' => $category->name,
-            ];
-        });
-
-        $brands = $this->brandRepository->all()->map(function ($brand) {
-            return [
-                'id' => $brand->id,
-                'brand_name' => $brand->brand_name,
-            ];
-        });
-
         return Inertia::render('SalesManagement/CreateSale', [
             'shops' => $shops,
-            'products' => $products,
             'suppliers' => $suppliers,
-            'categories' => $categories,
-            'brands' => $brands,
         ]);
     }
 
-    public function store(StoreSalesRequest $request)
+    public function getProductsBySupplier(Request $request)
     {
+        $supplierId = $request->get('supplier_id');
+
+        if (!$supplierId) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = $this->productPurchaseRepository->getProductsBySupplier($supplierId);
+
+        return response()->json(['products' => $products]);
+    }
+
+    public function getVariantInventory(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $variant = $request->get('variant');
+
+        if (!$productId || !$variant) {
+            return response()->json(['error' => 'Product ID and variant are required'], 400);
+        }
+
+        $inventory = $this->productPurchaseRepository->getVariantInventory($productId, $variant);
+
+        if (!$inventory) {
+            return response()->json(['error' => 'Variant not found'], 404);
+        }
+
+        return response()->json($inventory);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'shop_id' => 'required|exists:shops,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'sale_date' => 'required|date',
+            'include_free_bottles' => 'required|boolean',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant' => 'required|string',
+            'items.*.cases_sold' => 'required|integer|min:1',
+            'items.*.selling_price_per_case' => 'required|numeric|min:0',
+            'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
+            'items.*.extra_free_bottles' => 'nullable|integer|min:0',
+        ]);
+
         return DB::transaction(function () use ($request) {
             $data = [
                 'shop_id' => $request->shop_id,
-                'supplier_id' => $request->supplier_id ?? null,
+                'supplier_id' => $request->supplier_id,
                 'invoice_number' => 'INV-' . Str::padLeft(mt_rand(1, 999999), 6, '0'),
-                'total_amount' => collect($request->items)->sum('total_price'),
-                'subtotal' => collect($request->items)->sum('total_price'),
+                'total_amount' => 0,
+                'subtotal' => 0,
                 'status' => SalesStatus::IN_PROGRESS->value,
                 'sale_date' => $request->sale_date,
+                'due_amount' => 0,
             ];
 
             $sale = $this->salesRepository->create($data);
+            $totalAmount = 0;
+            $totalProfit = 0;
 
             foreach ($request->items as $item) {
                 $product = $this->productPurchaseRepository->find($item['product_id']);
-                $variantData = collect($product->metadata['variants'])->firstWhere('variant', $item['variant']);
+                $inventory = $this->productPurchaseRepository->getVariantInventory(
+                    $item['product_id'],
+                    $item['variant']
+                );
 
-                if (!$variantData || $item['total_quantity'] > $variantData['quantity']) {
-                    throw new \Exception('Insufficient inventory for ' . $item['variant']);
+                if (!$inventory) {
+                    throw new \Exception("Variant {$item['variant']} not found");
                 }
 
+                $bottlesPerCase = $inventory['bottles_per_case'];
+                $casesSold = $item['cases_sold'];
+                $sellingPricePerCase = $item['selling_price_per_case'];
+                $purchaseRatePerBottle = $inventory['purchase_rate'];
+
+                // Calculate bottles sold
+                $purchasedBottlesSold = $casesSold * $bottlesPerCase;
+                $freeBottlesSold = 0;
+
+                if ($request->include_free_bottles) {
+                    $freeBottlesPerCase = $item['free_bottles_per_case'] ?? 0;
+                    $extraFreeBottles = $item['extra_free_bottles'] ?? 0;
+                    $freeBottlesSold = ($casesSold * $freeBottlesPerCase) + $extraFreeBottles;
+                }
+
+                $totalBottlesSold = $purchasedBottlesSold + $freeBottlesSold;
+
+                // Validate inventory
+                if ($purchasedBottlesSold > $inventory['purchased_bottles_available']) {
+                    throw new \Exception("Insufficient purchased bottles for {$item['variant']}. Available: {$inventory['purchased_bottles_available']}, Required: {$purchasedBottlesSold}");
+                }
+
+                if ($freeBottlesSold > $inventory['free_bottles_available']) {
+                    throw new \Exception("Insufficient free bottles for {$item['variant']}. Available: {$inventory['free_bottles_available']}, Required: {$freeBottlesSold}");
+                }
+
+                // Calculate pricing and profit
+                $totalSalePrice = $casesSold * $sellingPricePerCase;
+                $purchaseCost = $purchasedBottlesSold * $purchaseRatePerBottle; // Only purchased bottles have cost
+                $profit = $totalSalePrice - $purchaseCost;
+
+                // Create sale item
                 $itemsData = [
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
-                    'supplier_id' => $item['supplier_id'],
+                    'supplier_id' => $request->supplier_id,
                     'variant' => $item['variant'],
-                    'boxes_sold' => $item['boxes_sold'],
-                    'bottles_per_box' => $item['bottles_per_box'],
-                    'quantity' => $item['total_quantity'],
-                    'free_bottles' => $item['free_bottles'],
-                    'purchase_unit_price' => $item['unit_price'],
-                    'unit_price' => $item['new_unit_price'],
-                    'total_price' => $item['total_price'],
-                    'profit' => $item['profit'],
+                    'cases_sold' => $casesSold,
+                    'bottles_per_case' => $bottlesPerCase,
+                    'purchased_bottles_sold' => $purchasedBottlesSold,
+                    'free_bottles_sold' => $freeBottlesSold,
+                    'total_bottles_sold' => $totalBottlesSold,
+                    'purchase_unit_price' => $purchaseRatePerBottle,
+                    'selling_price_per_case' => $sellingPricePerCase,
+                    'unit_price' => $sellingPricePerCase / $bottlesPerCase, // Selling price per bottle
+                    'total_price' => $totalSalePrice,
+                    'profit' => $profit,
                     'delivery_date' => $request->sale_date,
                     'invoice_number' => $data['invoice_number'],
                     'status' => SalesItemsStatus::IN_PROGRESS->value,
                 ];
 
                 $this->salesItemRepository->create($itemsData);
-                $this->productPurchaseRepository->updateInventory($product, $item['variant'], $item['total_quantity']);
+
+                // Update inventory
+                $this->productPurchaseRepository->updateInventory(
+                    $product,
+                    $item['variant'],
+                    $purchasedBottlesSold,
+                    $freeBottlesSold
+                );
+
+                $totalAmount += $totalSalePrice;
+                $totalProfit += $profit;
             }
+
+            // Update sale totals
+            $this->salesRepository->updateSales([
+                'total_amount' => $totalAmount,
+                'subtotal' => $totalAmount,
+                'due_amount' => $totalAmount,
+            ], $sale->id);
 
             return Inertia::render('SalesManagement/SalesPayment', [
                 'sale' => [
                     'id' => $sale->id,
                     'invoice_number' => $data['invoice_number'],
-                    'total_amount' => $data['total_amount'],
+                    'total_amount' => $totalAmount,
+                    'total_profit' => $totalProfit,
                     'paid_amount' => 0,
-                    'due_amount' => $data['total_amount'],
+                    'due_amount' => $totalAmount,
                     'shop_name' => $this->shopRepository->find($data['shop_id'])->shop_name ?? 'Unknown',
                     'advance_balance' => DB::table('payments')->where('shop_id', $data['shop_id'])->sum('advance_balance'),
                 ],
@@ -146,7 +221,6 @@ class SalesController extends Controller
 
     public function payment(Request $request, $id)
     {
-
         $sale = $this->salesRepository->find($id);
         if (!$sale) {
             return redirect()->route('sales.index')->with('error', 'Sale not found');
@@ -178,17 +252,18 @@ class SalesController extends Controller
             if (!$sale) {
                 return redirect()->route('sales.index')->with('error', 'Sale not found');
             }
-            $paymentAmount = $request->payment_amount;
 
+            $paymentAmount = $request->payment_amount;
             $currentAdvanceBalance = DB::table('payments')
                 ->where('shop_id', $sale->shop_id)
                 ->sum('advance_balance');
 
             $newPaidAmount = $sale->paid_amount + $paymentAmount;
-            $newDueAmount = abs($sale->due_amount - $request->due_amount);
+            $newDueAmount = $sale->due_amount - $paymentAmount;
+
             $data = [
                 'paid_amount' => $newPaidAmount,
-                'due_amount' => $newDueAmount,
+                'due_amount' => max(0, $newDueAmount),
                 'is_paid' => $newDueAmount <= 0,
                 'status' => $newDueAmount <= 0 ? SalesStatus::COMPLETED : SalesStatus::IN_PROGRESS,
             ];
@@ -217,14 +292,15 @@ class SalesController extends Controller
                     'invoice_number' => $sale->invoice_number,
                     'total_amount' => $sale->total_amount ?? 0,
                     'paid_amount' => $newPaidAmount,
-                    'due_amount' => $newDueAmount,
+                    'due_amount' => max(0, $newDueAmount),
                     'shop_name' => $shop ? $shop->shop_name : 'Unknown',
-                    'status' => $sale->status, // Include status
+                    'status' => $data['status'],
                 ],
-                'payment' => $paymentData, // Pass full payment data
+                'payment' => $paymentData,
             ]);
         });
     }
+
     public function cashMemo(Request $request, $id)
     {
         $sale = $this->salesRepository->find($id);
@@ -246,14 +322,14 @@ class SalesController extends Controller
                 'paid_amount' => $sale->paid_amount,
                 'due_amount' => $sale->due_amount,
                 'shop_name' => $shop ? $shop->shop_name : 'Unknown',
-                'status' => $sale->status, // Include status
+                'status' => $sale->status,
             ],
             'payment' => $latestPayment ? [
                 'amount' => $latestPayment->amount,
                 'payment_method' => $latestPayment->payment_method,
                 'advance_balance' => $latestPayment->advance_balance,
                 'payment_date' => $latestPayment->payment_date,
-                'status' => $latestPayment->status, // Include payment status
+                'status' => $latestPayment->status,
             ] : [
                 'amount' => 0,
                 'payment_method' => '',
@@ -263,10 +339,11 @@ class SalesController extends Controller
             ],
         ]);
     }
+
     public function report(Request $request)
     {
-
         $query = $this->salesRepository->query()->with(['shop', 'items.product', 'supplier']);
+
         // Apply filters
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('sale_date', [$request->start_date, $request->end_date]);
@@ -300,7 +377,10 @@ class SalesController extends Controller
                         'product_id' => $item->product_id,
                         'product_name' => $item->product ? $item->product->name : 'Unknown',
                         'variant' => $item->variant,
-                        'quantity' => $item->quantity,
+                        'cases_sold' => $item->cases_sold,
+                        'total_bottles_sold' => $item->total_bottles_sold,
+                        'purchased_bottles_sold' => $item->purchased_bottles_sold,
+                        'free_bottles_sold' => $item->free_bottles_sold,
                         'total_price' => $item->total_price,
                         'profit' => $item->profit,
                     ];

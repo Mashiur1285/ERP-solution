@@ -1,19 +1,20 @@
+```vue
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
     >
         <!-- Header -->
         <div
-            class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"
+            class="flex justify-between items-center mb-8 border-b border-indigo-100 pb-4"
         >
             <h1
                 class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
-                    class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
+                    class="p-2 mr-3 bg-indigo-50 rounded-full flex items-center justify-center"
                 >
                     <svg
-                        class="w-8 h-8 text-indigo-600"
+                        class="w-8 h-8 text-indigo-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -31,7 +32,7 @@
             <div class="flex items-center space-x-4">
                 <a
                     href="/suppliers/create"
-                    class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                    class="px-6 py-3 bg-gradient-to-r from-indigo-200 to-purple-200 text-gray-800 font-semibold rounded-lg hover:from-indigo-300 hover:to-purple-300 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                 >
                     <svg
                         class="w-5 h-5"
@@ -62,7 +63,7 @@
                 preserveAspectRatio="none"
             >
                 <path
-                    fill="#4f46e5"
+                    fill="#e0e7ff"
                     fill-opacity="0.1"
                     d="M0,160L48,138.7C96,117,192,75,288,80C384,85,480,139,576,149.3C672,160,768,128,864,106.7C960,85,1056,75,1152,90.7C1248,107,1344,149,1392,170.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
                 />
@@ -75,10 +76,10 @@
                         class="text-2xl font-semibold text-gray-800 flex items-center"
                     >
                         <div
-                            class="p-2 mr-3 bg-indigo-200 rounded-full flex items-center justify-center"
+                            class="p-2 mr-3 bg-indigo-50 rounded-full flex items-center justify-center"
                         >
                             <svg
-                                class="w-6 h-6 text-indigo-700"
+                                class="w-6 h-6 text-indigo-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -104,169 +105,54 @@
 
                 <!-- Table Container -->
                 <div
-                    class="bg-indigo-50 rounded-xl border border-indigo-100 overflow-hidden"
+                    class="bg-white rounded-xl border border-indigo-50 overflow-hidden"
                 >
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-indigo-200">
-                            <thead class="bg-indigo-100">
-                                <tr>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider"
-                                    >
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
-                                            <svg
-                                                class="w-4 h-4 text-indigo-600"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                                ></path>
-                                            </svg>
-                                            <span>Company</span>
-                                        </div>
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider"
-                                    >
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
-                                            <svg
-                                                class="w-4 h-4 text-indigo-600"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                                ></path>
-                                            </svg>
-                                            <span>Branch</span>
-                                        </div>
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider"
-                                    >
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
-                                            <svg
-                                                class="w-4 h-4 text-indigo-600"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                                ></path>
-                                            </svg>
-                                            <span>Contact</span>
-                                        </div>
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider"
-                                    >
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
-                                            <svg
-                                                class="w-4 h-4 text-indigo-600"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
-                                                ></path>
-                                            </svg>
-                                            <span>Website</span>
-                                        </div>
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider"
-                                    >
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
-                                            <svg
-                                                class="w-4 h-4 text-indigo-600"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                                                ></path>
-                                            </svg>
-                                            <span>Actions</span>
-                                        </div>
-                                    </th>
-                                </tr>
+                        <table class="min-w-full divide-y divide-indigo-100">
+                            <thead class="bg-indigo-50">
+                                <th
+                                    scope="col"
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                >
+                                    Company
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                >
+                                    Branch
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                >
+                                    Contact
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                >
+                                    Website
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                >
+                                    Actions
+                                </th>
                             </thead>
                             <tbody class="bg-white divide-y divide-indigo-100">
                                 <tr
                                     v-for="(supplier, index) in suppliers"
                                     :key="supplier.id"
-                                    class="hover:bg-indigo-25 transition-all duration-200 group"
-                                    :class="{ 'bg-indigo-25': index % 2 === 1 }"
+                                    class="hover:bg-indigo-100 transition-all duration-200"
+                                    :class="{ 'bg-indigo-50': index % 2 === 1 }"
                                 >
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div
-                                                class="flex-shrink-0 h-10 w-10"
-                                            >
-                                                <div
-                                                    class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors"
-                                                >
-                                                    <svg
-                                                        class="w-5 h-5 text-indigo-600"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                                        ></path>
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div
-                                                    class="text-sm font-semibold text-gray-900"
-                                                >
-                                                    {{
-                                                        supplier.company_name ??
-                                                        "-"
-                                                    }}
-                                                </div>
-                                            </div>
+                                        <div
+                                            class="text-sm font-semibold text-gray-900"
+                                        >
+                                            {{ supplier.company_name ?? "-" }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -331,7 +217,7 @@
                                         >
                                             <a
                                                 :href="`/suppliers/${supplier.id}/edit`"
-                                                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-700 bg-indigo-100 rounded-lg hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-300 transition-all duration-200 group"
+                                                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 group"
                                             >
                                                 <svg
                                                     class="w-4 h-4 group-hover:scale-110 transition-transform"
@@ -366,10 +252,10 @@
                                             class="flex flex-col items-center space-y-4"
                                         >
                                             <div
-                                                class="p-4 bg-indigo-100 rounded-full"
+                                                class="p-4 bg-indigo-50 rounded-full"
                                             >
                                                 <svg
-                                                    class="w-8 h-8 text-indigo-600"
+                                                    class="w-8 h-8 text-indigo-400"
                                                     fill="none"
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
@@ -394,7 +280,7 @@
                                                 </p>
                                                 <a
                                                     href="/suppliers/create"
-                                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+                                                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-200 to-purple-200 text-gray-800 font-semibold rounded-lg hover:from-indigo-300 hover:to-purple-300 transition-colors"
                                                 >
                                                     <svg
                                                         class="w-4 h-4 mr-2"
@@ -477,17 +363,13 @@ html {
     animation: fadeIn 1s ease-out;
 }
 
-.bg-indigo-25 {
-    background-color: rgb(238 242 255 / 0.3);
-}
-
 /* Custom scrollbar for horizontal overflow */
 .overflow-x-auto::-webkit-scrollbar {
     height: 6px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb {
-    background: #4f46e5;
+    background: #a5b4fc;
     border-radius: 3px;
 }
 
@@ -513,4 +395,10 @@ table {
 .group:hover .group-hover\:-translate-y-0\.5 {
     transform: translateY(-0.125rem);
 }
+
+/* Custom Tailwind color definitions */
+.bg-indigo-25 {
+    background-color: rgb(238 242 255 / 0.3);
+}
 </style>
+```

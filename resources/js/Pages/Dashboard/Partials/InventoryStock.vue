@@ -1,8 +1,8 @@
-<!-- components/Partials/InventoryStock.vue -->
+```vue
 <template>
     <div class="mt-10">
         <div
-            class="bg-white rounded-lg shadow-lg p-8 transition-all duration-300 hover:bg-gray-50 border border-gray-200"
+            class="bg-white rounded-lg shadow-lg p-8 transition-all duration-300 hover:bg-gray-50 border border-gray-200 relative"
         >
             <!-- Enhanced SVG Background -->
             <svg
@@ -82,10 +82,10 @@
                     </div>
                 </div>
 
-                <!-- Clean Stock Level Legend -->
+                <!-- Stock Level Legend -->
                 <div class="mb-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">
-                        {{ t("stockLevelLegend") }}
+                        {{ t("stockLevel") }}
                     </h3>
                     <div class="flex flex-wrap gap-6">
                         <div class="flex items-center space-x-1">
@@ -93,9 +93,7 @@
                             <span class="text-sm text-gray-600">{{
                                 t("lowStock")
                             }}</span>
-                            <span class="text-xs text-gray-400"
-                                >(Low Stock: ≤ 50)</span
-                            >
+                            <span class="text-xs text-gray-400">(≤ 50)</span>
                         </div>
                         <div class="flex items-center space-x-1">
                             <div
@@ -104,9 +102,7 @@
                             <span class="text-sm text-gray-600">{{
                                 t("mediumStock")
                             }}</span>
-                            <span class="text-xs text-gray-400"
-                                >(Medium Stock: 51–200)</span
-                            >
+                            <span class="text-xs text-gray-400">(51–200)</span>
                         </div>
                         <div class="flex items-center space-x-1">
                             <div
@@ -115,14 +111,12 @@
                             <span class="text-sm text-gray-600">{{
                                 t("highStock")
                             }}</span>
-                            <span class="text-xs text-gray-400"
-                                >(High Stock: > 200)</span
-                            >
+                            <span class="text-xs text-gray-400">(> 200)</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Enhanced Total Metrics with Boxes -->
+                <!-- Total Metrics -->
                 <div
                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
                 >
@@ -148,9 +142,13 @@
                             </p>
                         </div>
                         <p
-                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent metric-value"
+                            :class="{
+                                'large-number':
+                                    totalProducts.toString().length > 10,
+                            }"
                         >
-                            {{ toBengaliNumber(totalProducts) }}
+                            {{ toBengaliNumber(totalProducts, 0) }}
                         </p>
                     </div>
                     <div
@@ -175,9 +173,13 @@
                             </p>
                         </div>
                         <p
-                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent metric-value"
+                            :class="{
+                                'large-number':
+                                    totalBoxes.toString().length > 10,
+                            }"
                         >
-                            {{ toBengaliNumber(totalBoxes) }}
+                            {{ toBengaliNumber(totalBoxes, 0) }}
                         </p>
                     </div>
                     <div
@@ -202,9 +204,13 @@
                             </p>
                         </div>
                         <p
-                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent metric-value"
+                            :class="{
+                                'large-number':
+                                    totalQuantity.toString().length > 10,
+                            }"
                         >
-                            {{ toBengaliNumber(totalQuantity) }}
+                            {{ toBengaliNumber(totalQuantity, 0) }}
                         </p>
                     </div>
                     <div
@@ -229,9 +235,13 @@
                             </p>
                         </div>
                         <p
-                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent metric-value"
+                            :class="{
+                                'large-number':
+                                    totalPurchaseValue.toString().length > 10,
+                            }"
                         >
-                            ৳{{ toBengaliNumber(totalPurchaseValue) }}
+                            ৳{{ toBengaliNumber(totalPurchaseValue, 2) }}
                         </p>
                     </div>
                 </div>
@@ -247,7 +257,9 @@
                         v-for="(item, index) in filteredInventory"
                         :key="index"
                         class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer border"
-                        :class="getStockLevelBorder(item.total_quantity)"
+                        :class="
+                            getStockLevelBorder(item.total_available_bottles)
+                        "
                         @click="toggleVariants(index)"
                     >
                         <div class="flex justify-between items-center">
@@ -258,13 +270,13 @@
                                     >
                                         {{ item.product_name }}
                                     </h3>
-                                    <!-- Clean Stock Badge -->
+                                    <!-- Stock Badge -->
                                     <div class="ml-3">
                                         <span
                                             class="clean-stock-badge"
                                             :class="
                                                 getCleanStockBadge(
-                                                    item.total_quantity
+                                                    item.total_available_bottles
                                                 )
                                             "
                                         >
@@ -272,20 +284,21 @@
                                                 class="stock-dot"
                                                 :class="
                                                     getStockDot(
-                                                        item.total_quantity
+                                                        item.total_available_bottles
                                                     )
                                                 "
                                             ></div>
                                             {{
                                                 t(
                                                     getStockLevel(
-                                                        item.total_quantity
+                                                        item.total_available_bottles
                                                     )
                                                 )
                                             }}
                                             <span class="stock-count">{{
                                                 toBengaliNumber(
-                                                    item.total_quantity
+                                                    item.total_available_bottles,
+                                                    0
                                                 )
                                             }}</span>
                                         </span>
@@ -319,11 +332,17 @@
                                             >
                                         </div>
                                         <span
-                                            class="text-lg font-bold text-emerald-600"
+                                            class="text-lg font-bold text-emerald-600 metric-value"
+                                            :class="{
+                                                'large-number':
+                                                    item.total_available_cases.toString()
+                                                        .length > 10,
+                                            }"
                                         >
                                             {{
                                                 toBengaliNumber(
-                                                    item.total_boxes || 0
+                                                    item.total_available_cases,
+                                                    0
                                                 )
                                             }}
                                         </span>
@@ -352,11 +371,17 @@
                                             >
                                         </div>
                                         <span
-                                            class="text-lg font-bold text-blue-600"
+                                            class="text-lg font-bold text-blue-600 metric-value"
+                                            :class="{
+                                                'large-number':
+                                                    item.total_available_bottles.toString()
+                                                        .length > 10,
+                                            }"
                                         >
                                             {{
                                                 toBengaliNumber(
-                                                    item.total_quantity
+                                                    item.total_available_bottles,
+                                                    0
                                                 )
                                             }}
                                         </span>
@@ -385,11 +410,17 @@
                                             >
                                         </div>
                                         <span
-                                            class="text-lg font-bold text-purple-600"
+                                            class="text-lg font-bold text-purple-600 metric-value"
+                                            :class="{
+                                                'large-number':
+                                                    item.total_value.toString()
+                                                        .length > 10,
+                                            }"
                                         >
                                             ৳{{
                                                 toBengaliNumber(
-                                                    item.total_value
+                                                    item.total_value,
+                                                    2
                                                 )
                                             }}
                                         </span>
@@ -435,7 +466,7 @@
                                 class="bg-gradient-to-r from-gray-50 to-indigo-50 p-4 rounded-lg border border-gray-200 shadow-sm"
                             >
                                 <div
-                                    class="grid grid-cols-1 sm:grid-cols-6 gap-3"
+                                    class="grid grid-cols-1 sm:grid-cols-5 gap-3"
                                 >
                                     <div class="text-center">
                                         <span
@@ -444,7 +475,7 @@
                                         >
                                         <span
                                             class="text-sm font-semibold text-gray-800"
-                                            >{{ variant.variant }}ml</span
+                                            >{{ variant.variant }}</span
                                         >
                                     </div>
                                     <div class="text-center">
@@ -452,12 +483,12 @@
                                             class="text-xs text-gray-500 uppercase font-medium block mb-1"
                                             >{{ t("stockLevel") }}</span
                                         >
-                                        <!-- Clean Variant Stock Badge -->
+                                        <!-- Variant Stock Badge -->
                                         <span
                                             class="clean-variant-badge"
                                             :class="
                                                 getCleanVariantBadge(
-                                                    variant.quantity
+                                                    variant.total_bottles_available
                                                 )
                                             "
                                         >
@@ -465,14 +496,14 @@
                                                 class="variant-dot"
                                                 :class="
                                                     getStockDot(
-                                                        variant.quantity
+                                                        variant.total_bottles_available
                                                     )
                                                 "
                                             ></div>
                                             {{
                                                 t(
                                                     getStockLevel(
-                                                        variant.quantity
+                                                        variant.total_bottles_available
                                                     )
                                                 )
                                             }}
@@ -501,7 +532,8 @@
                                             </svg>
                                             {{
                                                 toBengaliNumber(
-                                                    variant.boxes || 0
+                                                    variant.cases_available,
+                                                    0
                                                 )
                                             }}
                                         </span>
@@ -509,30 +541,23 @@
                                     <div class="text-center">
                                         <span
                                             class="text-xs text-gray-500 uppercase font-medium block mb-1"
-                                            >{{ t("quantity") }}</span
-                                        >
-                                        <span
-                                            class="text-sm font-semibold text-blue-600"
-                                            >{{
-                                                toBengaliNumber(
-                                                    variant.quantity
-                                                )
-                                            }}</span
-                                        >
-                                    </div>
-                                    <div class="text-center">
-                                        <span
-                                            class="text-xs text-gray-500 uppercase font-medium block mb-1"
                                             >{{ t("unitPrice") }}</span
                                         >
                                         <span
-                                            class="text-sm font-semibold text-gray-800"
-                                            >৳{{
-                                                toBengaliNumber(
-                                                    variant.unit_price
-                                                )
-                                            }}</span
+                                            class="text-sm font-semibold text-gray-800 metric-value"
+                                            :class="{
+                                                'large-number':
+                                                    variant.unit_price.toString()
+                                                        .length > 10,
+                                            }"
                                         >
+                                            ৳{{
+                                                toBengaliNumber(
+                                                    variant.unit_price,
+                                                    2
+                                                )
+                                            }}
+                                        </span>
                                     </div>
                                     <div class="text-center">
                                         <span
@@ -540,17 +565,27 @@
                                             >{{ t("totalValue") }}</span
                                         >
                                         <span
-                                            class="text-sm font-semibold text-purple-600"
-                                            >৳{{
-                                                toBengaliNumber(
-                                                    variant.total_value
-                                                )
-                                            }}</span
+                                            class="text-sm font-semibold text-purple-600 metric-value"
+                                            :class="{
+                                                'large-number':
+                                                    (
+                                                        variant.total_bottles_available *
+                                                        variant.unit_price
+                                                    ).toString().length > 10,
+                                            }"
                                         >
+                                            ৳{{
+                                                toBengaliNumber(
+                                                    variant.total_bottles_available *
+                                                        variant.unit_price,
+                                                    2
+                                                )
+                                            }}
+                                        </span>
                                     </div>
                                 </div>
 
-                                <!-- Clean Progress Bar for Variant Quantity -->
+                                <!-- Progress Bar for Variant Quantity -->
                                 <div class="mt-3">
                                     <div
                                         class="flex justify-between items-center mb-1"
@@ -561,13 +596,15 @@
                                         <span class="text-xs text-gray-600"
                                             >{{
                                                 toBengaliNumber(
-                                                    variant.quantity
+                                                    variant.total_bottles_available,
+                                                    0
                                                 )
                                             }}
                                             /
                                             {{
                                                 toBengaliNumber(
-                                                    getMaxVariantQuantity()
+                                                    getMaxVariantQuantity(),
+                                                    0
                                                 )
                                             }}</span
                                         >
@@ -579,13 +616,13 @@
                                             class="h-2 rounded-full transition-all duration-1000"
                                             :class="
                                                 getCleanProgressBar(
-                                                    variant.quantity
+                                                    variant.total_bottles_available
                                                 )
                                             "
                                             :style="{
                                                 width:
                                                     getVariantBarWidth(
-                                                        variant.quantity
+                                                        variant.total_bottles_available
                                                     ) + '%',
                                             }"
                                         ></div>
@@ -617,20 +654,89 @@ const expandedVariants = ref({});
 const inventoryChart = ref(null);
 let chartInstance = null;
 
+// Updated toBengaliNumber to handle decimals
+const toBengaliNumber = (num, decimals = 0) => {
+    if (num === null || num === undefined || num === "") return "";
+    if (typeof num !== "number" && typeof num !== "string") return num;
+    if (props.t("languageLabel") !== "বাংলা") {
+        return decimals > 0 ? Number(num).toFixed(decimals) : num;
+    }
+
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    let formattedNum =
+        decimals > 0 ? Number(num).toFixed(decimals) : num.toString();
+    return formattedNum.replace(
+        /\d/g,
+        (digit) => bengaliDigits[parseInt(digit)]
+    );
+};
+
 // Computed properties for total metrics
 const totalProducts = computed(() => props.inventoryStock.length);
 const totalQuantity = computed(() =>
     props.inventoryStock.reduce(
-        (sum, item) => sum + (item.total_quantity || 0),
+        (sum, item) => sum + (item.total_available_bottles || 0),
         0
     )
 );
-const totalPurchaseValue = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + (item.total_value || 0), 0)
-);
 const totalBoxes = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + (item.total_boxes || 0), 0)
+    props.inventoryStock.reduce(
+        (sum, item) => sum + (item.total_available_cases || 0),
+        0
+    )
 );
+const totalPurchaseValue = computed(() => {
+    const total = props.inventoryStock.reduce((sum, item) => {
+        const itemTotalValue = item.variants.reduce((variantSum, variant) => {
+            if (
+                typeof variant.total_bottles_available !== "number" ||
+                typeof variant.unit_price !== "number"
+            ) {
+                console.warn(
+                    `Invalid variant data in item ${item.product_name}:`,
+                    variant
+                );
+                return variantSum;
+            }
+            return (
+                variantSum +
+                variant.total_bottles_available * variant.unit_price
+            );
+        }, 0);
+        return sum + itemTotalValue;
+    }, 0);
+    return total;
+});
+
+// Processed inventory to ensure total_value is calculated
+const processedInventory = computed(() => {
+    return props.inventoryStock.map((item) => {
+        if (!item.variants || !Array.isArray(item.variants)) {
+            console.warn(
+                `Invalid variants for item ${item.product_name}:`,
+                item
+            );
+            return { ...item, total_value: 0 };
+        }
+        const total_value = item.variants.reduce((sum, variant) => {
+            if (
+                typeof variant.total_bottles_available !== "number" ||
+                typeof variant.unit_price !== "number"
+            ) {
+                console.warn(
+                    `Invalid variant data in item ${item.product_name}:`,
+                    variant
+                );
+                return sum;
+            }
+            return sum + variant.total_bottles_available * variant.unit_price;
+        }, 0);
+        return {
+            ...item,
+            total_value,
+        };
+    });
+});
 
 // Determine stock level based on quantity
 const getStockLevel = (quantity) => {
@@ -679,29 +785,6 @@ const getCleanProgressBar = (quantity) => {
     };
 };
 
-// Get badge classes for stock level (legacy support)
-const getStockLevelBadge = (quantity) => {
-    const level = getStockLevel(quantity);
-    return {
-        "bg-red-500 text-white animate-pulse": level === "lowStock",
-        "bg-yellow-500 text-white": level === "mediumStock",
-        "bg-green-500 text-white": level === "highStock",
-    };
-};
-
-// Get progress bar classes for stock level (legacy support)
-const getStockLevelBar = (quantity) => {
-    const level = getStockLevel(quantity);
-    return {
-        "bg-gradient-to-r from-red-600 to-red-700 shadow-lg shadow-red-500/50":
-            level === "lowStock",
-        "bg-gradient-to-r from-yellow-600 to-yellow-700 shadow-lg shadow-yellow-500/50":
-            level === "mediumStock",
-        "bg-gradient-to-r from-green-600 to-green-700 shadow-lg shadow-green-500/50":
-            level === "highStock",
-    };
-};
-
 // Get border classes for low stock items
 const getStockLevelBorder = (quantity) => {
     const level = getStockLevel(quantity);
@@ -730,7 +813,7 @@ const getVariantBarWidth = (quantity) => {
 const getMaxVariantQuantity = () => {
     return Math.max(
         ...props.inventoryStock.flatMap((item) =>
-            item.variants.map((v) => v.quantity || 0)
+            item.variants.map((v) => v.total_bottles_available || 0)
         ),
         1
     );
@@ -738,9 +821,9 @@ const getMaxVariantQuantity = () => {
 
 // Filter inventory based on search query
 const filteredInventory = computed(() => {
-    if (!searchQuery.value) return props.inventoryStock;
+    if (!searchQuery.value) return processedInventory.value;
     const query = searchQuery.value.toLowerCase();
-    return props.inventoryStock.filter((item) =>
+    return processedInventory.value.filter((item) =>
         item.product_name.toLowerCase().includes(query)
     );
 });
@@ -756,15 +839,12 @@ const initializeChart = () => {
             (item) =>
                 props.animatedInventoryStock[item.product_name]
                     ?.total_quantity ||
-                item.total_quantity ||
+                item.total_available_bottles ||
                 0
         );
         const stockLevels = props.inventoryStock.map((item) =>
-            getStockLevel(item.total_quantity || 0)
+            getStockLevel(item.total_available_bottles || 0)
         );
-
-        // Debug stockLevels to ensure correct values
-        console.log("Stock Levels:", stockLevels);
 
         chartInstance = new Chart(inventoryChart.value, {
             type: "bar",
@@ -819,7 +899,7 @@ const initializeChart = () => {
                             padding: 10,
                             callback: function (value) {
                                 return props.t("languageLabel") === "বাংলা"
-                                    ? props.toBengaliNumber(value)
+                                    ? props.toBengaliNumber(value, 0)
                                     : value;
                             },
                         },
@@ -884,13 +964,15 @@ const initializeChart = () => {
                                 const index = context.dataIndex;
                                 const stockLevel =
                                     stockLevels[index] || "unknown";
-                                // Fallback to raw key if translation is missing
                                 const stockLevelLabel =
                                     props.t(stockLevel) || stockLevel;
                                 return [
                                     `${props.t(
                                         "totalQuantity"
-                                    )}: ${props.toBengaliNumber(context.raw)}`,
+                                    )}: ${props.toBengaliNumber(
+                                        context.raw,
+                                        0
+                                    )}`,
                                     `${props.t(
                                         "stockLevel"
                                     )}: ${stockLevelLabel}`,
@@ -915,6 +997,8 @@ onMounted(() => {
     if (viewMode.value === "chart") {
         initializeChart();
     }
+    // Log inventoryStock for debugging
+    console.log("InventoryStock prop:", props.inventoryStock);
 });
 
 watch(viewMode, () => {
@@ -926,6 +1010,7 @@ watch(viewMode, () => {
 watch(
     () => props.inventoryStock,
     () => {
+        console.log("InventoryStock updated:", props.inventoryStock);
         initializeChart();
     },
     { deep: true }
@@ -1042,6 +1127,25 @@ watch(
     }
 }
 
+/* Adjust metrics card text to prevent overflow */
+.metric-value {
+    word-break: break-all;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+/* Reduce font size for very large numbers */
+.metric-value.large-number {
+    font-size: 1.5rem; /* Adjust for smaller screens */
+}
+
+@media (min-width: 1024px) {
+    .metric-value.large-number {
+        font-size: 1.75rem; /* Slightly larger for desktop */
+    }
+}
+
 /* Legacy styles for compatibility */
 .bg-gradient-to-r {
     background: linear-gradient(to right, var(--tw-gradient-stops));
@@ -1107,3 +1211,4 @@ watch(
     animation: slideDown 0.3s ease-out;
 }
 </style>
+```
