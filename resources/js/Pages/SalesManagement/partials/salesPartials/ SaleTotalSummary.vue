@@ -115,6 +115,9 @@
                         <p class="text-sm text-gray-600 font-medium">
                             {{ t("totalBottles") }}
                         </p>
+                        <p class="text-xs text-gray-500">
+                            {{ t("includingFreeBottles") }}
+                        </p>
                         <p class="text-2xl font-bold text-indigo-600">
                             {{
                                 currentLanguage === "bn"
@@ -172,74 +175,129 @@
             </div>
         </div>
 
-        <!-- Profit Analysis -->
-        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-            <h4 class="text-sm font-semibold text-gray-700 mb-3">
-                {{ t("profitAnalysis") }}
-            </h4>
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <div class="p-2 bg-purple-100 rounded-lg mr-3">
-                        <svg
-                            class="w-5 h-5 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                            />
-                        </svg>
+        <!-- Bottles Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Purchased vs Free Bottles -->
+            <div
+                class="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
+            >
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                    {{ t("bottlesBreakdown") }}
+                </h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">{{
+                            t("purchasedBottles")
+                        }}</span>
+                        <span class="font-medium text-blue-600">
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(computedPurchasedBottles)
+                                    : computedPurchasedBottles.toLocaleString()
+                            }}
+                        </span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-600 font-medium">
-                            {{ t("totalProfit") }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            {{ t("expectedProfit") }}
-                        </p>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">{{
+                            t("freeBottles")
+                        }}</span>
+                        <span class="font-medium text-green-600">
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(computedFreeBottles)
+                                    : computedFreeBottles.toLocaleString()
+                            }}
+                        </span>
+                    </div>
+                    <hr class="border-gray-200" />
+                    <div class="flex justify-between text-sm font-semibold">
+                        <span class="text-gray-800">{{
+                            t("totalBottles")
+                        }}</span>
+                        <span class="text-indigo-600">
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(
+                                          saleSummary.totalBottlesSold
+                                      )
+                                    : saleSummary.totalBottlesSold.toLocaleString()
+                            }}
+                        </span>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p
-                        class="text-xl font-bold"
-                        :class="
-                            saleSummary.totalProfit >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                        "
-                    >
-                        ৳{{
-                            currentLanguage === "bn"
-                                ? toBengaliNumber(
-                                      saleSummary.totalProfit.toFixed(2)
-                                  )
-                                : saleSummary.totalProfit.toLocaleString(
-                                      "en-US",
-                                      {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                      }
-                                  )
-                        }}
-                    </p>
-                    <p
-                        class="text-xs"
-                        :class="
-                            saleSummary.totalProfit >= 0
-                                ? 'text-green-500'
-                                : 'text-red-500'
-                        "
-                    >
-                        {{
-                            saleSummary.totalProfit >= 0
-                                ? t("profit")
-                                : t("loss")
-                        }}
-                    </p>
+            </div>
+
+            <!-- Profit Analysis -->
+            <div
+                class="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
+            >
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                    {{ t("profitAnalysis") }}
+                </h4>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-purple-100 rounded-lg mr-3">
+                            <svg
+                                class="w-5 h-5 text-purple-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">
+                                {{ t("totalProfit") }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                {{ t("expectedProfit") }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p
+                            class="text-xl font-bold"
+                            :class="
+                                saleSummary.totalProfit >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                            "
+                        >
+                            ৳{{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(
+                                          saleSummary.totalProfit.toFixed(2)
+                                      )
+                                    : saleSummary.totalProfit.toLocaleString(
+                                          "en-US",
+                                          {
+                                              minimumFractionDigits: 2,
+                                              maximumFractionDigits: 2,
+                                          }
+                                      )
+                            }}
+                        </p>
+                        <p
+                            class="text-xs"
+                            :class="
+                                saleSummary.totalProfit >= 0
+                                    ? 'text-green-500'
+                                    : 'text-red-500'
+                            "
+                        >
+                            {{
+                                saleSummary.totalProfit >= 0
+                                    ? t("profit")
+                                    : t("loss")
+                            }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -277,6 +335,22 @@
                                       "0.00"
                             }}
                         </p>
+                        <!-- Show free bottles info if available -->
+                        <p
+                            v-if="
+                                item.purchase_metadata?.free_bottles_per_case >
+                                0
+                            "
+                            class="text-xs text-green-600"
+                        >
+                            {{ t("includes") }}
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(getItemFreeBottles(item))
+                                    : getItemFreeBottles(item)
+                            }}
+                            {{ t("freeBottles") }}
+                        </p>
                     </div>
                     <div class="text-right">
                         <p class="font-bold text-green-600">
@@ -297,6 +371,14 @@
                                     : getItemProfit(item).toFixed(2)
                             }}
                         </p>
+                        <p class="text-xs text-indigo-600">
+                            {{ t("totalBottles") }}:
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(getItemTotalBottles(item))
+                                    : getItemTotalBottles(item)
+                            }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -305,15 +387,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+
 interface SaleItem {
     product_id: number;
     variant: string;
     cases_sold: number;
     selling_price_per_case: number;
-    free_bottles_per_case: number;
-    extra_free_bottles: number;
     bottles_per_case: number;
     purchase_rate: number;
+    purchase_metadata?: {
+        free_bottles_per_case?: number;
+        case_buying_price?: number;
+    };
 }
 
 interface Product {
@@ -325,6 +411,7 @@ interface Product {
 const props = defineProps<{
     saleForm: {
         items: SaleItem[];
+        include_free_bottles: boolean;
     };
     saleSummary: {
         totalCases: number;
@@ -338,6 +425,23 @@ const props = defineProps<{
     toBengaliNumber: (num: number | string) => string;
 }>();
 
+// Computed values for bottle breakdown
+const computedPurchasedBottles = computed(() => {
+    return props.saleForm.items.reduce((sum, item) => {
+        return sum + (item.cases_sold || 0) * (item.bottles_per_case || 0);
+    }, 0);
+});
+
+const computedFreeBottles = computed(() => {
+    if (!props.saleForm.include_free_bottles) return 0;
+
+    return props.saleForm.items.reduce((sum, item) => {
+        const freeBottlesPerCase =
+            item.purchase_metadata?.free_bottles_per_case || 0;
+        return sum + (item.cases_sold || 0) * freeBottlesPerCase;
+    }, 0);
+});
+
 // Helper functions
 const getItemTotal = (item: SaleItem): number => {
     return (item.cases_sold || 0) * (item.selling_price_per_case || 0);
@@ -345,25 +449,24 @@ const getItemTotal = (item: SaleItem): number => {
 
 const getItemProfit = (item: SaleItem): number => {
     const sellPrice = getItemTotal(item);
+    const totalBottlesSold = getItemTotalBottles(item);
+    const purchaseCost = totalBottlesSold * (item.purchase_rate || 0);
+    return sellPrice - purchaseCost;
+};
 
-    // Calculate total bottles sold (including free bottles if toggle is on)
+const getItemTotalBottles = (item: SaleItem): number => {
     const purchasedBottles =
         (item.cases_sold || 0) * (item.bottles_per_case || 0);
-    let freeBottles = 0;
+    const freeBottles = getItemFreeBottles(item);
+    return purchasedBottles + freeBottles;
+};
 
-    // This should match the logic from the parent component
-    // We need to access the includeFreeBottles state somehow
-    // For now, check if free bottle fields have values
-    if (item.free_bottles_per_case || item.extra_free_bottles) {
-        freeBottles =
-            (item.cases_sold || 0) * (item.free_bottles_per_case || 0) +
-            (item.extra_free_bottles || 0);
-    }
-
-    const totalBottlesSold = purchasedBottles + freeBottles;
-    const purchaseCost = totalBottlesSold * (item.purchase_rate || 0);
-
-    return sellPrice - purchaseCost;
+const getItemFreeBottles = (item: SaleItem): number => {
+    if (!props.saleForm.include_free_bottles || !item.purchase_metadata)
+        return 0;
+    const freeBottlesPerCase =
+        item.purchase_metadata.free_bottles_per_case || 0;
+    return (item.cases_sold || 0) * freeBottlesPerCase;
 };
 
 const getProductName = (productId: number): string => {

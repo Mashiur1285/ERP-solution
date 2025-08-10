@@ -250,40 +250,37 @@
                         </p>
                     </div>
 
-                    <!-- Free Bottles per Case (only if toggle is on) -->
-                    <div v-if="includeFreeBottles && item.variant">
+                    <!-- Free Bottles per Case (READ-ONLY, populated from purchase data) -->
+                    <div
+                        v-if="
+                            includeFreeBottles &&
+                            item.variant &&
+                            item.purchase_metadata
+                        "
+                    >
                         <label
                             :for="'free_bottles_per_case_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
                             {{ t("freeBottlesPerCase") }}
+                            <span class="text-xs text-gray-500"
+                                >({{ t("fromPurchase") }})</span
+                            >
                         </label>
                         <input
-                            v-model.number="item.free_bottles_per_case"
-                            @input="calculateItemTotals(index)"
+                            :value="
+                                item.purchase_metadata.free_bottles_per_case ||
+                                0
+                            "
                             type="number"
-                            min="0"
                             :id="'free_bottles_per_case_' + index"
-                            class="w-full py-2 px-3 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                            class="w-full py-2 px-3 rounded-md border-2 border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
+                            readonly
+                            disabled
                         />
-                    </div>
-
-                    <!-- Extra Free Bottles (only if toggle is on) -->
-                    <div v-if="includeFreeBottles && item.variant">
-                        <label
-                            :for="'extra_free_bottles_' + index"
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            {{ t("extraFreeBottles") }}
-                        </label>
-                        <input
-                            v-model.number="item.extra_free_bottles"
-                            @input="calculateItemTotals(index)"
-                            type="number"
-                            min="0"
-                            :id="'extra_free_bottles_' + index"
-                            class="w-full py-2 px-3 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ t("autoPopulatedFromPurchase") }}
+                        </p>
                     </div>
                 </div>
 
@@ -539,6 +536,57 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Purchase Metadata Info (if available) -->
+                        <div
+                            v-if="item.purchase_metadata && includeFreeBottles"
+                            class="bg-white p-3 rounded-lg border border-yellow-200 shadow-sm mt-3"
+                        >
+                            <h6
+                                class="text-xs font-semibold text-yellow-700 mb-2 flex items-center"
+                            >
+                                <svg
+                                    class="w-3 h-3 mr-1 text-yellow-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                                {{ t("purchaseData") }}
+                            </h6>
+                            <div
+                                class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs"
+                            >
+                                <div>
+                                    <span class="text-gray-600"
+                                        >{{ t("freeBottlesPerCase") }}:</span
+                                    >
+                                    <span class="font-bold text-gray-800 ml-1">
+                                        {{
+                                            item.purchase_metadata
+                                                .free_bottles_per_case || 0
+                                        }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600"
+                                        >{{ t("caseBuyingPrice") }}:</span
+                                    >
+                                    <span class="font-bold text-gray-800 ml-1">
+                                        ৳{{
+                                            item.purchase_metadata
+                                                .case_buying_price || 0
+                                        }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Item Calculations -->
@@ -644,11 +692,10 @@ interface SaleItem {
     variant: string;
     cases_sold: number;
     selling_price_per_case: number;
-    free_bottles_per_case: number;
-    extra_free_bottles: number;
     bottles_per_case: number;
     purchase_rate: number;
     available_inventory?: any;
+    purchase_metadata?: any; // Added to store purchase-level data
 }
 
 const props = defineProps<{
@@ -684,6 +731,7 @@ const onProductChange = (index: number) => {
     item.bottles_per_case = 0;
     item.purchase_rate = 0;
     item.available_inventory = null;
+    item.purchase_metadata = null;
     emit("item-change", index, "product_id", item.product_id);
 };
 
@@ -711,7 +759,7 @@ const getItemTotal = (item: SaleItem): number => {
 const getItemProfit = (item: SaleItem): number => {
     const sellPrice = getItemTotal(item);
 
-    // Calculate total bottles sold (including free bottles)
+    // Calculate total bottles sold (including free bottles from purchase data)
     const totalBottlesSold = getTotalBottlesSold(item);
     const purchaseCost = totalBottlesSold * (item.purchase_rate || 0);
 
@@ -722,11 +770,14 @@ const getTotalBottlesSold = (item: SaleItem): number => {
     const purchasedBottles =
         (item.cases_sold || 0) * (item.bottles_per_case || 0);
     let freeBottles = 0;
-    if (props.includeFreeBottles) {
-        freeBottles =
-            (item.cases_sold || 0) * (item.free_bottles_per_case || 0) +
-            (item.extra_free_bottles || 0);
+
+    if (props.includeFreeBottles && item.purchase_metadata) {
+        // Use free bottles per case from purchase data
+        const freeBottlesPerCase =
+            item.purchase_metadata.free_bottles_per_case || 0;
+        freeBottles = (item.cases_sold || 0) * freeBottlesPerCase;
     }
+
     return purchasedBottles + freeBottles;
 };
 
@@ -742,12 +793,9 @@ const getTotalAvailableBottles = (item: SaleItem): number => {
 };
 
 const getPurchaseRatePerCase = (item: SaleItem): number => {
-    // Use the actual case buying price from metadata
-    if (
-        item.available_inventory &&
-        item.available_inventory.case_buying_price
-    ) {
-        return item.available_inventory.case_buying_price;
+    // Use the actual case buying price from purchase metadata
+    if (item.purchase_metadata && item.purchase_metadata.case_buying_price) {
+        return item.purchase_metadata.case_buying_price;
     }
     // Fallback to calculation if case_buying_price is not available
     return (item.purchase_rate || 0) * (item.bottles_per_case || 0);

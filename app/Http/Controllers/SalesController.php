@@ -97,7 +97,7 @@ class SalesController extends Controller
             'items.*.cases_sold' => 'required|integer|min:1',
             'items.*.selling_price_per_case' => 'required|numeric|min:0',
             'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
-            'items.*.extra_free_bottles' => 'nullable|integer|min:0',
+            // Removed extra_free_bottles validation as requested
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -137,9 +137,10 @@ class SalesController extends Controller
                 $freeBottlesSold = 0;
 
                 if ($request->include_free_bottles) {
+                    // Use free bottles per case from purchase data (sent from frontend)
                     $freeBottlesPerCase = $item['free_bottles_per_case'] ?? 0;
-                    $extraFreeBottles = $item['extra_free_bottles'] ?? 0;
-                    $freeBottlesSold = ($casesSold * $freeBottlesPerCase) + $extraFreeBottles;
+                    $freeBottlesSold = $casesSold * $freeBottlesPerCase;
+                    // Removed extra free bottles as requested
                 }
 
                 $totalBottlesSold = $purchasedBottlesSold + $freeBottlesSold;
@@ -155,7 +156,7 @@ class SalesController extends Controller
 
                 // Calculate pricing and profit
                 $totalSalePrice = $casesSold * $sellingPricePerCase;
-                $purchaseCost = $purchasedBottlesSold * $purchaseRatePerBottle; // Only purchased bottles have cost
+                $purchaseCost = $totalBottlesSold * $purchaseRatePerBottle; // Cost includes all bottles (purchased + free)
                 $profit = $totalSalePrice - $purchaseCost;
 
                 // Create sale item

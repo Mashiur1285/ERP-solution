@@ -241,11 +241,10 @@ interface SaleItem {
     variant: string;
     cases_sold: number;
     selling_price_per_case: number;
-    free_bottles_per_case: number;
-    extra_free_bottles: number;
     bottles_per_case: number;
     purchase_rate: number;
     available_inventory?: any;
+    purchase_metadata?: any; // Added to store purchase-level metadata
 }
 
 const props = defineProps<{
@@ -328,6 +327,10 @@ const translations = {
         loss: "Loss",
         itemsBreakdown: "Items Breakdown",
         cases: "Cases",
+        fromPurchase: "from purchase",
+        autoPopulatedFromPurchase: "Auto-populated from purchase data",
+        purchaseData: "Purchase Data",
+        caseBuyingPrice: "Case Buying Price",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -394,6 +397,10 @@ const translations = {
         loss: "ক্ষতি",
         itemsBreakdown: "আইটেম বিবরণ",
         cases: "কেস",
+        fromPurchase: "ক্রয় থেকে",
+        autoPopulatedFromPurchase: "ক্রয় ডেটা থেকে স্বয়ংক্রিয়ভাবে পূরণ",
+        purchaseData: "ক্রয় ডেটা",
+        caseBuyingPrice: "কেস ক্রয় মূল্য",
     },
 };
 
@@ -428,14 +435,14 @@ const saleSummary = computed(() => {
         const sellPrice =
             (item.cases_sold || 0) * (item.selling_price_per_case || 0);
 
-        // Calculate total bottles sold (including free bottles)
+        // Calculate total bottles sold (including free bottles from purchase data)
         const purchasedBottles =
             (item.cases_sold || 0) * (item.bottles_per_case || 0);
         let freeBottles = 0;
-        if (includeFreeBottles.value) {
-            freeBottles =
-                (item.cases_sold || 0) * (item.free_bottles_per_case || 0) +
-                (item.extra_free_bottles || 0);
+        if (includeFreeBottles.value && item.purchase_metadata) {
+            const freeBottlesPerCase =
+                item.purchase_metadata.free_bottles_per_case || 0;
+            freeBottles = (item.cases_sold || 0) * freeBottlesPerCase;
         }
         const totalBottlesSold = purchasedBottles + freeBottles;
 
@@ -447,10 +454,10 @@ const saleSummary = computed(() => {
         const purchasedBottles =
             (item.cases_sold || 0) * (item.bottles_per_case || 0);
         let freeBottles = 0;
-        if (includeFreeBottles.value) {
-            freeBottles =
-                (item.cases_sold || 0) * (item.free_bottles_per_case || 0) +
-                (item.extra_free_bottles || 0);
+        if (includeFreeBottles.value && item.purchase_metadata) {
+            const freeBottlesPerCase =
+                item.purchase_metadata.free_bottles_per_case || 0;
+            freeBottles = (item.cases_sold || 0) * freeBottlesPerCase;
         }
         return sum + purchasedBottles + freeBottles;
     }, 0);
@@ -491,13 +498,6 @@ const changeLanguage = (lang: string) => {
 // Toggle change handler
 const onToggleChange = () => {
     saleForm.value.include_free_bottles = includeFreeBottles.value;
-    // Reset free bottle fields if toggled off
-    if (!includeFreeBottles.value) {
-        saleForm.value.items.forEach((item) => {
-            item.free_bottles_per_case = 0;
-            item.extra_free_bottles = 0;
-        });
-    }
 };
 
 // Supplier change handler
@@ -533,10 +533,23 @@ const onVariantChange = async (
         );
         const inventory = await response.json();
 
+        // Get the purchase metadata from the product's variant data
+        const product = availableProducts.value.find(
+            (p) => p.product_id === productId
+        );
+        const variantData = product?.variants.find(
+            (v) => v.variant === variant
+        );
+
         const item = saleForm.value.items[itemIndex];
         item.bottles_per_case = inventory.bottles_per_case;
         item.purchase_rate = inventory.purchase_rate;
         item.available_inventory = inventory;
+
+        // Store purchase metadata for free bottles calculation
+        if (variantData && variantData.variant_metadata) {
+            item.purchase_metadata = variantData.variant_metadata;
+        }
     } catch (error) {
         console.error("Error fetching variant inventory:", error);
     }
@@ -544,7 +557,9 @@ const onVariantChange = async (
 
 // Item change handler
 const handleItemChange = (index: number, field: string, value: any) => {
-    saleForm.value.items[index][field] = value;
+    if (field !== "calculated") {
+        saleForm.value.items[index][field] = value;
+    }
 };
 
 // Add sale item handler
@@ -554,10 +569,10 @@ const addSaleItem = () => {
         variant: "",
         cases_sold: 0,
         selling_price_per_case: 0,
-        free_bottles_per_case: 0,
-        extra_free_bottles: 0,
         bottles_per_case: 0,
         purchase_rate: 0,
+        available_inventory: null,
+        purchase_metadata: null,
     });
 };
 
@@ -632,7 +647,24 @@ const closeToast = () => {
 const confirmSale = () => {
     isLoading.value = true;
 
-    router.post("/sales/store", saleForm.value, {
+    // Prepare sale data with purchase metadata
+    const saleData = {
+        ...saleForm.value,
+        items: saleForm.value.items.map((item) => ({
+            product_id: item.product_id,
+            variant: item.variant,
+            cases_sold: item.cases_sold,
+            selling_price_per_case: item.selling_price_per_case,
+            bottles_per_case: item.bottles_per_case,
+            purchase_rate: item.purchase_rate,
+            // Include free bottles per case from purchase metadata
+            free_bottles_per_case:
+                item.purchase_metadata?.free_bottles_per_case || 0,
+            extra_free_bottles: 0, // Remove this field as requested
+        })),
+    };
+
+    router.post("/sales/store", saleData, {
         onSuccess: () => {
             showModal.value = false;
             isLoading.value = false;

@@ -222,6 +222,8 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             'purchase_rate' => $variantData['actual_rate_per_bottle'] ?? 0,
             'case_buying_price' => $variantData['case_buying_price'] ?? 0,
             'variant_data' => $variantData,
+            // Add purchase metadata for free bottles calculation
+            'free_bottles_per_case' => $variantData['free_bottles_per_case'] ?? 0,
         ];
     }
 }
