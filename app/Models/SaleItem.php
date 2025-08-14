@@ -18,8 +18,10 @@ class SaleItem extends Model
         'purchased_bottles_sold',
         'free_bottles_sold',
         'total_bottles_sold',
+        'target_bottles_to_sell', // New field - the target number of bottles to sell
         'purchase_unit_price',
         'selling_price_per_case',
+        'selling_price_per_bottle', // New field - consistent selling price per bottle
         'unit_price',
         'total_price',
         'profit',
@@ -31,6 +33,7 @@ class SaleItem extends Model
         'delivery_date' => 'datetime',
         'purchase_unit_price' => 'decimal:2',
         'selling_price_per_case' => 'decimal:2',
+        'selling_price_per_bottle' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
         'profit' => 'decimal:2',

@@ -181,54 +181,55 @@
                         </p>
                     </div>
 
-                    <!-- Cases Sold -->
+                    <!-- Cases to Sell -->
                     <div v-if="item.variant">
                         <label
-                            :for="'cases_sold_' + index"
+                            :for="'cases_to_sell_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
-                            {{ t("casesSold") }}*
+                            {{ t("casesToSell") }}*
                         </label>
                         <input
-                            v-model.number="item.cases_sold"
-                            @input="calculateItemTotals(index)"
+                            v-model.number="item.cases_to_sell"
+                            @input="calculateFromCases(index)"
                             type="number"
                             min="1"
-                            :id="'cases_sold_' + index"
+                            :id="'cases_to_sell_' + index"
                             class="w-full py-2 px-3 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
                             :class="{
                                 'border-red-400 focus:border-red-500 focus:ring-red-200':
                                     isSubmitted &&
-                                    (!item.cases_sold || item.cases_sold <= 0),
+                                    (!item.cases_to_sell ||
+                                        item.cases_to_sell <= 0),
                             }"
                             required
                         />
                         <p
                             v-if="
                                 isSubmitted &&
-                                (!item.cases_sold || item.cases_sold <= 0)
+                                (!item.cases_to_sell || item.cases_to_sell <= 0)
                             "
                             class="mt-2 text-sm text-red-600"
                         >
-                            {{ t("casesSoldRequired") }}
+                            {{ t("casesToSellRequired") }}
                         </p>
                     </div>
 
                     <!-- Selling Price per Case -->
                     <div v-if="item.variant">
                         <label
-                            :for="'selling_price_' + index"
+                            :for="'selling_price_per_case_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
                             {{ t("sellingPricePerCase") }}*
                         </label>
                         <input
                             v-model.number="item.selling_price_per_case"
-                            @input="calculateItemTotals(index)"
+                            @input="calculateFromCases(index)"
                             type="number"
                             step="0.01"
                             min="0"
-                            :id="'selling_price_' + index"
+                            :id="'selling_price_per_case_' + index"
                             class="w-full py-2 px-3 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
                             :class="{
                                 'border-red-400 focus:border-red-500 focus:ring-red-200':
@@ -246,7 +247,76 @@
                             "
                             class="mt-2 text-sm text-red-600"
                         >
-                            {{ t("sellingPriceRequired") }}
+                            {{ t("sellingPricePerCaseRequired") }}
+                        </p>
+                    </div>
+
+                    <!-- Calculated Total Bottles (Read-only) -->
+                    <div
+                        v-if="
+                            item.variant &&
+                            item.cases_to_sell &&
+                            item.bottles_per_case
+                        "
+                    >
+                        <label
+                            :for="'total_bottles_calculated_' + index"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            {{ t("totalBottlesCalculated") }}
+                            <span class="text-xs text-green-600"
+                                >({{ t("calculated") }})</span
+                            >
+                        </label>
+                        <input
+                            :value="getCalculatedTotalBottles(item)"
+                            type="number"
+                            :id="'total_bottles_calculated_' + index"
+                            class="w-full py-2 px-3 rounded-md border-2 border-green-200 bg-green-50 text-green-800 font-medium cursor-not-allowed"
+                            readonly
+                            disabled
+                        />
+                        <p class="mt-1 text-xs text-green-600">
+                            {{ item.cases_to_sell }} {{ t("cases") }} ×
+                            {{ getEffectiveBottlesPerCase(item) }}
+                            {{ t("bottlesPerCase") }}
+                        </p>
+                    </div>
+
+                    <!-- Calculated Selling Price per Bottle (Read-only) -->
+                    <div
+                        v-if="
+                            item.variant &&
+                            item.selling_price_per_case &&
+                            item.bottles_per_case
+                        "
+                    >
+                        <label
+                            :for="
+                                'selling_price_per_bottle_calculated_' + index
+                            "
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            {{ t("sellingPricePerBottleCalculated") }}
+                            <span class="text-xs text-blue-600"
+                                >({{ t("calculated") }})</span
+                            >
+                        </label>
+                        <input
+                            :value="
+                                getCalculatedPricePerBottle(item).toFixed(2)
+                            "
+                            type="number"
+                            step="0.01"
+                            :id="'selling_price_per_bottle_calculated_' + index"
+                            class="w-full py-2 px-3 rounded-md border-2 border-blue-200 bg-blue-50 text-blue-800 font-medium cursor-not-allowed"
+                            readonly
+                            disabled
+                        />
+                        <p class="mt-1 text-xs text-blue-600">
+                            ৳{{ item.selling_price_per_case }} ÷
+                            {{ getEffectiveBottlesPerCase(item) }}
+                            {{ t("bottles") }}
                         </p>
                     </div>
 
@@ -589,14 +659,74 @@
                         </div>
                     </div>
 
-                    <!-- Item Calculations -->
+                    <!-- Calculation Display -->
                     <div
-                        v-if="item.cases_sold && item.selling_price_per_case"
+                        v-if="item.cases_to_sell && item.selling_price_per_case"
                         class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg"
                     >
                         <h5 class="text-sm font-semibold text-indigo-700 mb-3">
                             {{ t("itemSummary") }}
                         </h5>
+
+                        <!-- Cases calculation display -->
+                        <div
+                            v-if="item.purchase_metadata"
+                            class="mb-3 p-3 bg-white rounded-lg border border-gray-200"
+                        >
+                            <h6
+                                class="text-xs font-semibold text-gray-700 mb-2"
+                            >
+                                {{ t("calculationBreakdown") }}
+                            </h6>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p>
+                                    <span class="font-medium"
+                                        >{{ t("inputCases") }}:</span
+                                    >
+                                    {{ item.cases_to_sell }}
+                                </p>
+                                <p>
+                                    <span class="font-medium"
+                                        >{{ t("bottlesPerCase") }}:</span
+                                    >
+                                    {{ item.bottles_per_case }}
+                                </p>
+                                <p>
+                                    <span class="font-medium"
+                                        >{{ t("freeBottlesPerCase") }}:</span
+                                    >
+                                    {{
+                                        item.purchase_metadata
+                                            .free_bottles_per_case || 0
+                                    }}
+                                </p>
+                                <p>
+                                    <span class="font-medium"
+                                        >{{
+                                            t("effectiveBottlesPerCase")
+                                        }}:</span
+                                    >
+                                    {{ getEffectiveBottlesPerCase(item) }}
+                                </p>
+                                <hr class="border-gray-300" />
+                                <p class="font-semibold text-indigo-600">
+                                    <span>{{ t("totalBottles") }}:</span>
+                                    {{ getCalculatedTotalBottles(item) }}
+                                </p>
+                                <p class="font-semibold text-blue-600">
+                                    <span>{{ t("pricePerBottle") }}:</span> ৳{{
+                                        getCalculatedPricePerBottle(
+                                            item
+                                        ).toFixed(2)
+                                    }}
+                                </p>
+                                <p class="font-semibold text-orange-600">
+                                    <span>{{ t("actualCasesNeeded") }}:</span>
+                                    {{ getCalculatedCases(item) }}
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div
                                 class="text-center p-3 bg-white rounded-lg border border-indigo-100"
@@ -648,9 +778,11 @@
                                     {{
                                         currentLanguage === "bn"
                                             ? toBengaliNumber(
-                                                  getTotalBottlesSold(item)
+                                                  getCalculatedTotalBottles(
+                                                      item
+                                                  )
                                               )
-                                            : getTotalBottlesSold(
+                                            : getCalculatedTotalBottles(
                                                   item
                                               ).toLocaleString()
                                     }}
@@ -690,12 +822,15 @@ interface Product {
 interface SaleItem {
     product_id: number;
     variant: string;
-    cases_sold: number;
+    cases_to_sell: number;
     selling_price_per_case: number;
     bottles_per_case: number;
     purchase_rate: number;
     available_inventory?: any;
-    purchase_metadata?: any; // Added to store purchase-level data
+    purchase_metadata?: any;
+    // Calculated fields
+    total_bottles_to_sell?: number;
+    selling_price_per_bottle?: number;
 }
 
 const props = defineProps<{
@@ -732,6 +867,10 @@ const onProductChange = (index: number) => {
     item.purchase_rate = 0;
     item.available_inventory = null;
     item.purchase_metadata = null;
+    item.cases_to_sell = 0;
+    item.selling_price_per_case = 0;
+    item.total_bottles_to_sell = 0;
+    item.selling_price_per_bottle = 0;
     emit("item-change", index, "product_id", item.product_id);
 };
 
@@ -740,9 +879,50 @@ const onVariantChange = (index: number) => {
     emit("variant-change", index, item.product_id, item.variant);
 };
 
+const calculateFromCases = (index: number) => {
+    const item = props.saleForm.items[index];
+    if (
+        item.cases_to_sell &&
+        item.bottles_per_case &&
+        item.selling_price_per_case
+    ) {
+        // Calculate total bottles based on cases and effective bottles per case
+        const effectiveBottlesPerCase = getEffectiveBottlesPerCase(item);
+        item.total_bottles_to_sell =
+            item.cases_to_sell * effectiveBottlesPerCase;
+
+        // Calculate selling price per bottle
+        item.selling_price_per_bottle =
+            item.selling_price_per_case / effectiveBottlesPerCase;
+
+        emit("item-change", index, "calculated", true);
+    }
+};
+
 const calculateItemTotals = (index: number) => {
     // This will trigger reactivity for calculated fields
     emit("item-change", index, "calculated", true);
+};
+
+const getEffectiveBottlesPerCase = (item: SaleItem): number => {
+    if (!item.bottles_per_case) return 0;
+
+    // Target bottles calculation is ALWAYS bottles_per_case + free_bottles_per_case
+    // regardless of toggle state - this represents what customer wants to sell
+    const freeBottlesPerCase =
+        item.purchase_metadata?.free_bottles_per_case || 0;
+    return item.bottles_per_case + freeBottlesPerCase;
+};
+
+const getCalculatedTotalBottles = (item: SaleItem): number => {
+    if (!item.cases_to_sell || !item.bottles_per_case) return 0;
+    return item.cases_to_sell * getEffectiveBottlesPerCase(item);
+};
+
+const getCalculatedPricePerBottle = (item: SaleItem): number => {
+    if (!item.selling_price_per_case || !getEffectiveBottlesPerCase(item))
+        return 0;
+    return item.selling_price_per_case / getEffectiveBottlesPerCase(item);
 };
 
 const getProductVariants = (productId: number): ProductVariant[] => {
@@ -753,32 +933,76 @@ const getProductVariants = (productId: number): ProductVariant[] => {
 };
 
 const getItemTotal = (item: SaleItem): number => {
-    return (item.cases_sold || 0) * (item.selling_price_per_case || 0);
+    // ORIGINAL BUSINESS LOGIC: Total = target bottles × price per bottle
+    const targetBottles = getCalculatedTotalBottles(item);
+    const pricePerBottle = getCalculatedPricePerBottle(item);
+    return targetBottles * pricePerBottle;
+};
+
+const getCalculatedCases = (item: SaleItem): number => {
+    // This shows the actual cases that will be needed for delivery
+    if (!item.purchase_metadata || !item.bottles_per_case)
+        return item.cases_to_sell || 0;
+
+    const targetBottles = getCalculatedTotalBottles(item);
+
+    if (props.includeFreeBottles) {
+        // With free bottles: Use input cases directly
+        return item.cases_to_sell || 0;
+    } else {
+        // Without free bottles: Calculate cases needed for target bottles
+        return Math.ceil(targetBottles / item.bottles_per_case);
+    }
 };
 
 const getItemProfit = (item: SaleItem): number => {
+    if (!item.purchase_metadata || !item.bottles_per_case) return 0;
+
     const sellPrice = getItemTotal(item);
+    const targetBottles = getCalculatedTotalBottles(item);
+    const freeBottlesPerCase =
+        item.purchase_metadata.free_bottles_per_case || 0;
 
-    // Calculate total bottles sold (including free bottles from purchase data)
-    const totalBottlesSold = getTotalBottlesSold(item);
-    const purchaseCost = totalBottlesSold * (item.purchase_rate || 0);
+    // ORIGINAL BUSINESS LOGIC for calculating actual bottles used
+    let actualBottlesUsed = 0;
+    if (props.includeFreeBottles) {
+        // With free bottles: Calculate actual bottles from cases needed
+        const bottlesPerCaseIncludingFree =
+            item.bottles_per_case + freeBottlesPerCase;
+        const actualCases = Math.ceil(
+            targetBottles / bottlesPerCaseIncludingFree
+        );
+        actualBottlesUsed = actualCases * bottlesPerCaseIncludingFree;
+    } else {
+        // Without free bottles: Only target bottles
+        actualBottlesUsed = targetBottles;
+    }
 
+    const purchaseCost = actualBottlesUsed * (item.purchase_rate || 0);
     return sellPrice - purchaseCost;
 };
 
-const getTotalBottlesSold = (item: SaleItem): number => {
-    const purchasedBottles =
-        (item.cases_sold || 0) * (item.bottles_per_case || 0);
-    let freeBottles = 0;
+const getItemActualBottles = (item: SaleItem): number => {
+    // This shows the actual bottles that will be delivered
+    if (!item.purchase_metadata || !item.bottles_per_case)
+        return getCalculatedTotalBottles(item);
 
-    if (props.includeFreeBottles && item.purchase_metadata) {
-        // Use free bottles per case from purchase data
-        const freeBottlesPerCase =
-            item.purchase_metadata.free_bottles_per_case || 0;
-        freeBottles = (item.cases_sold || 0) * freeBottlesPerCase;
+    const targetBottles = getCalculatedTotalBottles(item);
+    const freeBottlesPerCase =
+        item.purchase_metadata.free_bottles_per_case || 0;
+
+    if (props.includeFreeBottles) {
+        // With free bottles: Calculate actual bottles from cases needed
+        const bottlesPerCaseIncludingFree =
+            item.bottles_per_case + freeBottlesPerCase;
+        const actualCases = Math.ceil(
+            targetBottles / bottlesPerCaseIncludingFree
+        );
+        return actualCases * bottlesPerCaseIncludingFree;
+    } else {
+        // Without free bottles: Only target bottles
+        return targetBottles;
     }
-
-    return purchasedBottles + freeBottles;
 };
 
 const getTotalAvailableBottles = (item: SaleItem): number => {

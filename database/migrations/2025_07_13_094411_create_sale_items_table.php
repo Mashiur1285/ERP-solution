@@ -20,9 +20,11 @@ return new class extends Migration {
             $table->integer('purchased_bottles_sold')->default(0);
             $table->integer('free_bottles_sold')->default(0);
             $table->integer('total_bottles_sold')->default(0);
+            $table->integer('target_bottles_to_sell')->comment('Target number of bottles to sell (consistent regardless of free bottles)');
             $table->decimal('purchase_unit_price', 10, 2);
             $table->decimal('selling_price_per_case', 10, 2);
-            $table->decimal('unit_price', 10, 2)->default(0.00); // Selling price per bottle
+            $table->decimal('selling_price_per_bottle', 10, 2)->comment('Consistent selling price per bottle');
+            $table->decimal('unit_price', 10, 2)->default(0.00); // Legacy field - same as selling_price_per_bottle
             $table->decimal('total_price', 10, 2)->default(0.00);
             $table->decimal('profit', 10, 2)->default(0.00);
             $table->string('status')->default(SalesItemsStatus::PENDING->value);
@@ -31,6 +33,7 @@ return new class extends Migration {
 
             $table->index(['sale_id', 'variant']);
             $table->index(['product_id', 'variant']);
+            $table->index('target_bottles_to_sell');
         });
     }
 

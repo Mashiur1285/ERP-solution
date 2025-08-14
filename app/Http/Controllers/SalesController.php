@@ -94,10 +94,9 @@ class SalesController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.variant' => 'required|string',
-            'items.*.cases_sold' => 'required|integer|min:1',
-            'items.*.selling_price_per_case' => 'required|numeric|min:0',
+            'items.*.total_bottles_to_sell' => 'required|integer|min:1',
+            'items.*.selling_price_per_bottle' => 'required|numeric|min:0',
             'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
-            // Removed extra_free_bottles validation as requested
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -128,22 +127,32 @@ class SalesController extends Controller
                 }
 
                 $bottlesPerCase = $inventory['bottles_per_case'];
-                $casesSold = $item['cases_sold'];
-                $sellingPricePerCase = $item['selling_price_per_case'];
                 $purchaseRatePerBottle = $inventory['purchase_rate'];
+                $totalBottlesToSell = $item['total_bottles_to_sell'];
+                $sellingPricePerBottle = $item['selling_price_per_bottle'];
+                $freeBottlesPerCase = $item['free_bottles_per_case'] ?? 0;
 
-                // Calculate bottles sold
-                $purchasedBottlesSold = $casesSold * $bottlesPerCase;
-                $freeBottlesSold = 0;
-
+                // ORIGINAL BUSINESS LOGIC: Calculate bottles and cases based on toggle state
                 if ($request->include_free_bottles) {
-                    // Use free bottles per case from purchase data (sent from frontend)
-                    $freeBottlesPerCase = $item['free_bottles_per_case'] ?? 0;
+                    // With free bottles: Calculate actual cases needed to get total bottles
+                    $bottlesPerCaseIncludingFree = $bottlesPerCase + $freeBottlesPerCase;
+                    $casesSold = ceil($totalBottlesToSell / $bottlesPerCaseIncludingFree);
+                    $purchasedBottlesSold = $casesSold * $bottlesPerCase;
                     $freeBottlesSold = $casesSold * $freeBottlesPerCase;
-                    // Removed extra free bottles as requested
-                }
+                    $actualTotalBottlesSold = $purchasedBottlesSold + $freeBottlesSold;
 
-                $totalBottlesSold = $purchasedBottlesSold + $freeBottlesSold;
+                    // Selling price is based on target bottles only
+                    $sellingPricePerCase = $bottlesPerCaseIncludingFree * $sellingPricePerBottle;
+                } else {
+                    // Without free bottles: All bottles are purchased
+                    $casesSold = ceil($totalBottlesToSell / $bottlesPerCase);
+                    $purchasedBottlesSold = $totalBottlesToSell;
+                    $freeBottlesSold = 0;
+                    $actualTotalBottlesSold = $purchasedBottlesSold;
+
+                    // Selling price is based on target bottles
+                    $sellingPricePerCase = $bottlesPerCase * $sellingPricePerBottle;
+                }
 
                 // Validate inventory
                 if ($purchasedBottlesSold > $inventory['purchased_bottles_available']) {
@@ -155,8 +164,8 @@ class SalesController extends Controller
                 }
 
                 // Calculate pricing and profit
-                $totalSalePrice = $casesSold * $sellingPricePerCase;
-                $purchaseCost = $totalBottlesSold * $purchaseRatePerBottle; // Cost includes all bottles (purchased + free)
+                $totalSalePrice = $totalBottlesToSell * $sellingPricePerBottle;
+                $purchaseCost = $actualTotalBottlesSold * $purchaseRatePerBottle;
                 $profit = $totalSalePrice - $purchaseCost;
 
                 // Create sale item
@@ -169,10 +178,12 @@ class SalesController extends Controller
                     'bottles_per_case' => $bottlesPerCase,
                     'purchased_bottles_sold' => $purchasedBottlesSold,
                     'free_bottles_sold' => $freeBottlesSold,
-                    'total_bottles_sold' => $totalBottlesSold,
+                    'total_bottles_sold' => $actualTotalBottlesSold,
+                    'target_bottles_to_sell' => $totalBottlesToSell,
                     'purchase_unit_price' => $purchaseRatePerBottle,
                     'selling_price_per_case' => $sellingPricePerCase,
-                    'unit_price' => $sellingPricePerCase / $bottlesPerCase, // Selling price per bottle
+                    'selling_price_per_bottle' => $sellingPricePerBottle,
+                    'unit_price' => $sellingPricePerBottle,
                     'total_price' => $totalSalePrice,
                     'profit' => $profit,
                     'delivery_date' => $request->sale_date,
@@ -380,6 +391,7 @@ class SalesController extends Controller
                         'variant' => $item->variant,
                         'cases_sold' => $item->cases_sold,
                         'total_bottles_sold' => $item->total_bottles_sold,
+                        'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
                         'purchased_bottles_sold' => $item->purchased_bottles_sold,
                         'free_bottles_sold' => $item->free_bottles_sold,
                         'total_price' => $item->total_price,

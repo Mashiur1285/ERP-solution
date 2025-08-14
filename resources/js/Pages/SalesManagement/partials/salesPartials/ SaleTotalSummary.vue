@@ -91,7 +91,7 @@
                 </div>
             </div>
 
-            <!-- Total Bottles -->
+            <!-- Target Bottles to Sell -->
             <div
                 class="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
             >
@@ -116,15 +116,15 @@
                             {{ t("totalBottles") }}
                         </p>
                         <p class="text-xs text-gray-500">
-                            {{ t("includingFreeBottles") }}
+                            {{ t("targetBottles") }}
                         </p>
                         <p class="text-2xl font-bold text-indigo-600">
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalBottlesSold
+                                          saleSummary.totalBottlesToSell
                                       )
-                                    : saleSummary.totalBottlesSold.toLocaleString()
+                                    : saleSummary.totalBottlesToSell.toLocaleString()
                             }}
                         </p>
                     </div>
@@ -177,7 +177,7 @@
 
         <!-- Bottles Breakdown -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <!-- Purchased vs Free Bottles -->
+            <!-- Actual vs Target Bottles -->
             <div
                 class="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
             >
@@ -187,40 +187,80 @@
                 <div class="space-y-2">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">{{
+                            t("targetBottles")
+                        }}</span>
+                        <span class="font-medium text-indigo-600">
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(
+                                          saleSummary.totalBottlesToSell
+                                      )
+                                    : saleSummary.totalBottlesToSell.toLocaleString()
+                            }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">{{
+                            t("actualBottles")
+                        }}</span>
+                        <span class="font-medium text-blue-600">
+                            {{
+                                currentLanguage === "bn"
+                                    ? toBengaliNumber(
+                                          saleSummary.totalActualBottles
+                                      )
+                                    : saleSummary.totalActualBottles.toLocaleString()
+                            }}
+                        </span>
+                    </div>
+                    <div
+                        v-if="includeFreeBottles"
+                        class="flex justify-between text-sm"
+                    >
+                        <span class="text-gray-600">{{
                             t("purchasedBottles")
                         }}</span>
                         <span class="font-medium text-blue-600">
                             {{
                                 currentLanguage === "bn"
-                                    ? toBengaliNumber(computedPurchasedBottles)
-                                    : computedPurchasedBottles.toLocaleString()
+                                    ? toBengaliNumber(
+                                          saleSummary.totalPurchasedBottles
+                                      )
+                                    : saleSummary.totalPurchasedBottles.toLocaleString()
                             }}
                         </span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    <div
+                        v-if="includeFreeBottles"
+                        class="flex justify-between text-sm"
+                    >
                         <span class="text-gray-600">{{
                             t("freeBottles")
                         }}</span>
                         <span class="font-medium text-green-600">
                             {{
                                 currentLanguage === "bn"
-                                    ? toBengaliNumber(computedFreeBottles)
-                                    : computedFreeBottles.toLocaleString()
+                                    ? toBengaliNumber(
+                                          saleSummary.totalFreeBottles
+                                      )
+                                    : saleSummary.totalFreeBottles.toLocaleString()
                             }}
                         </span>
                     </div>
                     <hr class="border-gray-200" />
                     <div class="flex justify-between text-sm font-semibold">
-                        <span class="text-gray-800">{{
-                            t("totalBottles")
-                        }}</span>
-                        <span class="text-indigo-600">
+                        <span class="text-gray-800">{{ t("difference") }}</span>
+                        <span class="text-purple-600">
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalBottlesSold
+                                          saleSummary.totalActualBottles -
+                                              saleSummary.totalBottlesToSell
                                       )
-                                    : saleSummary.totalBottlesSold.toLocaleString()
+                                    : (
+                                          saleSummary.totalActualBottles -
+                                          saleSummary.totalBottlesToSell
+                                      ).toLocaleString()
                             }}
                         </span>
                     </div>
@@ -321,8 +361,8 @@
                         <p class="text-sm text-gray-600">
                             {{
                                 currentLanguage === "bn"
-                                    ? toBengaliNumber(item.cases_sold)
-                                    : item.cases_sold
+                                    ? toBengaliNumber(item.cases_to_sell || 0)
+                                    : item.cases_to_sell || 0
                             }}
                             {{ t("cases") }} × ৳{{
                                 currentLanguage === "bn"
@@ -335,21 +375,26 @@
                                       "0.00"
                             }}
                         </p>
-                        <!-- Show free bottles info if available -->
-                        <p
-                            v-if="
-                                item.purchase_metadata?.free_bottles_per_case >
-                                0
-                            "
-                            class="text-xs text-green-600"
-                        >
-                            {{ t("includes") }}
-                            {{
-                                currentLanguage === "bn"
-                                    ? toBengaliNumber(getItemFreeBottles(item))
-                                    : getItemFreeBottles(item)
-                            }}
-                            {{ t("freeBottles") }}
+                        <!-- Show calculated cases info -->
+                        <p class="text-xs text-blue-600">
+                            {{ getCalculatedCases(item) }} {{ t("cases") }}
+                            <span
+                                v-if="
+                                    includeFreeBottles &&
+                                    item.purchase_metadata
+                                        ?.free_bottles_per_case > 0
+                                "
+                            >
+                                ({{ t("includes") }}
+                                {{
+                                    currentLanguage === "bn"
+                                        ? toBengaliNumber(
+                                              getItemFreeBottles(item)
+                                          )
+                                        : getItemFreeBottles(item)
+                                }}
+                                {{ t("freeBottles") }})
+                            </span>
                         </p>
                     </div>
                     <div class="text-right">
@@ -372,11 +417,13 @@
                             }}
                         </p>
                         <p class="text-xs text-indigo-600">
-                            {{ t("totalBottles") }}:
+                            {{ t("actualBottles") }}:
                             {{
                                 currentLanguage === "bn"
-                                    ? toBengaliNumber(getItemTotalBottles(item))
-                                    : getItemTotalBottles(item)
+                                    ? toBengaliNumber(
+                                          getItemActualBottles(item)
+                                      )
+                                    : getItemActualBottles(item)
                             }}
                         </p>
                     </div>
@@ -392,7 +439,7 @@ import { computed } from "vue";
 interface SaleItem {
     product_id: number;
     variant: string;
-    cases_sold: number;
+    cases_to_sell: number;
     selling_price_per_case: number;
     bottles_per_case: number;
     purchase_rate: number;
@@ -400,6 +447,9 @@ interface SaleItem {
         free_bottles_per_case?: number;
         case_buying_price?: number;
     };
+    // Calculated fields
+    total_bottles_to_sell?: number;
+    selling_price_per_bottle?: number;
 }
 
 interface Product {
@@ -417,62 +467,73 @@ const props = defineProps<{
         totalCases: number;
         totalAmount: number;
         totalProfit: number;
-        totalBottlesSold: number;
+        totalBottlesToSell: number;
+        totalActualBottles: number;
+        totalPurchasedBottles: number;
+        totalFreeBottles: number;
         itemCount: number;
     };
+    includeFreeBottles: boolean;
+    availableProducts: Product[];
     currentLanguage: string;
     t: (key: string, params?: Record<string, any>) => string;
     toBengaliNumber: (num: number | string) => string;
 }>();
 
-// Computed values for bottle breakdown
-const computedPurchasedBottles = computed(() => {
-    return props.saleForm.items.reduce((sum, item) => {
-        return sum + (item.cases_sold || 0) * (item.bottles_per_case || 0);
-    }, 0);
-});
-
-const computedFreeBottles = computed(() => {
-    if (!props.saleForm.include_free_bottles) return 0;
-
-    return props.saleForm.items.reduce((sum, item) => {
-        const freeBottlesPerCase =
-            item.purchase_metadata?.free_bottles_per_case || 0;
-        return sum + (item.cases_sold || 0) * freeBottlesPerCase;
-    }, 0);
-});
-
 // Helper functions
 const getItemTotal = (item: SaleItem): number => {
-    return (item.cases_sold || 0) * (item.selling_price_per_case || 0);
+    return (item.cases_to_sell || 0) * (item.selling_price_per_case || 0);
+};
+
+const getCalculatedCases = (item: SaleItem): number => {
+    return item.cases_to_sell || 0;
+};
+
+const getCalculatedTotalBottles = (item: SaleItem): number => {
+    if (!item.cases_to_sell || !item.bottles_per_case) return 0;
+    const effectiveBottlesPerCase = getEffectiveBottlesPerCase(item);
+    return item.cases_to_sell * effectiveBottlesPerCase;
+};
+
+const getEffectiveBottlesPerCase = (item: SaleItem): number => {
+    if (!item.bottles_per_case) return 0;
+
+    if (props.includeFreeBottles && item.purchase_metadata) {
+        const freeBottlesPerCase =
+            item.purchase_metadata.free_bottles_per_case || 0;
+        return item.bottles_per_case + freeBottlesPerCase;
+    }
+    return item.bottles_per_case;
 };
 
 const getItemProfit = (item: SaleItem): number => {
+    if (!item.purchase_metadata || !item.bottles_per_case) return 0;
+
     const sellPrice = getItemTotal(item);
-    const totalBottlesSold = getItemTotalBottles(item);
-    const purchaseCost = totalBottlesSold * (item.purchase_rate || 0);
+    const actualBottlesSold = getItemActualBottles(item);
+    const purchaseCost = actualBottlesSold * (item.purchase_rate || 0);
+
     return sellPrice - purchaseCost;
 };
 
-const getItemTotalBottles = (item: SaleItem): number => {
-    const purchasedBottles =
-        (item.cases_sold || 0) * (item.bottles_per_case || 0);
-    const freeBottles = getItemFreeBottles(item);
-    return purchasedBottles + freeBottles;
+const getItemActualBottles = (item: SaleItem): number => {
+    return getCalculatedTotalBottles(item);
 };
 
 const getItemFreeBottles = (item: SaleItem): number => {
-    if (!props.saleForm.include_free_bottles || !item.purchase_metadata)
-        return 0;
+    if (!props.includeFreeBottles || !item.purchase_metadata) return 0;
+
+    const cases = getCalculatedCases(item);
     const freeBottlesPerCase =
         item.purchase_metadata.free_bottles_per_case || 0;
-    return (item.cases_sold || 0) * freeBottlesPerCase;
+    return cases * freeBottlesPerCase;
 };
 
 const getProductName = (productId: number): string => {
-    // This would typically come from a products prop or be fetched
-    // For now, return a placeholder
-    return `Product ${productId}`;
+    const product = props.availableProducts.find(
+        (p) => p.product_id === productId
+    );
+    return product ? product.product_name : `Product ${productId}`;
 };
 </script>
 
