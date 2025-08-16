@@ -207,7 +207,6 @@ import SalesConfirmationModal from "./partials/salesPartials/SalesConfirmationMo
 import SalesHeader from "./partials/salesPartials/SalesHeader.vue";
 import SaleInformation from "./partials/salesPartials/SaleInformation.vue";
 import SaleItemsSection from "./partials/salesPartials/SaleItemsSection.vue";
-// import SaleTotalSummary from "./partials/salesPartials/SaleTotalSummary.vue";
 import SaleTotalSummary from "./partials/salesPartials/ SaleTotalSummary.vue";
 
 interface Shop {
@@ -302,7 +301,14 @@ const translations = {
         calculationBreakdown: "Calculation Breakdown",
         inputCases: "Input Cases",
         effectiveBottlesPerCase: "Effective Bottles per Case",
-        actualCasesNeeded: "Actual Cases Needed",
+        totalBottlesToSell: "Total Bottles to Sell",
+        totalBottlesToSellRequired:
+            "Total bottles to sell must be greater than 0",
+        sellingPricePerBottle: "Selling Price per Bottle (৳)",
+        sellingPricePerBottleRequired:
+            "Selling price per bottle must be greater than 0",
+        casesNeededCalculated: "Cases Needed",
+        sellingPricePerCaseCalculated: "Selling Price per Case",
         freeBottlesPerCase: "Free Bottles per Case",
         extraFreeBottles: "Extra Free Bottles",
         bottlesPerCase: "Bottles per Case",
@@ -389,7 +395,13 @@ const translations = {
         calculationBreakdown: "গণনার বিবরণ",
         inputCases: "ইনপুট কেস",
         effectiveBottlesPerCase: "কার্যকর বোতল প্রতি কেস",
-        actualCasesNeeded: "প্রকৃত প্রয়োজনীয় কেস",
+        totalBottlesToSell: "মোট বিক্রয়ের বোতল",
+        totalBottlesToSellRequired: "মোট বিক্রয়ের বোতল ০-এর বেশি হতে হবে",
+        sellingPricePerBottle: "বোতল প্রতি বিক্রয় মূল্য (৳)",
+        sellingPricePerBottleRequired:
+            "বোতল প্রতি বিক্রয় মূল্য ০-এর বেশি হতে হবে",
+        casesNeededCalculated: "প্রয়োজনীয় কেস",
+        sellingPricePerCaseCalculated: "কেস প্রতি বিক্রয় মূল্য",
         freeBottlesPerCase: "কেস প্রতি বিনামূল্যে বোতল",
         extraFreeBottles: "অতিরিক্ত বিনামূল্যে বোতল",
         bottlesPerCase: "কেস প্রতি বোতল",
@@ -459,33 +471,57 @@ const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref("success");
 
-// Computed properties for summary - CORRECTED BUSINESS LOGIC
+// Helper function to safely convert values to numbers
+const safeNumber = (value: any): number => {
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+};
+
+// Computed properties for summary - CORRECTED BUSINESS LOGIC with null safety
 const saleSummary = computed(() => {
+    if (!saleForm.value.items || !Array.isArray(saleForm.value.items)) {
+        return {
+            totalCases: 0,
+            totalAmount: 0,
+            totalProfit: 0,
+            totalBottlesToSell: 0,
+            totalActualBottles: 0,
+            totalPurchasedBottles: 0,
+            totalFreeBottles: 0,
+            itemCount: 0,
+        };
+    }
+
     const items = saleForm.value.items;
 
     // Calculate total bottles to sell (this should be the same regardless of toggle)
     const totalBottlesToSell = items.reduce((sum, item) => {
-        if (!item.cases_to_sell || !item.bottles_per_case) return sum;
+        const cases = safeNumber(item.cases_to_sell);
+        const bottlesPerCase = safeNumber(item.bottles_per_case);
+        if (!cases || !bottlesPerCase) return sum;
+
         // Target bottles is ALWAYS: input cases × (bottles per case + free bottles per case)
-        // This represents what the customer wants to sell
-        const freeBottlesPerCase =
-            item.purchase_metadata?.free_bottles_per_case || 0;
-        const effectiveBottlesPerCase =
-            item.bottles_per_case + freeBottlesPerCase;
-        return sum + item.cases_to_sell * effectiveBottlesPerCase;
+        const freeBottlesPerCase = safeNumber(
+            item.purchase_metadata?.free_bottles_per_case
+        );
+        const effectiveBottlesPerCase = bottlesPerCase + freeBottlesPerCase;
+        return sum + cases * effectiveBottlesPerCase;
     }, 0);
 
     // Calculate total amount (this should be the same regardless of toggle)
     const totalAmount = items.reduce((sum, item) => {
-        if (!item.cases_to_sell || !item.selling_price_per_case) return sum;
-        const freeBottlesPerCase =
-            item.purchase_metadata?.free_bottles_per_case || 0;
-        const effectiveBottlesPerCase =
-            item.bottles_per_case + freeBottlesPerCase;
-        const totalBottlesForThisItem =
-            item.cases_to_sell * effectiveBottlesPerCase;
-        const pricePerBottle =
-            item.selling_price_per_case / effectiveBottlesPerCase;
+        const cases = safeNumber(item.cases_to_sell);
+        const pricePerCase = safeNumber(item.selling_price_per_case);
+        const bottlesPerCase = safeNumber(item.bottles_per_case);
+
+        if (!cases || !pricePerCase || !bottlesPerCase) return sum;
+
+        const freeBottlesPerCase = safeNumber(
+            item.purchase_metadata?.free_bottles_per_case
+        );
+        const effectiveBottlesPerCase = bottlesPerCase + freeBottlesPerCase;
+        const totalBottlesForThisItem = cases * effectiveBottlesPerCase;
+        const pricePerBottle = pricePerCase / effectiveBottlesPerCase;
         return sum + totalBottlesForThisItem * pricePerBottle;
     }, 0);
 
@@ -497,25 +533,24 @@ const saleSummary = computed(() => {
     let totalProfit = 0;
 
     items.forEach((item) => {
-        if (
-            !item.purchase_metadata ||
-            !item.bottles_per_case ||
-            !item.cases_to_sell
-        )
-            return;
+        const cases = safeNumber(item.cases_to_sell);
+        const bottlesPerCase = safeNumber(item.bottles_per_case);
+        const pricePerCase = safeNumber(item.selling_price_per_case);
+        const purchaseRate = safeNumber(item.purchase_rate);
 
-        const freeBottlesPerCase =
-            item.purchase_metadata.free_bottles_per_case || 0;
-        const effectiveBottlesPerCase =
-            item.bottles_per_case + freeBottlesPerCase;
-        const targetBottles = item.cases_to_sell * effectiveBottlesPerCase;
-        const sellingPricePerBottle =
-            item.selling_price_per_case / effectiveBottlesPerCase;
+        if (!item.purchase_metadata || !bottlesPerCase || !cases) return;
+
+        const freeBottlesPerCase = safeNumber(
+            item.purchase_metadata.free_bottles_per_case
+        );
+        const effectiveBottlesPerCase = bottlesPerCase + freeBottlesPerCase;
+        const targetBottles = cases * effectiveBottlesPerCase;
+        const sellingPricePerBottle = pricePerCase / effectiveBottlesPerCase;
 
         if (includeFreeBottles.value) {
             // With free bottles: Use input cases directly
-            const actualCases = item.cases_to_sell;
-            const purchasedBottles = actualCases * item.bottles_per_case;
+            const actualCases = cases;
+            const purchasedBottles = actualCases * bottlesPerCase;
             const freeBottles = actualCases * freeBottlesPerCase;
 
             totalCases += actualCases;
@@ -526,13 +561,11 @@ const saleSummary = computed(() => {
             // Profit calculation
             const salePrice = targetBottles * sellingPricePerBottle;
             const purchaseCost =
-                (purchasedBottles + freeBottles) * (item.purchase_rate || 0);
+                (purchasedBottles + freeBottles) * purchaseRate;
             totalProfit += salePrice - purchaseCost;
         } else {
             // Without free bottles: Need more cases to get same target bottles
-            const actualCases = Math.ceil(
-                targetBottles / item.bottles_per_case
-            );
+            const actualCases = Math.ceil(targetBottles / bottlesPerCase);
             const purchasedBottles = targetBottles; // Only sell target bottles, no extra
 
             totalCases += actualCases;
@@ -541,7 +574,7 @@ const saleSummary = computed(() => {
 
             // Profit calculation - same sale price, different cost
             const salePrice = targetBottles * sellingPricePerBottle;
-            const purchaseCost = purchasedBottles * (item.purchase_rate || 0);
+            const purchaseCost = purchasedBottles * purchaseRate;
             totalProfit += salePrice - purchaseCost;
         }
     });
@@ -560,13 +593,15 @@ const saleSummary = computed(() => {
 
 // Helper function to get effective bottles per case - CORRECTED
 const getEffectiveBottlesPerCase = (item: SaleItem): number => {
-    if (!item.bottles_per_case) return 0;
+    const bottlesPerCase = safeNumber(item.bottles_per_case);
+    if (!bottlesPerCase) return 0;
 
     // Target bottles calculation is ALWAYS bottles_per_case + free_bottles_per_case
     // regardless of toggle state - this represents what customer wants to sell
-    const freeBottlesPerCase =
-        item.purchase_metadata?.free_bottles_per_case || 0;
-    return item.bottles_per_case + freeBottlesPerCase;
+    const freeBottlesPerCase = safeNumber(
+        item.purchase_metadata?.free_bottles_per_case
+    );
+    return bottlesPerCase + freeBottlesPerCase;
 };
 
 // Translation function
@@ -593,9 +628,12 @@ const changeLanguage = (lang: string) => {
     localStorage.setItem("language", lang);
 };
 
-// Toggle change handler
+// Toggle change handler - Simplified
 const onToggleChange = () => {
     saleForm.value.include_free_bottles = includeFreeBottles.value;
+    // Clear items when toggling to avoid confusion
+    saleForm.value.items = [];
+    addSaleItem(); // Add a fresh item
 };
 
 // Supplier change handler
@@ -639,14 +677,16 @@ const onVariantChange = async (
             (v) => v.variant === variant
         );
 
-        const item = saleForm.value.items[itemIndex];
-        item.bottles_per_case = inventory.bottles_per_case;
-        item.purchase_rate = inventory.purchase_rate;
-        item.available_inventory = inventory;
+        if (saleForm.value.items[itemIndex]) {
+            const item = saleForm.value.items[itemIndex];
+            item.bottles_per_case = safeNumber(inventory.bottles_per_case);
+            item.purchase_rate = safeNumber(inventory.purchase_rate);
+            item.available_inventory = inventory;
 
-        // Store purchase metadata for free bottles calculation
-        if (variantData && variantData.variant_metadata) {
-            item.purchase_metadata = variantData.variant_metadata;
+            // Store purchase metadata for free bottles calculation
+            if (variantData && variantData.variant_metadata) {
+                item.purchase_metadata = variantData.variant_metadata;
+            }
         }
     } catch (error) {
         console.error("Error fetching variant inventory:", error);
@@ -655,7 +695,7 @@ const onVariantChange = async (
 
 // Item change handler
 const handleItemChange = (index: number, field: string, value: any) => {
-    if (field !== "calculated") {
+    if (field !== "calculated" && saleForm.value.items[index]) {
         saleForm.value.items[index][field] = value;
     }
 };
@@ -716,8 +756,11 @@ const openModal = () => {
             (item) =>
                 item.product_id &&
                 item.variant &&
-                item.cases_to_sell > 0 &&
-                item.selling_price_per_case > 0
+                (includeFreeBottles.value
+                    ? safeNumber(item.cases_to_sell) > 0 &&
+                      safeNumber(item.selling_price_per_case) > 0
+                    : safeNumber(item.total_bottles_to_sell) > 0 &&
+                      safeNumber(item.selling_price_per_bottle) > 0)
         );
 
     if (!isFormValid) {
@@ -753,17 +796,19 @@ const confirmSale = () => {
         items: saleForm.value.items.map((item) => {
             // Calculate final values using ORIGINAL LOGIC
             const effectiveBottlesPerCase = getEffectiveBottlesPerCase(item);
-            const targetBottles = item.cases_to_sell * effectiveBottlesPerCase;
-            const pricePerBottle =
-                item.selling_price_per_case / effectiveBottlesPerCase;
+            const cases = safeNumber(item.cases_to_sell);
+            const pricePerCase = safeNumber(item.selling_price_per_case);
+            const targetBottles = cases * effectiveBottlesPerCase;
+            const pricePerBottle = pricePerCase / effectiveBottlesPerCase;
 
             return {
                 product_id: item.product_id,
                 variant: item.variant,
                 total_bottles_to_sell: targetBottles, // This is the target bottles to sell
                 selling_price_per_bottle: pricePerBottle, // This is the consistent price per bottle
-                free_bottles_per_case:
-                    item.purchase_metadata?.free_bottles_per_case || 0,
+                free_bottles_per_case: safeNumber(
+                    item.purchase_metadata?.free_bottles_per_case
+                ),
             };
         }),
     };

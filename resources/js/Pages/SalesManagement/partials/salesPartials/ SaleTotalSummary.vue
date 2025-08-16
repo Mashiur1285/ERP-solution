@@ -1,6 +1,6 @@
 <template>
     <div
-        class="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-200"
+        class="bg-gradient-to-br from-gray-50 via-white to-gray-50 p-6 rounded-xl border border-indigo-200"
     >
         <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
             <svg
@@ -48,8 +48,10 @@
                         <p class="text-2xl font-bold text-orange-600">
                             {{
                                 currentLanguage === "bn"
-                                    ? toBengaliNumber(saleSummary.itemCount)
-                                    : saleSummary.itemCount
+                                    ? toBengaliNumber(
+                                          saleSummary.itemCount || 0
+                                      )
+                                    : saleSummary.itemCount || 0
                             }}
                         </p>
                     </div>
@@ -83,8 +85,12 @@
                         <p class="text-2xl font-bold text-blue-600">
                             {{
                                 currentLanguage === "bn"
-                                    ? toBengaliNumber(saleSummary.totalCases)
-                                    : saleSummary.totalCases.toLocaleString()
+                                    ? toBengaliNumber(
+                                          saleSummary.totalCases || 0
+                                      )
+                                    : (
+                                          saleSummary.totalCases || 0
+                                      ).toLocaleString()
                             }}
                         </p>
                     </div>
@@ -122,9 +128,11 @@
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalBottlesToSell
+                                          saleSummary.totalBottlesToSell || 0
                                       )
-                                    : saleSummary.totalBottlesToSell.toLocaleString()
+                                    : (
+                                          saleSummary.totalBottlesToSell || 0
+                                      ).toLocaleString()
                             }}
                         </p>
                     </div>
@@ -159,14 +167,14 @@
                             ৳{{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalAmount.toFixed(2)
+                                          formatNumber(
+                                              saleSummary.totalAmount || 0,
+                                              2
+                                          )
                                       )
-                                    : saleSummary.totalAmount.toLocaleString(
-                                          "en-US",
-                                          {
-                                              minimumFractionDigits: 2,
-                                              maximumFractionDigits: 2,
-                                          }
+                                    : formatNumber(
+                                          saleSummary.totalAmount || 0,
+                                          2
                                       )
                             }}
                         </p>
@@ -193,9 +201,11 @@
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalBottlesToSell
+                                          saleSummary.totalBottlesToSell || 0
                                       )
-                                    : saleSummary.totalBottlesToSell.toLocaleString()
+                                    : (
+                                          saleSummary.totalBottlesToSell || 0
+                                      ).toLocaleString()
                             }}
                         </span>
                     </div>
@@ -207,9 +217,11 @@
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalActualBottles
+                                          saleSummary.totalActualBottles || 0
                                       )
-                                    : saleSummary.totalActualBottles.toLocaleString()
+                                    : (
+                                          saleSummary.totalActualBottles || 0
+                                      ).toLocaleString()
                             }}
                         </span>
                     </div>
@@ -224,9 +236,11 @@
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalPurchasedBottles
+                                          saleSummary.totalPurchasedBottles || 0
                                       )
-                                    : saleSummary.totalPurchasedBottles.toLocaleString()
+                                    : (
+                                          saleSummary.totalPurchasedBottles || 0
+                                      ).toLocaleString()
                             }}
                         </span>
                     </div>
@@ -241,9 +255,11 @@
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalFreeBottles
+                                          saleSummary.totalFreeBottles || 0
                                       )
-                                    : saleSummary.totalFreeBottles.toLocaleString()
+                                    : (
+                                          saleSummary.totalFreeBottles || 0
+                                      ).toLocaleString()
                             }}
                         </span>
                     </div>
@@ -254,12 +270,15 @@
                             {{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalActualBottles -
-                                              saleSummary.totalBottlesToSell
+                                          (saleSummary.totalActualBottles ||
+                                              0) -
+                                              (saleSummary.totalBottlesToSell ||
+                                                  0)
                                       )
                                     : (
-                                          saleSummary.totalActualBottles -
-                                          saleSummary.totalBottlesToSell
+                                          (saleSummary.totalActualBottles ||
+                                              0) -
+                                          (saleSummary.totalBottlesToSell || 0)
                                       ).toLocaleString()
                             }}
                         </span>
@@ -304,7 +323,7 @@
                         <p
                             class="text-xl font-bold"
                             :class="
-                                saleSummary.totalProfit >= 0
+                                (saleSummary.totalProfit || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
                             "
@@ -312,27 +331,27 @@
                             ৳{{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          saleSummary.totalProfit.toFixed(2)
+                                          formatNumber(
+                                              saleSummary.totalProfit || 0,
+                                              2
+                                          )
                                       )
-                                    : saleSummary.totalProfit.toLocaleString(
-                                          "en-US",
-                                          {
-                                              minimumFractionDigits: 2,
-                                              maximumFractionDigits: 2,
-                                          }
+                                    : formatNumber(
+                                          saleSummary.totalProfit || 0,
+                                          2
                                       )
                             }}
                         </p>
                         <p
                             class="text-xs"
                             :class="
-                                saleSummary.totalProfit >= 0
+                                (saleSummary.totalProfit || 0) >= 0
                                     ? 'text-green-500'
                                     : 'text-red-500'
                             "
                         >
                             {{
-                                saleSummary.totalProfit >= 0
+                                (saleSummary.totalProfit || 0) >= 0
                                     ? t("profit")
                                     : t("loss")
                             }}
@@ -343,7 +362,7 @@
         </div>
 
         <!-- Items Details -->
-        <div v-if="saleForm.items.length > 0" class="mt-4">
+        <div v-if="saleForm.items && saleForm.items.length > 0" class="mt-4">
             <h4 class="text-sm font-semibold text-gray-700 mb-3">
                 {{ t("itemsBreakdown") }}
             </h4>
@@ -356,7 +375,7 @@
                     <div class="flex-1">
                         <p class="font-medium text-gray-800">
                             {{ getProductName(item.product_id) }} -
-                            {{ item.variant }}
+                            {{ item.variant || "N/A" }}
                         </p>
                         <p class="text-sm text-gray-600">
                             {{
@@ -367,12 +386,15 @@
                             {{ t("cases") }} × ৳{{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          item.selling_price_per_case?.toFixed(
+                                          formatNumber(
+                                              item.selling_price_per_case || 0,
                                               2
-                                          ) || "0.00"
+                                          )
                                       )
-                                    : item.selling_price_per_case?.toFixed(2) ||
-                                      "0.00"
+                                    : formatNumber(
+                                          item.selling_price_per_case || 0,
+                                          2
+                                      )
                             }}
                         </p>
                         <!-- Show calculated cases info -->
@@ -381,8 +403,9 @@
                             <span
                                 v-if="
                                     includeFreeBottles &&
-                                    item.purchase_metadata
-                                        ?.free_bottles_per_case > 0
+                                    item.purchase_metadata &&
+                                    (item.purchase_metadata
+                                        .free_bottles_per_case || 0) > 0
                                 "
                             >
                                 ({{ t("includes") }}
@@ -402,18 +425,18 @@
                             ৳{{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          getItemTotal(item).toFixed(2)
+                                          formatNumber(getItemTotal(item), 2)
                                       )
-                                    : getItemTotal(item).toFixed(2)
+                                    : formatNumber(getItemTotal(item), 2)
                             }}
                         </p>
                         <p class="text-xs text-purple-600">
                             {{ t("profit") }}: ৳{{
                                 currentLanguage === "bn"
                                     ? toBengaliNumber(
-                                          getItemProfit(item).toFixed(2)
+                                          formatNumber(getItemProfit(item), 2)
                                       )
-                                    : getItemProfit(item).toFixed(2)
+                                    : formatNumber(getItemProfit(item), 2)
                             }}
                         </p>
                         <p class="text-xs text-indigo-600">
@@ -464,14 +487,14 @@ const props = defineProps<{
         include_free_bottles: boolean;
     };
     saleSummary: {
-        totalCases: number;
-        totalAmount: number;
-        totalProfit: number;
-        totalBottlesToSell: number;
-        totalActualBottles: number;
-        totalPurchasedBottles: number;
-        totalFreeBottles: number;
-        itemCount: number;
+        totalCases?: number;
+        totalAmount?: number;
+        totalProfit?: number;
+        totalBottlesToSell?: number;
+        totalActualBottles?: number;
+        totalPurchasedBottles?: number;
+        totalFreeBottles?: number;
+        itemCount?: number;
     };
     includeFreeBottles: boolean;
     availableProducts: Product[];
@@ -480,30 +503,42 @@ const props = defineProps<{
     toBengaliNumber: (num: number | string) => string;
 }>();
 
-// Helper functions
+// Helper function to safely format numbers
+const formatNumber = (value: any, decimals: number = 2): string => {
+    const num = Number(value) || 0;
+    return num.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    });
+};
+
+// Helper functions with null safety
 const getItemTotal = (item: SaleItem): number => {
-    return (item.cases_to_sell || 0) * (item.selling_price_per_case || 0);
+    const cases = Number(item.cases_to_sell) || 0;
+    const price = Number(item.selling_price_per_case) || 0;
+    return cases * price;
 };
 
 const getCalculatedCases = (item: SaleItem): number => {
-    return item.cases_to_sell || 0;
-};
-
-const getCalculatedTotalBottles = (item: SaleItem): number => {
-    if (!item.cases_to_sell || !item.bottles_per_case) return 0;
-    const effectiveBottlesPerCase = getEffectiveBottlesPerCase(item);
-    return item.cases_to_sell * effectiveBottlesPerCase;
+    return Number(item.cases_to_sell) || 0;
 };
 
 const getEffectiveBottlesPerCase = (item: SaleItem): number => {
-    if (!item.bottles_per_case) return 0;
+    const bottlesPerCase = Number(item.bottles_per_case) || 0;
+    if (!bottlesPerCase) return 0;
 
     if (props.includeFreeBottles && item.purchase_metadata) {
         const freeBottlesPerCase =
-            item.purchase_metadata.free_bottles_per_case || 0;
-        return item.bottles_per_case + freeBottlesPerCase;
+            Number(item.purchase_metadata.free_bottles_per_case) || 0;
+        return bottlesPerCase + freeBottlesPerCase;
     }
-    return item.bottles_per_case;
+    return bottlesPerCase;
+};
+
+const getCalculatedTotalBottles = (item: SaleItem): number => {
+    const cases = Number(item.cases_to_sell) || 0;
+    const effectiveBottles = getEffectiveBottlesPerCase(item);
+    return cases * effectiveBottles;
 };
 
 const getItemProfit = (item: SaleItem): number => {
@@ -511,7 +546,8 @@ const getItemProfit = (item: SaleItem): number => {
 
     const sellPrice = getItemTotal(item);
     const actualBottlesSold = getItemActualBottles(item);
-    const purchaseCost = actualBottlesSold * (item.purchase_rate || 0);
+    const purchaseRate = Number(item.purchase_rate) || 0;
+    const purchaseCost = actualBottlesSold * purchaseRate;
 
     return sellPrice - purchaseCost;
 };
@@ -525,13 +561,17 @@ const getItemFreeBottles = (item: SaleItem): number => {
 
     const cases = getCalculatedCases(item);
     const freeBottlesPerCase =
-        item.purchase_metadata.free_bottles_per_case || 0;
+        Number(item.purchase_metadata.free_bottles_per_case) || 0;
     return cases * freeBottlesPerCase;
 };
 
 const getProductName = (productId: number): string => {
+    if (!props.availableProducts || !Array.isArray(props.availableProducts)) {
+        return `Product ${productId}`;
+    }
+
     const product = props.availableProducts.find(
-        (p) => p.product_id === productId
+        (p) => p && p.product_id === productId
     );
     return product ? product.product_name : `Product ${productId}`;
 };

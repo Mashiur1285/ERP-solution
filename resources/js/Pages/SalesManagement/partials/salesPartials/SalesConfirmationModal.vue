@@ -65,8 +65,10 @@
                             <p class="text-lg font-bold text-indigo-600">
                                 {{
                                     currentLanguage === "bn"
-                                        ? toBengaliNumber(saleSummary.itemCount)
-                                        : saleSummary.itemCount
+                                        ? toBengaliNumber(
+                                              saleSummary.itemCount || 0
+                                          )
+                                        : saleSummary.itemCount || 0
                                 }}
                             </p>
                             <p class="text-xs text-indigo-600 font-medium">
@@ -81,9 +83,9 @@
                                 {{
                                     currentLanguage === "bn"
                                         ? toBengaliNumber(
-                                              saleSummary.totalCases
+                                              saleSummary.totalCases || 0
                                           )
-                                        : saleSummary.totalCases
+                                        : saleSummary.totalCases || 0
                                 }}
                             </p>
                             <p class="text-xs text-blue-600 font-medium">
@@ -98,9 +100,13 @@
                                 {{
                                     currentLanguage === "bn"
                                         ? toBengaliNumber(
-                                              saleSummary.totalBottlesSold
+                                              saleSummary.totalBottlesToSell ||
+                                                  0
                                           )
-                                        : saleSummary.totalBottlesSold.toLocaleString()
+                                        : (
+                                              saleSummary.totalBottlesToSell ||
+                                              0
+                                          ).toLocaleString()
                                 }}
                             </p>
                             <p class="text-xs text-orange-600 font-medium">
@@ -115,9 +121,15 @@
                                 ৳{{
                                     currentLanguage === "bn"
                                         ? toBengaliNumber(
-                                              saleSummary.totalAmount.toFixed(2)
+                                              formatNumber(
+                                                  saleSummary.totalAmount || 0,
+                                                  2
+                                              )
                                           )
-                                        : saleSummary.totalAmount.toFixed(2)
+                                        : formatNumber(
+                                              saleSummary.totalAmount || 0,
+                                              2
+                                          )
                                 }}
                             </p>
                             <p class="text-xs text-green-600 font-medium">
@@ -157,7 +169,7 @@
                                 <p
                                     class="text-lg font-bold"
                                     :class="
-                                        saleSummary.totalProfit >= 0
+                                        (saleSummary.totalProfit || 0) >= 0
                                             ? 'text-green-600'
                                             : 'text-red-600'
                                     "
@@ -165,23 +177,28 @@
                                     ৳{{
                                         currentLanguage === "bn"
                                             ? toBengaliNumber(
-                                                  saleSummary.totalProfit.toFixed(
+                                                  formatNumber(
+                                                      saleSummary.totalProfit ||
+                                                          0,
                                                       2
                                                   )
                                               )
-                                            : saleSummary.totalProfit.toFixed(2)
+                                            : formatNumber(
+                                                  saleSummary.totalProfit || 0,
+                                                  2
+                                              )
                                     }}
                                 </p>
                                 <p
                                     class="text-xs"
                                     :class="
-                                        saleSummary.totalProfit >= 0
+                                        (saleSummary.totalProfit || 0) >= 0
                                             ? 'text-green-500'
                                             : 'text-red-500'
                                     "
                                 >
                                     {{
-                                        saleSummary.totalProfit >= 0
+                                        (saleSummary.totalProfit || 0) >= 0
                                             ? t("profit")
                                             : t("loss")
                                     }}
@@ -245,11 +262,11 @@
 defineProps<{
     show: boolean;
     saleSummary: {
-        totalCases: number;
-        totalAmount: number;
-        totalProfit: number;
-        totalBottlesSold: number;
-        itemCount: number;
+        totalCases?: number;
+        totalAmount?: number;
+        totalProfit?: number;
+        totalBottlesToSell?: number;
+        itemCount?: number;
     };
     isLoading: boolean;
     currentLanguage: string;
@@ -258,6 +275,15 @@ defineProps<{
 }>();
 
 defineEmits(["close", "confirm"]);
+
+// Helper function to safely format numbers
+const formatNumber = (value: any, decimals: number = 2): string => {
+    const num = Number(value) || 0;
+    return num.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    });
+};
 </script>
 
 <style scoped>
