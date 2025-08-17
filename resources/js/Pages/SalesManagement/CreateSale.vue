@@ -761,26 +761,27 @@ const confirmSale = () => {
                 item.purchase_metadata?.free_bottles_per_case
             );
 
+            // ALWAYS calculate actual selling price per bottle from the "with free bottles" scenario
+            const effectiveBottlesPerCaseWithFree =
+                bottlesPerCase + freeBottlesPerCase;
+            const actualSellingPricePerBottle =
+                pricePerCase / effectiveBottlesPerCaseWithFree;
+
             let targetBottles: number;
-            let pricePerBottle: number;
 
             if (includeFreeBottles.value) {
-                // WITH free bottles
-                const effectiveBottlesPerCase =
-                    bottlesPerCase + freeBottlesPerCase;
-                targetBottles = cases * effectiveBottlesPerCase;
-                pricePerBottle = pricePerCase / effectiveBottlesPerCase;
+                // WITH free bottles: cases × (bottles + free bottles)
+                targetBottles = cases * effectiveBottlesPerCaseWithFree;
             } else {
-                // WITHOUT free bottles
+                // WITHOUT free bottles: cases × bottles only
                 targetBottles = cases * bottlesPerCase;
-                pricePerBottle = pricePerCase / bottlesPerCase;
             }
 
             return {
                 product_id: item.product_id,
                 variant: item.variant,
                 total_bottles_to_sell: targetBottles,
-                selling_price_per_bottle: pricePerBottle,
+                selling_price_per_bottle: actualSellingPricePerBottle, // ALWAYS use the consistent price
                 free_bottles_per_case: freeBottlesPerCase,
             };
         }),

@@ -215,22 +215,7 @@ class SalesController extends Controller
                 'due_amount' => $totalAmount,
             ], $sale->id);
 
-            return Inertia::render('SalesManagement/SalesPayment', [
-                'sale' => [
-                    'id' => $sale->id,
-                    'invoice_number' => $data['invoice_number'],
-                    'total_amount' => $totalAmount,
-                    'total_profit' => $totalProfit,
-                    'paid_amount' => 0,
-                    'due_amount' => $totalAmount,
-                    'shop_name' => $this->shopRepository->find($data['shop_id'])->shop_name ?? 'Unknown',
-                    'advance_balance' => DB::table('payments')->where('shop_id', $data['shop_id'])->sum('advance_balance'),
-                ],
-                'flash' => [
-                    'sale_id' => $sale->id,
-                    'success' => 'Sale created successfully, please proceed with payment',
-                ],
-            ]);
+            return redirect()->route('sales.payment', $sale->id)->with('success', 'Sale created successfully, please proceed with payment');
         });
     }
 
