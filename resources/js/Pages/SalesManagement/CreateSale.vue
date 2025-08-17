@@ -34,7 +34,7 @@
         <div
             class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl"
         >
-            <!-- Form Header with Toggle -->
+            <!-- Form Header -->
             <div class="flex items-center justify-between mb-8">
                 <h2
                     class="text-2xl font-semibold text-gray-800 flex items-center"
@@ -56,37 +56,6 @@
                     </div>
                     {{ t("createNewSale") }}
                 </h2>
-
-                <!-- Toggle for Free Bottles -->
-                <div class="flex items-center space-x-4">
-                    <label class="flex items-center cursor-pointer">
-                        <span class="mr-3 text-sm font-medium text-gray-700">
-                            {{ t("includeFreeBottles") }}
-                        </span>
-                        <div class="relative">
-                            <input
-                                type="checkbox"
-                                v-model="includeFreeBottles"
-                                class="sr-only"
-                                @change="onToggleChange"
-                            />
-                            <div
-                                class="block bg-gray-600 w-14 h-8 rounded-full"
-                                :class="
-                                    includeFreeBottles
-                                        ? 'bg-green-500'
-                                        : 'bg-gray-400'
-                                "
-                            ></div>
-                            <div
-                                class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform"
-                                :class="
-                                    includeFreeBottles ? 'translate-x-6' : ''
-                                "
-                            ></div>
-                        </div>
-                    </label>
-                </div>
             </div>
 
             <!-- Sale Information Section -->
@@ -113,10 +82,13 @@
                     :current-language="currentLanguage"
                     :t="t"
                     :to-bengali-number="toBengaliNumber"
+                    :show-toggle="showToggleButton"
                     @add-item="addSaleItem"
                     @remove-item="removeSaleItem"
                     @item-change="handleItemChange"
                     @variant-change="onVariantChange"
+                    @toggle-free-bottles="onToggleFreeBottles"
+                    @item-input-complete="checkToggleVisibility"
                 />
             </div>
 
@@ -199,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import ToastNotification from "./partials/salesPartials/ToastNotification.vue";
@@ -265,6 +237,7 @@ defineOptions({
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const includeFreeBottles = ref(true);
 const availableProducts = ref<Product[]>([]);
+const showToggleButton = ref(false);
 
 const translations = {
     en: {
@@ -272,6 +245,7 @@ const translations = {
         salesManagement: "Sales Management",
         createNewSale: "Create New Sale",
         includeFreeBottles: "Include Free Bottles",
+        withoutFreeBottles: "Without Free Bottles",
         saleInformation: "Sale Information",
         shopName: "Shop Name",
         selectShop: "Select a shop",
@@ -360,12 +334,14 @@ const translations = {
         difference: "Difference",
         target: "target",
         bottles: "bottles",
+        pricePerBottle: "Price per Bottle",
     },
     bn: {
         languageLabel: "বাংলা",
         salesManagement: "বিক্রয় ব্যবস্থাপনা",
         createNewSale: "নতুন বিক্রয় তৈরি করুন",
         includeFreeBottles: "বিনামূল্যে বোতল অন্তর্ভুক্ত করুন",
+        withoutFreeBottles: "বিনামূল্যে বোতল ছাড়া",
         saleInformation: "বিক্রয়ের তথ্য",
         shopName: "দোকানের নাম",
         selectShop: "একটি দোকান নির্বাচন করুন",
@@ -453,6 +429,7 @@ const translations = {
         difference: "পার্থক্য",
         target: "লক্ষ্য",
         bottles: "বোতল",
+        pricePerBottle: "বোতল প্রতি মূল্য",
     },
 };
 
@@ -477,7 +454,22 @@ const safeNumber = (value: any): number => {
     return isNaN(num) ? 0 : num;
 };
 
-// Computed properties for summary - CORRECTED BUSINESS LOGIC with null safety
+// Check if toggle button should be visible
+const checkToggleVisibility = () => {
+    const hasValidItem = saleForm.value.items.some(
+        (item) =>
+            item.product_id &&
+            item.variant &&
+            safeNumber(item.cases_to_sell) > 0 &&
+            safeNumber(item.selling_price_per_case) > 0
+    );
+    showToggleButton.value = hasValidItem;
+};
+
+// Watch for changes in form items to check toggle visibility
+watch(() => saleForm.value.items, checkToggleVisibility, { deep: true });
+
+// Computed properties for summary with corrected logic
 const saleSummary = computed(() => {
     if (!saleForm.value.items || !Array.isArray(saleForm.value.items)) {
         return {
@@ -493,89 +485,71 @@ const saleSummary = computed(() => {
     }
 
     const items = saleForm.value.items;
-
-    // Calculate total bottles to sell (this should be the same regardless of toggle)
-    const totalBottlesToSell = items.reduce((sum, item) => {
-        const cases = safeNumber(item.cases_to_sell);
-        const bottlesPerCase = safeNumber(item.bottles_per_case);
-        if (!cases || !bottlesPerCase) return sum;
-
-        // Target bottles is ALWAYS: input cases × (bottles per case + free bottles per case)
-        const freeBottlesPerCase = safeNumber(
-            item.purchase_metadata?.free_bottles_per_case
-        );
-        const effectiveBottlesPerCase = bottlesPerCase + freeBottlesPerCase;
-        return sum + cases * effectiveBottlesPerCase;
-    }, 0);
-
-    // Calculate total amount (this should be the same regardless of toggle)
-    const totalAmount = items.reduce((sum, item) => {
-        const cases = safeNumber(item.cases_to_sell);
-        const pricePerCase = safeNumber(item.selling_price_per_case);
-        const bottlesPerCase = safeNumber(item.bottles_per_case);
-
-        if (!cases || !pricePerCase || !bottlesPerCase) return sum;
-
-        const freeBottlesPerCase = safeNumber(
-            item.purchase_metadata?.free_bottles_per_case
-        );
-        const effectiveBottlesPerCase = bottlesPerCase + freeBottlesPerCase;
-        const totalBottlesForThisItem = cases * effectiveBottlesPerCase;
-        const pricePerBottle = pricePerCase / effectiveBottlesPerCase;
-        return sum + totalBottlesForThisItem * pricePerBottle;
-    }, 0);
-
-    // Calculate actual cases and bottles needed for delivery based on toggle
     let totalCases = 0;
+    let totalAmount = 0;
+    let totalProfit = 0;
+    let totalBottlesToSell = 0;
     let totalActualBottles = 0;
     let totalPurchasedBottles = 0;
     let totalFreeBottles = 0;
-    let totalProfit = 0;
 
     items.forEach((item) => {
         const cases = safeNumber(item.cases_to_sell);
-        const bottlesPerCase = safeNumber(item.bottles_per_case);
         const pricePerCase = safeNumber(item.selling_price_per_case);
+        const bottlesPerCase = safeNumber(item.bottles_per_case);
         const purchaseRate = safeNumber(item.purchase_rate);
 
-        if (!item.purchase_metadata || !bottlesPerCase || !cases) return;
+        if (
+            !cases ||
+            !pricePerCase ||
+            !bottlesPerCase ||
+            !item.purchase_metadata
+        )
+            return;
 
         const freeBottlesPerCase = safeNumber(
             item.purchase_metadata.free_bottles_per_case
         );
-        const effectiveBottlesPerCase = bottlesPerCase + freeBottlesPerCase;
-        const targetBottles = cases * effectiveBottlesPerCase;
-        const sellingPricePerBottle = pricePerCase / effectiveBottlesPerCase;
+
+        // Calculate the actual selling price per bottle (always based on with free bottles)
+        const effectiveBottlesPerCaseWithFree =
+            bottlesPerCase + freeBottlesPerCase;
+        const actualSellingPricePerBottle =
+            pricePerCase / effectiveBottlesPerCaseWithFree;
+
+        totalCases += cases;
 
         if (includeFreeBottles.value) {
-            // With free bottles: Use input cases directly
-            const actualCases = cases;
-            const purchasedBottles = actualCases * bottlesPerCase;
-            const freeBottles = actualCases * freeBottlesPerCase;
+            // WITH free bottles calculation
+            const totalBottles = cases * effectiveBottlesPerCaseWithFree;
+            const purchasedBottles = cases * bottlesPerCase;
+            const freeBottles = cases * freeBottlesPerCase;
 
-            totalCases += actualCases;
+            totalBottlesToSell += totalBottles;
+            totalActualBottles += totalBottles;
             totalPurchasedBottles += purchasedBottles;
             totalFreeBottles += freeBottles;
-            totalActualBottles += purchasedBottles + freeBottles;
 
-            // Profit calculation
-            const salePrice = targetBottles * sellingPricePerBottle;
-            const purchaseCost =
-                (purchasedBottles + freeBottles) * purchaseRate;
-            totalProfit += salePrice - purchaseCost;
+            // Calculate total amount and profit
+            const itemAmount = totalBottles * actualSellingPricePerBottle;
+            const purchaseCost = totalBottles * purchaseRate;
+
+            totalAmount += itemAmount;
+            totalProfit += itemAmount - purchaseCost;
         } else {
-            // Without free bottles: Need more cases to get same target bottles
-            const actualCases = Math.ceil(targetBottles / bottlesPerCase);
-            const purchasedBottles = targetBottles; // Only sell target bottles, no extra
+            // WITHOUT free bottles calculation
+            const totalBottles = cases * bottlesPerCase; // Only purchased bottles
 
-            totalCases += actualCases;
-            totalPurchasedBottles += purchasedBottles;
-            totalActualBottles += purchasedBottles;
+            totalBottlesToSell += totalBottles;
+            totalActualBottles += totalBottles;
+            totalPurchasedBottles += totalBottles;
 
-            // Profit calculation - same sale price, different cost
-            const salePrice = targetBottles * sellingPricePerBottle;
-            const purchaseCost = purchasedBottles * purchaseRate;
-            totalProfit += salePrice - purchaseCost;
+            // Calculate total amount and profit using the SAME selling price per bottle
+            const itemAmount = totalBottles * actualSellingPricePerBottle;
+            const purchaseCost = totalBottles * purchaseRate;
+
+            totalAmount += itemAmount;
+            totalProfit += itemAmount - purchaseCost;
         }
     });
 
@@ -590,19 +564,6 @@ const saleSummary = computed(() => {
         itemCount: items.length,
     };
 });
-
-// Helper function to get effective bottles per case - CORRECTED
-const getEffectiveBottlesPerCase = (item: SaleItem): number => {
-    const bottlesPerCase = safeNumber(item.bottles_per_case);
-    if (!bottlesPerCase) return 0;
-
-    // Target bottles calculation is ALWAYS bottles_per_case + free_bottles_per_case
-    // regardless of toggle state - this represents what customer wants to sell
-    const freeBottlesPerCase = safeNumber(
-        item.purchase_metadata?.free_bottles_per_case
-    );
-    return bottlesPerCase + freeBottlesPerCase;
-};
 
 // Translation function
 const t = (key: string, params: Record<string, any> = {}) => {
@@ -628,12 +589,10 @@ const changeLanguage = (lang: string) => {
     localStorage.setItem("language", lang);
 };
 
-// Toggle change handler - Simplified
-const onToggleChange = () => {
+// Toggle free bottles handler
+const onToggleFreeBottles = () => {
+    includeFreeBottles.value = !includeFreeBottles.value;
     saleForm.value.include_free_bottles = includeFreeBottles.value;
-    // Clear items when toggling to avoid confusion
-    saleForm.value.items = [];
-    addSaleItem(); // Add a fresh item
 };
 
 // Supplier change handler
@@ -697,6 +656,7 @@ const onVariantChange = async (
 const handleItemChange = (index: number, field: string, value: any) => {
     if (field !== "calculated" && saleForm.value.items[index]) {
         saleForm.value.items[index][field] = value;
+        checkToggleVisibility(); // Check if toggle should be shown
     }
 };
 
@@ -721,6 +681,7 @@ const removeSaleItem = (index: number) => {
     if (saleForm.value.items.length > 1) {
         saleForm.value.items.splice(index, 1);
     }
+    checkToggleVisibility(); // Check if toggle should be shown after removal
 };
 
 // Form reset handler
@@ -729,11 +690,13 @@ const resetForm = () => {
         shop_id: "",
         supplier_id: "",
         sale_date: new Date().toISOString().split("T")[0],
-        include_free_bottles: includeFreeBottles.value,
+        include_free_bottles: true,
         items: [],
     };
     availableProducts.value = [];
     isSubmitted.value = false;
+    showToggleButton.value = false;
+    includeFreeBottles.value = true;
     showToast.value = true;
     toastMessage.value = "formReset";
     toastType.value = "success";
@@ -756,11 +719,8 @@ const openModal = () => {
             (item) =>
                 item.product_id &&
                 item.variant &&
-                (includeFreeBottles.value
-                    ? safeNumber(item.cases_to_sell) > 0 &&
-                      safeNumber(item.selling_price_per_case) > 0
-                    : safeNumber(item.total_bottles_to_sell) > 0 &&
-                      safeNumber(item.selling_price_per_bottle) > 0)
+                safeNumber(item.cases_to_sell) > 0 &&
+                safeNumber(item.selling_price_per_case) > 0
         );
 
     if (!isFormValid) {
@@ -790,25 +750,38 @@ const closeToast = () => {
 const confirmSale = () => {
     isLoading.value = true;
 
-    // Prepare sale data with ORIGINAL BUSINESS LOGIC
+    // Prepare sale data
     const saleData = {
         ...saleForm.value,
         items: saleForm.value.items.map((item) => {
-            // Calculate final values using ORIGINAL LOGIC
-            const effectiveBottlesPerCase = getEffectiveBottlesPerCase(item);
             const cases = safeNumber(item.cases_to_sell);
             const pricePerCase = safeNumber(item.selling_price_per_case);
-            const targetBottles = cases * effectiveBottlesPerCase;
-            const pricePerBottle = pricePerCase / effectiveBottlesPerCase;
+            const bottlesPerCase = safeNumber(item.bottles_per_case);
+            const freeBottlesPerCase = safeNumber(
+                item.purchase_metadata?.free_bottles_per_case
+            );
+
+            let targetBottles: number;
+            let pricePerBottle: number;
+
+            if (includeFreeBottles.value) {
+                // WITH free bottles
+                const effectiveBottlesPerCase =
+                    bottlesPerCase + freeBottlesPerCase;
+                targetBottles = cases * effectiveBottlesPerCase;
+                pricePerBottle = pricePerCase / effectiveBottlesPerCase;
+            } else {
+                // WITHOUT free bottles
+                targetBottles = cases * bottlesPerCase;
+                pricePerBottle = pricePerCase / bottlesPerCase;
+            }
 
             return {
                 product_id: item.product_id,
                 variant: item.variant,
-                total_bottles_to_sell: targetBottles, // This is the target bottles to sell
-                selling_price_per_bottle: pricePerBottle, // This is the consistent price per bottle
-                free_bottles_per_case: safeNumber(
-                    item.purchase_metadata?.free_bottles_per_case
-                ),
+                total_bottles_to_sell: targetBottles,
+                selling_price_per_bottle: pricePerBottle,
+                free_bottles_per_case: freeBottlesPerCase,
             };
         }),
     };

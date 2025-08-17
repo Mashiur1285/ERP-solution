@@ -4,25 +4,62 @@
             <h3 class="text-lg font-semibold text-gray-800">
                 {{ t("saleItems") }}
             </h3>
-            <button
-                @click="addItem"
-                class="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-                <svg
-                    class="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            <div class="flex items-center space-x-4">
+                <!-- Toggle Button - Only show when conditions are met -->
+                <div v-if="showToggle" class="flex items-center space-x-4">
+                    <label class="flex items-center cursor-pointer">
+                        <span class="mr-3 text-sm font-medium text-gray-700">
+                            {{
+                                includeFreeBottles
+                                    ? t("includeFreeBottles")
+                                    : t("withoutFreeBottles")
+                            }}
+                        </span>
+                        <div class="relative">
+                            <input
+                                type="checkbox"
+                                :checked="includeFreeBottles"
+                                @change="$emit('toggle-free-bottles')"
+                                class="sr-only"
+                            />
+                            <div
+                                class="block bg-gray-600 w-14 h-8 rounded-full"
+                                :class="
+                                    includeFreeBottles
+                                        ? 'bg-green-500'
+                                        : 'bg-red-500'
+                                "
+                            ></div>
+                            <div
+                                class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform"
+                                :class="
+                                    includeFreeBottles ? 'translate-x-6' : ''
+                                "
+                            ></div>
+                        </div>
+                    </label>
+                </div>
+
+                <button
+                    @click="addItem"
+                    class="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                </svg>
-                {{ t("addItem") }}
-            </button>
+                    <svg
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                    </svg>
+                    {{ t("addItem") }}
+                </button>
+            </div>
         </div>
 
         <div class="space-y-6">
@@ -181,8 +218,8 @@
                         </p>
                     </div>
 
-                    <!-- Cases to Sell (Only for WITH free bottles) -->
-                    <div v-if="item.variant && includeFreeBottles">
+                    <!-- Cases to Sell - Always visible -->
+                    <div v-if="item.variant">
                         <label
                             :for="'cases_to_sell_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
@@ -215,15 +252,22 @@
                         </p>
                     </div>
 
-                    <!-- Selling Price per Case (Only for WITH free bottles) -->
-                    <div v-if="item.variant && includeFreeBottles">
+                    <!-- Selling Price per Case - Always visible -->
+                    <div v-if="item.variant">
                         <label
                             :for="'selling_price_per_case_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
                             {{ t("sellingPricePerCase") }}*
+                            <span
+                                v-if="!includeFreeBottles"
+                                class="text-xs text-orange-600"
+                            >
+                                ({{ t("calculated") }})
+                            </span>
                         </label>
                         <input
+                            v-if="includeFreeBottles"
                             v-model.number="item.selling_price_per_case"
                             @input="calculateFromCases(index)"
                             type="number"
@@ -239,8 +283,23 @@
                             }"
                             required
                         />
+                        <input
+                            v-else
+                            :value="
+                                formatNumber(
+                                    getEffectiveSellingPricePerCase(item),
+                                    2
+                                )
+                            "
+                            type="text"
+                            :id="'selling_price_per_case_' + index"
+                            class="w-full py-2 px-3 rounded-md border-2 border-orange-200 bg-orange-50 text-orange-800 font-medium cursor-not-allowed"
+                            readonly
+                            disabled
+                        />
                         <p
                             v-if="
+                                includeFreeBottles &&
                                 isSubmitted &&
                                 (!item.selling_price_per_case ||
                                     item.selling_price_per_case <= 0)
@@ -249,84 +308,25 @@
                         >
                             {{ t("sellingPricePerCaseRequired") }}
                         </p>
-                    </div>
-
-                    <!-- Total Bottles to Sell (Only for WITHOUT free bottles) -->
-                    <div v-if="item.variant && !includeFreeBottles">
-                        <label
-                            :for="'total_bottles_' + index"
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            {{ t("totalBottlesToSell") }}*
-                        </label>
-                        <input
-                            v-model.number="item.total_bottles_to_sell"
-                            @input="calculateFromBottles(index)"
-                            type="number"
-                            min="1"
-                            :id="'total_bottles_' + index"
-                            class="w-full py-2 px-3 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                            :class="{
-                                'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                    isSubmitted &&
-                                    (!item.total_bottles_to_sell ||
-                                        item.total_bottles_to_sell <= 0),
-                            }"
-                            required
-                        />
                         <p
-                            v-if="
-                                isSubmitted &&
-                                (!item.total_bottles_to_sell ||
-                                    item.total_bottles_to_sell <= 0)
-                            "
-                            class="mt-2 text-sm text-red-600"
+                            v-if="!includeFreeBottles"
+                            class="mt-1 text-xs text-orange-600"
                         >
-                            {{ t("totalBottlesToSellRequired") }}
+                            {{
+                                formatNumber(
+                                    getCalculatedPricePerBottle(item),
+                                    2
+                                )
+                            }}
+                            × {{ safeNumber(item.bottles_per_case) }}
+                            {{ t("bottles") }}
                         </p>
                     </div>
 
-                    <!-- Selling Price per Bottle (Only for WITHOUT free bottles) -->
-                    <div v-if="item.variant && !includeFreeBottles">
-                        <label
-                            :for="'selling_price_per_bottle_' + index"
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            {{ t("sellingPricePerBottle") }}*
-                        </label>
-                        <input
-                            v-model.number="item.selling_price_per_bottle"
-                            @input="calculateFromBottles(index)"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            :id="'selling_price_per_bottle_' + index"
-                            class="w-full py-2 px-3 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                            :class="{
-                                'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                    isSubmitted &&
-                                    (!item.selling_price_per_bottle ||
-                                        item.selling_price_per_bottle <= 0),
-                            }"
-                            required
-                        />
-                        <p
-                            v-if="
-                                isSubmitted &&
-                                (!item.selling_price_per_bottle ||
-                                    item.selling_price_per_bottle <= 0)
-                            "
-                            class="mt-2 text-sm text-red-600"
-                        >
-                            {{ t("sellingPricePerBottleRequired") }}
-                        </p>
-                    </div>
-
-                    <!-- Calculated Total Bottles (Read-only, only for WITH free bottles) -->
+                    <!-- Calculated Total Bottles - Read-only -->
                     <div
                         v-if="
                             item.variant &&
-                            includeFreeBottles &&
                             item.cases_to_sell &&
                             item.bottles_per_case
                         "
@@ -352,15 +352,22 @@
                             {{ safeNumber(item.cases_to_sell) }}
                             {{ t("cases") }} ×
                             {{ getEffectiveBottlesPerCase(item) }}
-                            {{ t("bottlesPerCase") }}
+                            {{
+                                includeFreeBottles
+                                    ? t("bottlesPerCase") +
+                                      " (+" +
+                                      (item.purchase_metadata
+                                          ?.free_bottles_per_case || 0) +
+                                      " free)"
+                                    : t("bottlesPerCase")
+                            }}
                         </p>
                     </div>
 
-                    <!-- Calculated Selling Price per Bottle (Read-only, only for WITH free bottles) -->
+                    <!-- Calculated Selling Price per Bottle - Read-only -->
                     <div
                         v-if="
                             item.variant &&
-                            includeFreeBottles &&
                             item.selling_price_per_case &&
                             item.bottles_per_case
                         "
@@ -402,83 +409,7 @@
                         </p>
                     </div>
 
-                    <!-- Calculated Cases Needed (Read-only, only for WITHOUT free bottles) -->
-                    <div
-                        v-if="
-                            item.variant &&
-                            !includeFreeBottles &&
-                            item.total_bottles_to_sell &&
-                            item.bottles_per_case
-                        "
-                    >
-                        <label
-                            :for="'cases_needed_calculated_' + index"
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            {{ t("casesNeededCalculated") }}
-                            <span class="text-xs text-orange-600"
-                                >({{ t("calculated") }})</span
-                            >
-                        </label>
-                        <input
-                            :value="getCalculatedCasesForBottles(item)"
-                            type="number"
-                            :id="'cases_needed_calculated_' + index"
-                            class="w-full py-2 px-3 rounded-md border-2 border-orange-200 bg-orange-50 text-orange-800 font-medium cursor-not-allowed"
-                            readonly
-                            disabled
-                        />
-                        <p class="mt-1 text-xs text-orange-600">
-                            ceil({{ safeNumber(item.total_bottles_to_sell) }} ÷
-                            {{ safeNumber(item.bottles_per_case) }})
-                            {{ t("cases") }}
-                        </p>
-                    </div>
-
-                    <!-- Calculated Selling Price per Case (Read-only, only for WITHOUT free bottles) -->
-                    <div
-                        v-if="
-                            item.variant &&
-                            !includeFreeBottles &&
-                            item.total_bottles_to_sell &&
-                            item.selling_price_per_bottle &&
-                            item.bottles_per_case
-                        "
-                    >
-                        <label
-                            :for="'selling_price_per_case_calculated_' + index"
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            {{ t("sellingPricePerCaseCalculated") }}
-                            <span class="text-xs text-purple-600"
-                                >({{ t("calculated") }})</span
-                            >
-                        </label>
-                        <input
-                            :value="
-                                formatNumber(
-                                    getCalculatedPricePerCaseForBottles(item),
-                                    2
-                                )
-                            "
-                            type="text"
-                            :id="'selling_price_per_case_calculated_' + index"
-                            class="w-full py-2 px-3 rounded-md border-2 border-purple-200 bg-purple-50 text-purple-800 font-medium cursor-not-allowed"
-                            readonly
-                            disabled
-                        />
-                        <p class="mt-1 text-xs text-purple-600">
-                            {{ safeNumber(item.bottles_per_case) }} × ৳{{
-                                formatNumber(
-                                    item.selling_price_per_bottle || 0,
-                                    2
-                                )
-                            }}
-                            {{ t("perCase") }}
-                        </p>
-                    </div>
-
-                    <!-- Free Bottles per Case (READ-ONLY, populated from purchase data) -->
+                    <!-- Free Bottles per Case (only with free bottles mode) -->
                     <div
                         v-if="
                             includeFreeBottles &&
@@ -885,7 +816,7 @@
                                     >
                                     {{ safeNumber(item.bottles_per_case) }}
                                 </p>
-                                <p>
+                                <p v-if="includeFreeBottles">
                                     <span class="font-medium"
                                         >{{ t("freeBottlesPerCase") }}:</span
                                     >
@@ -1022,7 +953,6 @@ interface SaleItem {
     purchase_rate: number;
     available_inventory?: any;
     purchase_metadata?: any;
-    // Calculated fields
     total_bottles_to_sell?: number;
     selling_price_per_bottle?: number;
 }
@@ -1035,6 +965,7 @@ const props = defineProps<{
     includeFreeBottles: boolean;
     isSubmitted: boolean;
     currentLanguage: string;
+    showToggle: boolean;
     t: (key: string, params?: Record<string, any>) => string;
     toBengaliNumber: (num: number | string) => string;
 }>();
@@ -1044,6 +975,8 @@ const emit = defineEmits([
     "remove-item",
     "item-change",
     "variant-change",
+    "toggle-free-bottles",
+    "item-input-complete",
 ]);
 
 // Helper function to safely convert values to numbers
@@ -1109,51 +1042,21 @@ const calculateFromCases = (index: number) => {
         item.selling_price_per_bottle = pricePerCase / effectiveBottlesPerCase;
 
         emit("item-change", index, "calculated", true);
+        emit("item-input-complete"); // Emit to check toggle visibility
     }
-};
-
-const calculateFromBottles = (index: number) => {
-    if (!props.saleForm.items[index]) return;
-
-    const item = props.saleForm.items[index];
-    const totalBottles = safeNumber(item.total_bottles_to_sell);
-    const pricePerBottle = safeNumber(item.selling_price_per_bottle);
-    const bottlesPerCase = safeNumber(item.bottles_per_case);
-
-    if (totalBottles && pricePerBottle && bottlesPerCase) {
-        // Calculate cases needed and price per case
-        const casesNeeded = Math.ceil(totalBottles / bottlesPerCase);
-        item.cases_to_sell = casesNeeded;
-        item.selling_price_per_case = bottlesPerCase * pricePerBottle;
-
-        emit("item-change", index, "calculated", true);
-    }
-};
-
-const getCalculatedCasesForBottles = (item: SaleItem): number => {
-    const totalBottles = safeNumber(item.total_bottles_to_sell);
-    const bottlesPerCase = safeNumber(item.bottles_per_case);
-    if (!totalBottles || !bottlesPerCase) return 0;
-    return Math.ceil(totalBottles / bottlesPerCase);
-};
-
-const getCalculatedPricePerCaseForBottles = (item: SaleItem): number => {
-    const pricePerBottle = safeNumber(item.selling_price_per_bottle);
-    const bottlesPerCase = safeNumber(item.bottles_per_case);
-    if (!pricePerBottle || !bottlesPerCase) return 0;
-    return pricePerBottle * bottlesPerCase;
 };
 
 const getEffectiveBottlesPerCase = (item: SaleItem): number => {
     const bottlesPerCase = safeNumber(item.bottles_per_case);
     if (!bottlesPerCase) return 0;
 
-    // Target bottles calculation is ALWAYS bottles_per_case + free_bottles_per_case
-    // regardless of toggle state - this represents what customer wants to sell
-    const freeBottlesPerCase = safeNumber(
-        item.purchase_metadata?.free_bottles_per_case
-    );
-    return bottlesPerCase + freeBottlesPerCase;
+    if (props.includeFreeBottles && item.purchase_metadata) {
+        const freeBottlesPerCase = safeNumber(
+            item.purchase_metadata.free_bottles_per_case
+        );
+        return bottlesPerCase + freeBottlesPerCase;
+    }
+    return bottlesPerCase;
 };
 
 const getCalculatedTotalBottles = (item: SaleItem): number => {
@@ -1164,9 +1067,50 @@ const getCalculatedTotalBottles = (item: SaleItem): number => {
 
 const getCalculatedPricePerBottle = (item: SaleItem): number => {
     const pricePerCase = safeNumber(item.selling_price_per_case);
-    const effectiveBottles = getEffectiveBottlesPerCase(item);
-    if (!pricePerCase || !effectiveBottles) return 0;
-    return pricePerCase / effectiveBottles;
+    const bottlesPerCase = safeNumber(item.bottles_per_case);
+
+    if (!pricePerCase || !bottlesPerCase || !item.purchase_metadata) return 0;
+
+    // ALWAYS calculate based on the "with free bottles" scenario to get actual selling price
+    const freeBottlesPerCase = safeNumber(
+        item.purchase_metadata.free_bottles_per_case
+    );
+    const effectiveBottlesPerCaseWithFree = bottlesPerCase + freeBottlesPerCase;
+
+    return pricePerCase / effectiveBottlesPerCaseWithFree;
+};
+
+const getEffectiveSellingPricePerCase = (item: SaleItem): number => {
+    const actualSellingPricePerBottle = getCalculatedPricePerBottle(item);
+    const bottlesPerCase = safeNumber(item.bottles_per_case);
+
+    if (props.includeFreeBottles) {
+        // With free bottles: use the input selling price per case
+        return safeNumber(item.selling_price_per_case);
+    } else {
+        // Without free bottles: calculate new selling price per case
+        return actualSellingPricePerBottle * bottlesPerCase;
+    }
+};
+
+const getItemTotal = (item: SaleItem): number => {
+    const cases = safeNumber(item.cases_to_sell);
+    const actualSellingPricePerBottle = getCalculatedPricePerBottle(item);
+    const totalBottles = getCalculatedTotalBottles(item);
+
+    // Total amount = total bottles × actual selling price per bottle
+    return totalBottles * actualSellingPricePerBottle;
+};
+
+const getItemProfit = (item: SaleItem): number => {
+    if (!item.purchase_metadata || !item.bottles_per_case) return 0;
+
+    const totalSalePrice = getItemTotal(item);
+    const totalBottlesSold = getCalculatedTotalBottles(item);
+    const purchaseRate = safeNumber(item.purchase_rate);
+    const totalPurchaseCost = totalBottlesSold * purchaseRate;
+
+    return totalSalePrice - totalPurchaseCost;
 };
 
 const getProductVariants = (productId: number): ProductVariant[] => {
@@ -1178,27 +1122,6 @@ const getProductVariants = (productId: number): ProductVariant[] => {
         (p) => p && p.product_id === productId
     );
     return product && product.variants ? product.variants : [];
-};
-
-const getItemTotal = (item: SaleItem): number => {
-    const cases = safeNumber(item.cases_to_sell);
-    const pricePerCase = safeNumber(item.selling_price_per_case);
-    return cases * pricePerCase;
-};
-
-const getItemProfit = (item: SaleItem): number => {
-    if (!item.purchase_metadata || !item.bottles_per_case) return 0;
-
-    const sellPrice = getItemTotal(item);
-    const actualBottlesSold = getItemActualBottles(item);
-    const purchaseRate = safeNumber(item.purchase_rate);
-    const purchaseCost = actualBottlesSold * purchaseRate;
-
-    return sellPrice - purchaseCost;
-};
-
-const getItemActualBottles = (item: SaleItem): number => {
-    return getCalculatedTotalBottles(item);
 };
 
 const getTotalAvailableBottles = (item: SaleItem): number => {
@@ -1246,5 +1169,9 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type="number"] {
     -moz-appearance: textfield;
+}
+
+.dot {
+    transition: transform 0.3s ease;
 }
 </style>
