@@ -81,18 +81,16 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         $rawData = collect(DB::select($query))->map(function ($item) {
             $variant = json_decode($item->variant_data, true) ?: [];
 
-            // Calculate available inventory
-            $purchased_bottles = ($variant['number_of_cases'] ?? 0) * ($variant['bottles_per_case'] ?? 0);
-            $free_bottles = $variant['total_free_bottles'] ?? 0;
-            $total_available = $purchased_bottles + $free_bottles;
+            // CORRECTED: Calculate initial purchased bottles correctly
+            $purchasedCases = $variant['cases_without_free_bottles'] ?? 0;
+            $bottlesPerCase = $variant['bottles_per_case'] ?? 0;
+            $initialPurchasedBottles = $purchasedCases * $bottlesPerCase;
+
+            $initialFreeBottles = $variant['total_free_bottles'] ?? 0;
 
             // Get current inventory (subtract sold quantities)
-            $current_purchased = $variant['current_purchased_quantity'] ?? $purchased_bottles;
-            $current_free = $variant['current_free_quantity'] ?? $free_bottles;
-
-            $bottles_per_box = isset($variant['bottles_per_case']) && is_numeric($variant['bottles_per_case']) && $variant['bottles_per_case'] > 0
-                ? $variant['bottles_per_case']
-                : null;
+            $currentPurchased = $variant['current_purchased_quantity'] ?? $initialPurchasedBottles;
+            $currentFree = $variant['current_free_quantity'] ?? $initialFreeBottles;
 
             return [
                 'product_id' => $item->id,
@@ -100,12 +98,12 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'supplier_id' => $item->supplier_id,
                 'supplier_name' => $item->supplier_name,
                 'variant' => $variant['variant'] ?? 'N/A',
-                'purchased_bottles_available' => $current_purchased,
-                'free_bottles_available' => $current_free,
-                'total_bottles_available' => $current_purchased + $current_free,
+                'purchased_bottles_available' => $currentPurchased,
+                'free_bottles_available' => $currentFree,
+                'total_bottles_available' => $currentPurchased + $currentFree,
                 'unit_price' => floatval($variant['actual_rate_per_bottle'] ?? 0),
-                'bottles_per_case' => $bottles_per_box,
-                'cases_available' => $bottles_per_box ? floor(($current_purchased + $current_free) / $bottles_per_box) : 0,
+                'bottles_per_case' => $bottlesPerCase,
+                'cases_available' => $bottlesPerCase ? floor(($currentPurchased + $currentFree) / $bottlesPerCase) : 0,
                 'purchase_rate' => floatval($variant['actual_rate_per_bottle'] ?? 0),
                 'variant_metadata' => $variant,
             ];
@@ -178,10 +176,15 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
         $variantData = $metadata['variants'][$variantIndex];
 
+        // CORRECTED: Calculate initial quantities properly
+        $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
+        $bottlesPerCase = $variantData['bottles_per_case'] ?? 0;
+        $initialPurchasedBottles = $purchasedCases * $bottlesPerCase;
+        $initialFreeBottles = $variantData['total_free_bottles'] ?? 0;
+
         // Get current available quantities
-        $currentPurchased = $variantData['current_purchased_quantity'] ??
-            (($variantData['number_of_cases'] ?? 0) * ($variantData['bottles_per_case'] ?? 0));
-        $currentFree = $variantData['current_free_quantity'] ?? ($variantData['total_free_bottles'] ?? 0);
+        $currentPurchased = $variantData['current_purchased_quantity'] ?? $initialPurchasedBottles;
+        $currentFree = $variantData['current_free_quantity'] ?? $initialFreeBottles;
 
         // Validate sufficient inventory
         if ($currentPurchased < $soldPurchasedBottles) {
@@ -212,18 +215,24 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             return null;
         }
 
-        $purchasedBottles = ($variantData['number_of_cases'] ?? 0) * ($variantData['bottles_per_case'] ?? 0);
-        $freeBottles = $variantData['total_free_bottles'] ?? 0;
+        // CORRECTED: Calculate initial quantities properly
+        $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
+        $bottlesPerCase = $variantData['bottles_per_case'] ?? 0;
+        $initialPurchasedBottles = $purchasedCases * $bottlesPerCase;
+        $initialFreeBottles = $variantData['total_free_bottles'] ?? 0;
 
         return [
-            'purchased_bottles_available' => $variantData['current_purchased_quantity'] ?? $purchasedBottles,
-            'free_bottles_available' => $variantData['current_free_quantity'] ?? $freeBottles,
+            'purchased_bottles_available' => $variantData['current_purchased_quantity'] ?? $initialPurchasedBottles,
+            'free_bottles_available' => $variantData['current_free_quantity'] ?? $initialFreeBottles,
             'bottles_per_case' => $variantData['bottles_per_case'] ?? 0,
             'purchase_rate' => $variantData['actual_rate_per_bottle'] ?? 0,
             'case_buying_price' => $variantData['case_buying_price'] ?? 0,
             'variant_data' => $variantData,
-            // Add purchase metadata for free bottles calculation
+            // Add complete purchase metadata for frontend
             'free_bottles_per_case' => $variantData['free_bottles_per_case'] ?? 0,
+            'cases_without_free_bottles' => $variantData['cases_without_free_bottles'] ?? 0,
+            'cases_with_free_bottles' => $variantData['cases_with_free_bottles'] ?? 0,
+            'total_cases' => $variantData['number_of_cases'] ?? 0,
         ];
     }
 }

@@ -121,9 +121,6 @@
                         <p class="text-sm text-gray-600 font-medium">
                             {{ t("totalBottles") }}
                         </p>
-                        <p class="text-xs text-gray-500">
-                            {{ t("targetBottles") }}
-                        </p>
                         <p class="text-2xl font-bold text-indigo-600">
                             {{
                                 currentLanguage === "bn"
