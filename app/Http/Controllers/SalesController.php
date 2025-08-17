@@ -86,6 +86,7 @@ class SalesController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'shop_id' => 'required|exists:shops,id',
             'supplier_id' => 'required|exists:suppliers,id',
@@ -128,30 +129,32 @@ class SalesController extends Controller
 
                 $bottlesPerCase = $inventory['bottles_per_case'];
                 $purchaseRatePerBottle = $inventory['purchase_rate'];
-                $totalBottlesToSell = $item['total_bottles_to_sell'];
-                $sellingPricePerBottle = $item['selling_price_per_bottle'];
+                $targetBottlesToSell = $item['total_bottles_to_sell']; // This is the target bottles from frontend
+                $actualSellingPricePerBottle = $item['selling_price_per_bottle']; // This is consistent selling price
                 $freeBottlesPerCase = $item['free_bottles_per_case'] ?? 0;
 
-                // ORIGINAL BUSINESS LOGIC: Calculate bottles and cases based on toggle state
+                // CORRECTED BUSINESS LOGIC: Calculate based on toggle state but maintain consistent pricing
                 if ($request->include_free_bottles) {
-                    // With free bottles: Calculate actual cases needed to get total bottles
-                    $bottlesPerCaseIncludingFree = $bottlesPerCase + $freeBottlesPerCase;
-                    $casesSold = ceil($totalBottlesToSell / $bottlesPerCaseIncludingFree);
+                    // WITH free bottles mode: Calculate cases needed based on effective bottles per case
+                    $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
+                    $casesSold = ceil($targetBottlesToSell / $effectiveBottlesPerCase);
                     $purchasedBottlesSold = $casesSold * $bottlesPerCase;
                     $freeBottlesSold = $casesSold * $freeBottlesPerCase;
                     $actualTotalBottlesSold = $purchasedBottlesSold + $freeBottlesSold;
+                    // Selling price per case is calculated to maintain consistent per-bottle pricing
+                    $sellingPricePerCase = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
 
-                    // Selling price is based on target bottles only
-                    $sellingPricePerCase = $bottlesPerCaseIncludingFree * $sellingPricePerBottle;
+                    // Debugging line to check selling price per case
                 } else {
-                    // Without free bottles: All bottles are purchased
-                    $casesSold = ceil($totalBottlesToSell / $bottlesPerCase);
-                    $purchasedBottlesSold = $totalBottlesToSell;
+                    // WITHOUT free bottles mode: Only purchased bottles
+                    $casesSold = ceil($targetBottlesToSell / $bottlesPerCase);
+                    $purchasedBottlesSold = $targetBottlesToSell; // Only target bottles, no extra
                     $freeBottlesSold = 0;
                     $actualTotalBottlesSold = $purchasedBottlesSold;
 
-                    // Selling price is based on target bottles
-                    $sellingPricePerCase = $bottlesPerCase * $sellingPricePerBottle;
+                    // Selling price per case for purchased bottles only
+                    $sellingPricePerCase = $bottlesPerCase * $actualSellingPricePerBottle;
+                    // dd($sellingPricePerCase)
                 }
 
                 // Validate inventory
@@ -163,12 +166,12 @@ class SalesController extends Controller
                     throw new \Exception("Insufficient free bottles for {$item['variant']}. Available: {$inventory['free_bottles_available']}, Required: {$freeBottlesSold}");
                 }
 
-                // Calculate pricing and profit
-                $totalSalePrice = $totalBottlesToSell * $sellingPricePerBottle;
+                // CORRECTED: Calculate pricing and profit using target bottles and consistent pricing
+                $totalSalePrice = $targetBottlesToSell * $actualSellingPricePerBottle;
                 $purchaseCost = $actualTotalBottlesSold * $purchaseRatePerBottle;
                 $profit = $totalSalePrice - $purchaseCost;
 
-                // Create sale item
+                // Create sale item with corrected data
                 $itemsData = [
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
@@ -179,11 +182,11 @@ class SalesController extends Controller
                     'purchased_bottles_sold' => $purchasedBottlesSold,
                     'free_bottles_sold' => $freeBottlesSold,
                     'total_bottles_sold' => $actualTotalBottlesSold,
-                    'target_bottles_to_sell' => $totalBottlesToSell,
+                    'target_bottles_to_sell' => $targetBottlesToSell, // The consistent target
                     'purchase_unit_price' => $purchaseRatePerBottle,
                     'selling_price_per_case' => $sellingPricePerCase,
-                    'selling_price_per_bottle' => $sellingPricePerBottle,
-                    'unit_price' => $sellingPricePerBottle,
+                    'selling_price_per_bottle' => $actualSellingPricePerBottle, // Consistent pricing
+                    'unit_price' => $actualSellingPricePerBottle, // Legacy field
                     'total_price' => $totalSalePrice,
                     'profit' => $profit,
                     'delivery_date' => $request->sale_date,

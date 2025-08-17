@@ -100,7 +100,7 @@
                 </div>
 
                 <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
                 >
                     <!-- Product Selection -->
                     <div>
@@ -259,12 +259,6 @@
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
                             {{ t("sellingPricePerCase") }}*
-                            <span
-                                v-if="!includeFreeBottles"
-                                class="text-xs text-orange-600"
-                            >
-                                ({{ t("calculated") }})
-                            </span>
                         </label>
                         <input
                             v-if="includeFreeBottles"
@@ -312,7 +306,7 @@
                             v-if="!includeFreeBottles"
                             class="mt-1 text-xs text-orange-600"
                         >
-                            {{
+                            ৳{{
                                 formatNumber(
                                     getCalculatedPricePerBottle(item),
                                     2
@@ -322,23 +316,24 @@
                             {{ t("bottles") }}
                         </p>
                     </div>
+                </div>
 
-                    <!-- Calculated Total Bottles - Read-only -->
-                    <div
-                        v-if="
-                            item.variant &&
-                            item.cases_to_sell &&
-                            item.bottles_per_case
-                        "
-                    >
+                <!-- Second Row - Calculated Fields -->
+                <div
+                    v-if="
+                        item.variant &&
+                        item.cases_to_sell &&
+                        item.bottles_per_case
+                    "
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"
+                >
+                    <!-- Total Bottles -->
+                    <div>
                         <label
                             :for="'total_bottles_calculated_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
-                            {{ t("totalBottlesCalculated") }}
-                            <span class="text-xs text-green-600"
-                                >({{ t("calculated") }})</span
-                            >
+                            {{ t("totalBottles") }}
                         </label>
                         <input
                             :value="getCalculatedTotalBottles(item)"
@@ -364,24 +359,15 @@
                         </p>
                     </div>
 
-                    <!-- Calculated Selling Price per Bottle - Read-only -->
-                    <div
-                        v-if="
-                            item.variant &&
-                            item.selling_price_per_case &&
-                            item.bottles_per_case
-                        "
-                    >
+                    <!-- Selling Price per Bottle -->
+                    <div>
                         <label
                             :for="
                                 'selling_price_per_bottle_calculated_' + index
                             "
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
-                            {{ t("sellingPricePerBottleCalculated") }}
-                            <span class="text-xs text-blue-600"
-                                >({{ t("calculated") }})</span
-                            >
+                            {{ t("sellingPricePerBottle") }}
                         </label>
                         <input
                             :value="
@@ -410,21 +396,12 @@
                     </div>
 
                     <!-- Free Bottles per Case (only with free bottles mode) -->
-                    <div
-                        v-if="
-                            includeFreeBottles &&
-                            item.variant &&
-                            item.purchase_metadata
-                        "
-                    >
+                    <div v-if="includeFreeBottles && item.purchase_metadata">
                         <label
                             :for="'free_bottles_per_case_' + index"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
                             {{ t("freeBottlesPerCase") }}
-                            <span class="text-xs text-gray-500"
-                                >({{ t("fromPurchase") }})</span
-                            >
                         </label>
                         <input
                             :value="
@@ -439,7 +416,7 @@
                             disabled
                         />
                         <p class="mt-1 text-xs text-gray-500">
-                            {{ t("autoPopulatedFromPurchase") }}
+                            {{ t("fromPurchase") }}
                         </p>
                     </div>
                 </div>

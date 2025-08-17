@@ -512,11 +512,52 @@ const formatNumber = (value: any, decimals: number = 2): string => {
     });
 };
 
-// Helper functions with null safety
+// Helper functions with null safety - CORRECTED
 const getItemTotal = (item: SaleItem): number => {
+    if (!item.purchase_metadata || !item.bottles_per_case) return 0;
+
+    // Calculate using the ACTUAL selling price per bottle method
     const cases = Number(item.cases_to_sell) || 0;
-    const price = Number(item.selling_price_per_case) || 0;
-    return cases * price;
+    const bottlesPerCase = Number(item.bottles_per_case) || 0;
+    const pricePerCase = Number(item.selling_price_per_case) || 0;
+    const freeBottlesPerCase =
+        Number(item.purchase_metadata.free_bottles_per_case) || 0;
+
+    // ALWAYS calculate actual selling price per bottle from "with free bottles" scenario
+    const effectiveBottlesPerCaseWithFree = bottlesPerCase + freeBottlesPerCase;
+    const actualSellingPricePerBottle =
+        pricePerCase / effectiveBottlesPerCaseWithFree;
+
+    if (props.includeFreeBottles) {
+        // WITH free bottles: Total bottles × actual selling price per bottle
+        const totalBottles = cases * effectiveBottlesPerCaseWithFree;
+        return totalBottles * actualSellingPricePerBottle;
+    } else {
+        // WITHOUT free bottles: Only purchased bottles × actual selling price per bottle
+        const totalBottles = cases * bottlesPerCase;
+        return totalBottles * actualSellingPricePerBottle;
+    }
+};
+
+const getEffectiveSellingPricePerCase = (item: SaleItem): number => {
+    if (!item.purchase_metadata || !item.bottles_per_case)
+        return Number(item.selling_price_per_case) || 0;
+
+    const bottlesPerCase = Number(item.bottles_per_case) || 0;
+    const pricePerCase = Number(item.selling_price_per_case) || 0;
+    const freeBottlesPerCase =
+        Number(item.purchase_metadata.free_bottles_per_case) || 0;
+
+    // Calculate actual selling price per bottle
+    const effectiveBottlesPerCaseWithFree = bottlesPerCase + freeBottlesPerCase;
+    const actualSellingPricePerBottle =
+        pricePerCase / effectiveBottlesPerCaseWithFree;
+
+    if (props.includeFreeBottles) {
+        return pricePerCase; // Use original input price
+    } else {
+        return actualSellingPricePerBottle * bottlesPerCase; // Calculate for purchased bottles only
+    }
 };
 
 const getCalculatedCases = (item: SaleItem): number => {
@@ -544,12 +585,12 @@ const getCalculatedTotalBottles = (item: SaleItem): number => {
 const getItemProfit = (item: SaleItem): number => {
     if (!item.purchase_metadata || !item.bottles_per_case) return 0;
 
-    const sellPrice = getItemTotal(item);
+    const totalSalePrice = getItemTotal(item);
     const actualBottlesSold = getItemActualBottles(item);
     const purchaseRate = Number(item.purchase_rate) || 0;
-    const purchaseCost = actualBottlesSold * purchaseRate;
+    const totalPurchaseCost = actualBottlesSold * purchaseRate;
 
-    return sellPrice - purchaseCost;
+    return totalSalePrice - totalPurchaseCost;
 };
 
 const getItemActualBottles = (item: SaleItem): number => {

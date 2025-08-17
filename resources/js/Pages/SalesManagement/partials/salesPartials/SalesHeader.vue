@@ -1,4 +1,3 @@
-<!-- Pages/SalesManagement/partials/salesPartials/SalesHeader.vue -->
 <template>
     <div
         class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"

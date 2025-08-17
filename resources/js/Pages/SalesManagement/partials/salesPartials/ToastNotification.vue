@@ -1,4 +1,3 @@
-<!-- Pages/SalesManagement/partials/salesPartials/ToastNotification.vue -->
 <template>
     <div
         v-if="show"
