@@ -32,7 +32,7 @@
             <div class="flex items-center space-x-4">
                 <a
                     href="/suppliers/create"
-                    class="px-6 py-3 bg-gradient-to-r from-indigo-200 to-purple-200 text-gray-800 font-semibold rounded-lg hover:from-indigo-300 hover:to-purple-300 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                    class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                 >
                     <svg
                         class="w-5 h-5"

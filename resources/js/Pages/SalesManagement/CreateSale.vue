@@ -1,6 +1,7 @@
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Toast Notification -->
         <ToastNotification
@@ -587,6 +588,8 @@ const toBengaliNumber = (num: number | string): string => {
 const changeLanguage = (lang: string) => {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
+    // Set document language for proper font rendering
+    document.documentElement.lang = lang;
 };
 
 // Toggle free bottles handler
@@ -816,12 +819,33 @@ const confirmSale = () => {
 
 // Initialize form
 onMounted(() => {
+    // Set document language for proper font rendering
+    document.documentElement.lang = currentLanguage.value;
+
     addSaleItem(); // Add initial item
 });
 </script>
 
 <style scoped>
+@import url("https://fonts.maateen.me/kalpurush/font.css");
+
 .bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
+}
+
+.bangla-font h1,
+.bangla-font h2,
+.bangla-font h3,
+.bangla-font h4,
+.bangla-font p,
+.bangla-font span,
+.bangla-font button,
+.bangla-font input,
+.bangla-font select,
+.bangla-font textarea,
+.bangla-font label,
+.bangla-font div,
+.bangla-font input::placeholder {
     font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
@@ -847,5 +871,41 @@ input[type="number"] {
 
 .dot {
     transition: transform 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 1s ease-out;
+}
+
+.bg-gradient-to-br {
+    background-image: linear-gradient(
+        to bottom right,
+        var(--tw-gradient-stops)
+    );
+}
+
+.from-gray-50 {
+    --tw-gradient-from: #f9fafb;
+    --tw-gradient-stops: var(--tw-gradient-from),
+        var(--tw-gradient-to, rgba(249, 250, 251, 0));
+}
+
+.via-white {
+    --tw-gradient-to: #ffffff;
+}
+
+.to-gray-50 {
+    --tw-gradient-to: #f9fafb;
 }
 </style>

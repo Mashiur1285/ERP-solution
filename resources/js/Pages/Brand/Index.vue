@@ -1,6 +1,7 @@
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Flash Message -->
         <div
@@ -838,11 +839,10 @@ console.log("Brand.vue component loaded");
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+@import url("https://fonts.maateen.me/kalpurush/font.css");
 
-body,
-html {
-    font-family: "Noto Serif Bengali", Arial, sans-serif;
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
 @keyframes fadeIn {

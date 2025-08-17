@@ -2,6 +2,7 @@
 <template>
     <div
         class="fixed inset-0 z-50 overflow-y-auto"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
         role="dialog"
         aria-labelledby="modal-title"
         aria-modal="true"
@@ -465,6 +466,11 @@ onUnmounted(cleanup);
 </script>
 
 <style scoped>
+@import url("https://fonts.maateen.me/kalpurush/font.css");
+
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
+}
 /* Custom animations */
 @keyframes fadeIn {
     from {
