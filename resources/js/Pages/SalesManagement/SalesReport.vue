@@ -1,15 +1,16 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="p-4 lg:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle -->
         <div class="flex justify-end space-x-2 mb-4">
             <button
                 @click="changeLanguage('en')"
                 :class="[
-                    'px-4 py-2 rounded-md font-medium transition-colors',
+                    'px-4 py-2 rounded-md font-medium transition-all duration-200',
                     currentLanguage === 'en'
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-indigo-600 text-white shadow-md'
                         : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
                 ]"
             >
@@ -18,9 +19,9 @@
             <button
                 @click="changeLanguage('bn')"
                 :class="[
-                    'px-4 py-2 rounded-md font-medium transition-colors',
+                    'px-4 py-2 rounded-md font-medium transition-all duration-200',
                     currentLanguage === 'bn'
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-indigo-600 text-white shadow-md'
                         : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
                 ]"
             >
@@ -48,7 +49,7 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M12 8c-1.657 0-3 .671-3 1.5S10.343 11 12 11s3-.671 3-1.5S13.657 8 12 8zm-8 7h16M5 8h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                         />
                     </svg>
                 </div>
@@ -57,9 +58,9 @@
         </div>
 
         <!-- Total Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
+                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200 hover:shadow-md transition-shadow"
             >
                 <div class="flex items-center">
                     <div class="p-2 bg-indigo-500 rounded-lg mr-3">
@@ -74,7 +75,7 @@
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            ></path>
+                            />
                         </svg>
                     </div>
                     <div>
@@ -89,8 +90,9 @@
                     </div>
                 </div>
             </div>
+
             <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200 hover:shadow-md transition-shadow"
             >
                 <div class="flex items-center">
                     <div class="p-2 bg-green-500 rounded-lg mr-3">
@@ -105,7 +107,7 @@
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
+                            />
                         </svg>
                     </div>
                     <div>
@@ -115,13 +117,14 @@
                         <p
                             class="text-2xl lg:text-3xl font-bold text-green-900"
                         >
-                            ৳{{ toBengaliNumber(totalAmount) }}
+                            ৳{{ toBengaliNumber(formatCurrency(totalAmount)) }}
                         </p>
                     </div>
                 </div>
             </div>
+
             <div
-                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200 hover:shadow-md transition-shadow"
             >
                 <div class="flex items-center">
                     <div class="p-2 bg-purple-500 rounded-lg mr-3">
@@ -136,7 +139,7 @@
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                            ></path>
+                            />
                         </svg>
                     </div>
                     <div>
@@ -144,9 +147,46 @@
                             {{ getTranslation("totalProfit") }}
                         </p>
                         <p
-                            class="text-2xl lg:text-3xl font-bold text-purple-900"
+                            class="text-2xl lg:text-3xl font-bold"
+                            :class="
+                                totalProfit >= 0
+                                    ? 'text-purple-900'
+                                    : 'text-red-600'
+                            "
                         >
-                            ৳{{ toBengaliNumber(totalProfit) }}
+                            ৳{{ toBengaliNumber(formatCurrency(totalProfit)) }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-sm border border-orange-200 hover:shadow-md transition-shadow"
+            >
+                <div class="flex items-center">
+                    <div class="p-2 bg-orange-500 rounded-lg mr-3">
+                        <svg
+                            class="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-orange-700">
+                            {{ getTranslation("totalItems") }}
+                        </p>
+                        <p
+                            class="text-2xl lg:text-3xl font-bold text-orange-900"
+                        >
+                            {{ toBengaliNumber(totalItemsSold) }}
                         </p>
                     </div>
                 </div>
@@ -171,38 +211,45 @@
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
-                            ></path>
+                            />
                         </svg>
                     </div>
                     <h2 class="text-lg font-semibold text-gray-800">
                         {{ getTranslation("filters") }}
                     </h2>
                 </div>
-                <button
-                    @click="applyFilters"
-                    class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
-                >
-                    <span class="flex items-center">
-                        <svg
-                            class="w-4 h-4 mr-1.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
-                            ></path>
-                        </svg>
-                        {{ getTranslation("applyFilters") }}
-                    </span>
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        @click="clearFilters"
+                        class="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+                    >
+                        {{ getTranslation("clearFilters") }}
+                    </button>
+                    <button
+                        @click="applyFilters"
+                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
+                    >
+                        <span class="flex items-center">
+                            <svg
+                                class="w-4 h-4 mr-1.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
+                                />
+                            </svg>
+                            {{ getTranslation("applyFilters") }}
+                        </span>
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                <!-- Start Date -->
                 <div>
                     <label
                         for="start_date"
@@ -218,7 +265,6 @@
                     />
                 </div>
 
-                <!-- End Date -->
                 <div>
                     <label
                         for="end_date"
@@ -234,7 +280,6 @@
                     />
                 </div>
 
-                <!-- Shop Select -->
                 <div>
                     <label
                         for="shop_id"
@@ -260,7 +305,6 @@
                     </select>
                 </div>
 
-                <!-- Product Select -->
                 <div>
                     <label
                         for="product_id"
@@ -286,7 +330,6 @@
                     </select>
                 </div>
 
-                <!-- Supplier Select -->
                 <div>
                     <label
                         for="supplier_id"
@@ -331,7 +374,7 @@
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        ></path>
+                        />
                     </svg>
                 </div>
                 <input
@@ -343,70 +386,97 @@
             </div>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex justify-center items-center py-12">
+            <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"
+            ></div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="filteredSales.length === 0" class="text-center py-12">
+            <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">
+                {{ getTranslation("noSales") }}
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">
+                {{ getTranslation("noSalesDescription") }}
+            </p>
+        </div>
+
         <!-- Sales Table -->
-        <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
-            <div class="w-full">
+        <div v-else class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("invoiceNumber") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
                             >
                                 {{ getTranslation("shop") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell"
                             >
                                 {{ getTranslation("supplier") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("totalAmount") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("totalProfit") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
                                 {{ getTranslation("saleDate") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
                             >
                                 {{ getTranslation("status") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("actions") }}
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <template
-                            v-for="(sale, index) in filteredSales"
-                            :key="sale.id"
-                        >
+                        <template v-for="sale in filteredSales" :key="sale.id">
                             <tr
                                 class="hover:bg-gray-50 transition-colors cursor-pointer"
                                 @click="toggleItems(sale.id)"
                             >
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900"
+                                    class="px-3 py-4 text-sm font-medium text-gray-900"
                                 >
                                     <div class="flex items-center">
                                         <svg
                                             :class="[
-                                                'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
+                                                'w-4 h-4 mr-2 transition-transform flex-shrink-0',
                                                 expandedSale === sale.id
                                                     ? 'rotate-90'
                                                     : '',
@@ -425,44 +495,41 @@
                                         <span
                                             class="break-all"
                                             :title="sale.invoice_number"
+                                            >{{ sale.invoice_number }}</span
                                         >
-                                            {{ sale.invoice_number }}
-                                        </span>
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 hidden lg:table-cell"
+                                    class="px-3 py-4 text-sm text-gray-500 hidden lg:table-cell"
                                 >
                                     <span
-                                        class="truncate max-w-24"
+                                        class="truncate max-w-32"
                                         :title="sale.shop_name"
+                                        >{{ sale.shop_name }}</span
                                     >
-                                        {{ sale.shop_name }}
-                                    </span>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 hidden xl:table-cell"
+                                    class="px-3 py-4 text-sm text-gray-500 hidden xl:table-cell"
                                 >
                                     <span
-                                        class="truncate max-w-24"
+                                        class="truncate max-w-32"
                                         :title="sale.supplier_name"
+                                        >{{ sale.supplier_name }}</span
                                     >
-                                        {{ sale.supplier_name }}
-                                    </span>
                                 </td>
-                                <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500"
-                                >
+                                <td class="px-3 py-4 text-sm text-gray-500">
                                     <div class="text-right font-medium">
                                         ৳{{
                                             toBengaliNumber(
-                                                Math.round(sale.total_amount)
+                                                formatCurrency(
+                                                    sale.total_amount
+                                                )
                                             )
                                         }}
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm"
+                                    class="px-3 py-4 text-sm"
                                     :class="
                                         sale.total_profit >= 0
                                             ? 'text-green-600'
@@ -472,42 +539,42 @@
                                     <div class="text-right font-medium">
                                         ৳{{
                                             toBengaliNumber(
-                                                Math.round(sale.total_profit)
+                                                formatCurrency(
+                                                    sale.total_profit
+                                                )
                                             )
                                         }}
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 hidden md:table-cell"
+                                    class="px-3 py-4 text-sm text-gray-500 hidden md:table-cell"
                                 >
-                                    {{ toBengaliNumber(sale.sale_date) }}
+                                    {{ formatDate(sale.sale_date) }}
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm hidden sm:table-cell"
+                                    class="px-3 py-4 text-sm hidden sm:table-cell"
                                 >
                                     <span
                                         :class="{
-                                            'status-pending':
+                                            'bg-yellow-100 text-yellow-800':
                                                 sale.status === 'pending',
-                                            'status-in_progress':
+                                            'bg-blue-100 text-blue-800':
                                                 sale.status === 'in_progress',
-                                            'status-completed':
+                                            'bg-green-100 text-green-800':
                                                 sale.status === 'completed',
                                         }"
-                                        class="px-2 py-1 rounded-full text-xs capitalize"
+                                        class="px-2 py-1 rounded-full text-xs font-medium capitalize"
                                     >
                                         {{ getTranslation(sale.status) }}
                                     </span>
                                 </td>
-                                <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm"
-                                >
+                                <td class="px-3 py-4 text-sm">
                                     <div
                                         class="flex flex-col sm:flex-row gap-1"
                                     >
                                         <button
                                             @click.stop="toggleItems(sale.id)"
-                                            class="px-2 py-1 bg-indigo-100 text-indigo-600 rounded text-xs hover:bg-indigo-200 transition duration-200 whitespace-nowrap min-w-fit"
+                                            class="px-2 py-1 bg-indigo-100 text-indigo-600 rounded text-xs hover:bg-indigo-200 transition duration-200 whitespace-nowrap"
                                         >
                                             {{
                                                 expandedSale === sale.id
@@ -515,13 +582,14 @@
                                                     : `${getTranslation(
                                                           "show"
                                                       )} (${toBengaliNumber(
-                                                          sale.items.length
+                                                          sale.items?.length ||
+                                                              0
                                                       )})`
                                             }}
                                         </button>
                                         <button
                                             @click.stop="viewCashMemo(sale.id)"
-                                            class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs hover:bg-green-200 transition duration-200 whitespace-nowrap min-w-fit"
+                                            class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs hover:bg-green-200 transition duration-200 whitespace-nowrap"
                                         >
                                             {{ getTranslation("view") }}
                                         </button>
@@ -529,16 +597,14 @@
                                 </td>
                             </tr>
 
+                            <!-- Expanded Row -->
                             <tr
                                 v-if="expandedSale === sale.id"
                                 class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                <td
-                                    :colspan="currentLanguage === 'bn' ? 8 : 8"
-                                    class="px-2 lg:px-6 py-6"
-                                >
-                                    <div class="ml-2 lg:ml-6">
-                                        <!-- Mobile view for hidden columns -->
+                                <td :colspan="8" class="px-6 py-6">
+                                    <div class="ml-6">
+                                        <!-- Mobile Sale Details -->
                                         <div
                                             class="lg:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border-l-4 border-indigo-500"
                                         >
@@ -556,7 +622,7 @@
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    ></path>
+                                                    />
                                                 </svg>
                                                 {{
                                                     getTranslation(
@@ -618,7 +684,7 @@
                                                         <span
                                                             class="text-gray-800 font-medium"
                                                             >{{
-                                                                toBengaliNumber(
+                                                                formatDate(
                                                                     sale.sale_date
                                                                 )
                                                             }}</span
@@ -637,17 +703,17 @@
                                                         >
                                                         <span
                                                             :class="{
-                                                                'status-pending':
+                                                                'bg-yellow-100 text-yellow-800':
                                                                     sale.status ===
                                                                     'pending',
-                                                                'status-in_progress':
+                                                                'bg-blue-100 text-blue-800':
                                                                     sale.status ===
                                                                     'in_progress',
-                                                                'status-completed':
+                                                                'bg-green-100 text-green-800':
                                                                     sale.status ===
                                                                     'completed',
                                                             }"
-                                                            class="px-2 py-1 rounded-full text-xs capitalize inline-block w-fit"
+                                                            class="px-2 py-1 rounded-full text-xs font-medium capitalize inline-block w-fit"
                                                         >
                                                             {{
                                                                 getTranslation(
@@ -678,7 +744,7 @@
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                                                    ></path>
+                                                    />
                                                 </svg>
                                                 {{
                                                     getTranslation("orderItems")
@@ -688,7 +754,8 @@
                                                 >
                                                     {{
                                                         toBengaliNumber(
-                                                            sale.items.length
+                                                            sale.items
+                                                                ?.length || 0
                                                         )
                                                     }}
                                                     {{
@@ -698,379 +765,401 @@
                                             </h4>
                                         </div>
 
-                                        <!-- Items Cards for Mobile -->
-                                        <div class="lg:hidden space-y-3">
-                                            <div
-                                                v-for="item in sale.items"
-                                                :key="
-                                                    item.product_id +
-                                                    item.variant
-                                                "
-                                                class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-                                            >
+                                        <!-- Items List -->
+                                        <div
+                                            v-if="
+                                                sale.items &&
+                                                sale.items.length > 0
+                                            "
+                                        >
+                                            <!-- Mobile Cards -->
+                                            <div class="lg:hidden space-y-3">
                                                 <div
-                                                    class="flex justify-between items-start mb-3"
+                                                    v-for="(
+                                                        item, itemIndex
+                                                    ) in sale.items"
+                                                    :key="`${item.product_id}-${item.variant}-${itemIndex}`"
+                                                    class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
                                                 >
-                                                    <div class="flex-1 min-w-0">
-                                                        <h5
-                                                            class="font-semibold text-gray-900 truncate"
-                                                            :title="
-                                                                item.product_name
-                                                            "
-                                                        >
-                                                            {{
-                                                                item.product_name
-                                                            }}
-                                                        </h5>
-                                                        <p
-                                                            class="text-sm text-gray-600 mt-1"
-                                                        >
-                                                            {{ item.variant }}
-                                                        </p>
-                                                    </div>
                                                     <div
-                                                        class="ml-3 text-right"
+                                                        class="flex justify-between items-start mb-3"
                                                     >
                                                         <div
-                                                            class="flex items-center justify-end mb-1"
+                                                            class="flex-1 min-w-0"
                                                         >
-                                                            <svg
-                                                                class="w-4 h-4 mr-1 text-gray-400"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24"
+                                                            <h5
+                                                                class="font-semibold text-gray-900 truncate"
+                                                                :title="
+                                                                    item.product_name
+                                                                "
                                                             >
-                                                                <path
-                                                                    stroke-linecap="round"
-                                                                    stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                ></path>
-                                                            </svg>
-                                                            <span
-                                                                class="text-sm font-medium text-gray-700"
-                                                                >{{
-                                                                    toBengaliNumber(
-                                                                        item.quantity
-                                                                    )
-                                                                }}</span
+                                                                {{
+                                                                    item.product_name
+                                                                }}
+                                                            </h5>
+                                                            <p
+                                                                class="text-sm text-gray-600 mt-1"
                                                             >
+                                                                {{
+                                                                    item.variant
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                        <div
+                                                            class="ml-3 text-right"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-end mb-1"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-gray-400"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                                                    />
+                                                                </svg>
+                                                                <span
+                                                                    class="text-sm font-medium text-gray-700"
+                                                                >
+                                                                    {{
+                                                                        toBengaliNumber(
+                                                                            item.total_bottles_sold ||
+                                                                                item.quantity ||
+                                                                                0
+                                                                        )
+                                                                    }}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div
-                                                    class="flex justify-between items-center pt-3 border-t border-gray-100"
-                                                >
-                                                    <div class="text-center">
-                                                        <p
-                                                            class="text-xs text-gray-500 font-medium"
+                                                    <div
+                                                        class="flex justify-between items-center pt-3 border-t border-gray-100"
+                                                    >
+                                                        <div
+                                                            class="text-center"
                                                         >
-                                                            {{
-                                                                getTranslation(
-                                                                    "totalPrice"
-                                                                )
-                                                            }}
-                                                        </p>
-                                                        <p
-                                                            class="text-sm font-bold text-gray-900"
-                                                        >
-                                                            ৳{{
-                                                                toBengaliNumber(
-                                                                    Math.round(
-                                                                        item.total_price
-                                                                    )
-                                                                )
-                                                            }}
-                                                        </p>
-                                                    </div>
-                                                    <div class="text-center">
-                                                        <p
-                                                            class="text-xs text-gray-500 font-medium"
-                                                        >
-                                                            {{
-                                                                getTranslation(
-                                                                    "profit"
-                                                                )
-                                                            }}
-                                                        </p>
-                                                        <p
-                                                            class="text-sm font-bold"
-                                                            :class="
-                                                                item.profit >= 0
-                                                                    ? 'text-green-600'
-                                                                    : 'text-red-600'
-                                                            "
-                                                        >
-                                                            ৳{{
-                                                                toBengaliNumber(
-                                                                    Math.round(
-                                                                        item.profit
-                                                                    )
-                                                                )
-                                                            }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Items Table for Desktop -->
-                                        <div
-                                            class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 shadow-sm"
-                                        >
-                                            <table
-                                                class="w-full table-fixed bg-white"
-                                            >
-                                                <thead
-                                                    class="bg-gradient-to-r from-indigo-50 to-purple-50"
-                                                >
-                                                    <tr>
-                                                        <th
-                                                            class="w-2/5 px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
-                                                        >
-                                                            <div
-                                                                class="flex items-center"
+                                                            <p
+                                                                class="text-xs text-gray-500 font-medium"
                                                             >
-                                                                <svg
-                                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                                                    ></path>
-                                                                </svg>
-                                                                {{
-                                                                    getTranslation(
-                                                                        "product"
-                                                                    )
-                                                                }}
-                                                            </div>
-                                                        </th>
-                                                        <th
-                                                            class="w-1/5 px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
-                                                        >
-                                                            <div
-                                                                class="flex items-center"
-                                                            >
-                                                                <svg
-                                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                    ></path>
-                                                                </svg>
-                                                                {{
-                                                                    getTranslation(
-                                                                        "variant"
-                                                                    )
-                                                                }}
-                                                            </div>
-                                                        </th>
-                                                        <th
-                                                            class="w-1/12 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
-                                                        >
-                                                            <div
-                                                                class="flex items-center justify-center"
-                                                            >
-                                                                <svg
-                                                                    class="w-4 h-4 mr-1 text-indigo-600"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                    ></path>
-                                                                </svg>
-                                                                {{
-                                                                    getTranslation(
-                                                                        "quantity"
-                                                                    )
-                                                                }}
-                                                            </div>
-                                                        </th>
-                                                        <th
-                                                            class="w-1/6 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
-                                                        >
-                                                            <div
-                                                                class="flex items-center justify-end"
-                                                            >
-                                                                <svg
-                                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                                    ></path>
-                                                                </svg>
                                                                 {{
                                                                     getTranslation(
                                                                         "totalPrice"
                                                                     )
                                                                 }}
-                                                            </div>
-                                                        </th>
-                                                        <th
-                                                            class="w-1/6 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                                                        >
-                                                            <div
-                                                                class="flex items-center justify-end"
+                                                            </p>
+                                                            <p
+                                                                class="text-sm font-bold text-gray-900"
                                                             >
-                                                                <svg
-                                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                                                    ></path>
-                                                                </svg>
+                                                                ৳{{
+                                                                    toBengaliNumber(
+                                                                        formatCurrency(
+                                                                            item.total_price
+                                                                        )
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                        <div
+                                                            class="text-center"
+                                                        >
+                                                            <p
+                                                                class="text-xs text-gray-500 font-medium"
+                                                            >
                                                                 {{
                                                                     getTranslation(
                                                                         "profit"
                                                                     )
                                                                 }}
-                                                            </div>
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody
-                                                    class="divide-y divide-gray-100"
-                                                >
-                                                    <tr
-                                                        v-for="(
-                                                            item, itemIndex
-                                                        ) in sale.items"
-                                                        :key="
-                                                            item.product_id +
-                                                            item.variant
-                                                        "
-                                                        class="hover:bg-gray-50 transition-colors"
-                                                        :class="
-                                                            itemIndex % 2 === 0
-                                                                ? 'bg-white'
-                                                                : 'bg-gray-25'
-                                                        "
-                                                    >
-                                                        <td
-                                                            class="px-4 py-4 border-r border-gray-200"
-                                                        >
-                                                            <div
-                                                                class="flex items-center"
-                                                            >
-                                                                <div
-                                                                    class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3"
-                                                                >
-                                                                    <span
-                                                                        class="text-xs font-medium text-indigo-700"
-                                                                        >{{
-                                                                            toBengaliNumber(
-                                                                                itemIndex +
-                                                                                    1
-                                                                            )
-                                                                        }}</span
-                                                                    >
-                                                                </div>
-                                                                <div>
-                                                                    <p
-                                                                        class="font-semibold text-gray-900"
-                                                                        :title="
-                                                                            item.product_name
-                                                                        "
-                                                                    >
-                                                                        {{
-                                                                            item.product_name
-                                                                        }}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td
-                                                            class="px-4 py-4 border-r border-gray-200"
-                                                        >
-                                                            <span
-                                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                                                            >
-                                                                {{
-                                                                    item.variant
-                                                                }}
-                                                            </span>
-                                                        </td>
-                                                        <td
-                                                            class="px-4 py-4 text-center border-r border-gray-200"
-                                                        >
-                                                            <span
-                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
-                                                            >
-                                                                {{
-                                                                    toBengaliNumber(
-                                                                        item.quantity
-                                                                    )
-                                                                }}
-                                                            </span>
-                                                        </td>
-                                                        <td
-                                                            class="px-4 py-4 text-right border-r border-gray-200"
-                                                        >
-                                                            <span
-                                                                class="font-bold text-gray-900 text-lg"
-                                                            >
-                                                                ৳{{
-                                                                    toBengaliNumber(
-                                                                        Math.round(
-                                                                            item.total_price
-                                                                        )
-                                                                    )
-                                                                }}
-                                                            </span>
-                                                        </td>
-                                                        <td
-                                                            class="px-4 py-4 text-right"
-                                                        >
-                                                            <span
-                                                                class="font-bold text-lg"
+                                                            </p>
+                                                            <p
+                                                                class="text-sm font-bold"
                                                                 :class="
-                                                                    item.profit >=
-                                                                    0
+                                                                    parseFloat(
+                                                                        item.profit
+                                                                    ) >= 0
                                                                         ? 'text-green-600'
                                                                         : 'text-red-600'
                                                                 "
                                                             >
                                                                 ৳{{
                                                                     toBengaliNumber(
-                                                                        Math.round(
+                                                                        formatCurrency(
                                                                             item.profit
                                                                         )
                                                                     )
                                                                 }}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                                            </p>
+                                                        </div>
+                                                        <div
+                                                            v-if="
+                                                                item.cases_sold
+                                                            "
+                                                            class="text-center"
+                                                        >
+                                                            <p
+                                                                class="text-xs text-gray-500 font-medium"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "cases"
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                            <p
+                                                                class="text-sm font-bold text-blue-600"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        item.cases_sold
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Desktop Table -->
+                                            <div
+                                                class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+                                            >
+                                                <table
+                                                    class="w-full table-fixed bg-white"
+                                                >
+                                                    <thead
+                                                        class="bg-gradient-to-r from-indigo-50 to-purple-50"
+                                                    >
+                                                        <tr>
+                                                            <th
+                                                                class="w-2/5 px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                            >
+                                                                <div
+                                                                    class="flex items-center"
+                                                                >
+                                                                    <svg
+                                                                        class="w-4 h-4 mr-2 text-indigo-600"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path
+                                                                            stroke-linecap="round"
+                                                                            stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                                        />
+                                                                    </svg>
+                                                                    {{
+                                                                        getTranslation(
+                                                                            "product"
+                                                                        )
+                                                                    }}
+                                                                </div>
+                                                            </th>
+                                                            <th
+                                                                class="w-1/5 px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "variant"
+                                                                    )
+                                                                }}
+                                                            </th>
+                                                            <th
+                                                                class="w-1/12 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "quantity"
+                                                                    )
+                                                                }}
+                                                            </th>
+                                                            <th
+                                                                v-if="
+                                                                    hasAnyCases
+                                                                "
+                                                                class="w-1/12 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "cases"
+                                                                    )
+                                                                }}
+                                                            </th>
+                                                            <th
+                                                                class="w-1/6 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "totalPrice"
+                                                                    )
+                                                                }}
+                                                            </th>
+                                                            <th
+                                                                class="w-1/6 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "profit"
+                                                                    )
+                                                                }}
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody
+                                                        class="divide-y divide-gray-100"
+                                                    >
+                                                        <tr
+                                                            v-for="(
+                                                                item, itemIndex
+                                                            ) in sale.items"
+                                                            :key="`${item.product_id}-${item.variant}-${itemIndex}`"
+                                                            class="hover:bg-gray-50 transition-colors"
+                                                            :class="
+                                                                itemIndex %
+                                                                    2 ===
+                                                                0
+                                                                    ? 'bg-white'
+                                                                    : 'bg-gray-25'
+                                                            "
+                                                        >
+                                                            <td
+                                                                class="px-4 py-4 border-r border-gray-200"
+                                                            >
+                                                                <div
+                                                                    class="flex items-center"
+                                                                >
+                                                                    <div
+                                                                        class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3"
+                                                                    >
+                                                                        <span
+                                                                            class="text-xs font-medium text-indigo-700"
+                                                                        >
+                                                                            {{
+                                                                                toBengaliNumber(
+                                                                                    itemIndex +
+                                                                                        1
+                                                                                )
+                                                                            }}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p
+                                                                            class="font-semibold text-gray-900"
+                                                                            :title="
+                                                                                item.product_name
+                                                                            "
+                                                                        >
+                                                                            {{
+                                                                                item.product_name
+                                                                            }}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td
+                                                                class="px-4 py-4 border-r border-gray-200"
+                                                            >
+                                                                <span
+                                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                                                                >
+                                                                    {{
+                                                                        item.variant
+                                                                    }}
+                                                                </span>
+                                                            </td>
+                                                            <td
+                                                                class="px-4 py-4 text-center border-r border-gray-200"
+                                                            >
+                                                                <span
+                                                                    class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                                >
+                                                                    {{
+                                                                        toBengaliNumber(
+                                                                            item.total_bottles_sold ||
+                                                                                item.quantity ||
+                                                                                0
+                                                                        )
+                                                                    }}
+                                                                </span>
+                                                            </td>
+                                                            <td
+                                                                v-if="
+                                                                    hasAnyCases
+                                                                "
+                                                                class="px-4 py-4 text-center border-r border-gray-200"
+                                                            >
+                                                                <span
+                                                                    v-if="
+                                                                        item.cases_sold
+                                                                    "
+                                                                    class="inline-flex items-center justify-center w-12 h-8 bg-blue-100 text-blue-800 rounded-lg font-bold text-sm"
+                                                                >
+                                                                    {{
+                                                                        toBengaliNumber(
+                                                                            item.cases_sold
+                                                                        )
+                                                                    }}
+                                                                </span>
+                                                                <span
+                                                                    v-else
+                                                                    class="text-gray-400"
+                                                                    >-</span
+                                                                >
+                                                            </td>
+                                                            <td
+                                                                class="px-4 py-4 text-right border-r border-gray-200"
+                                                            >
+                                                                <span
+                                                                    class="font-bold text-gray-900 text-lg"
+                                                                >
+                                                                    ৳{{
+                                                                        toBengaliNumber(
+                                                                            formatCurrency(
+                                                                                item.total_price
+                                                                            )
+                                                                        )
+                                                                    }}
+                                                                </span>
+                                                            </td>
+                                                            <td
+                                                                class="px-4 py-4 text-right"
+                                                            >
+                                                                <span
+                                                                    class="font-bold text-lg"
+                                                                    :class="
+                                                                        parseFloat(
+                                                                            item.profit
+                                                                        ) >= 0
+                                                                            ? 'text-green-600'
+                                                                            : 'text-red-600'
+                                                                    "
+                                                                >
+                                                                    ৳{{
+                                                                        toBengaliNumber(
+                                                                            formatCurrency(
+                                                                                item.profit
+                                                                            )
+                                                                        )
+                                                                    }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div
+                                            v-else
+                                            class="text-center py-8 text-gray-500"
+                                        >
+                                            {{ getTranslation("noItemsFound") }}
                                         </div>
                                     </div>
                                 </td>
@@ -1084,47 +1173,148 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
-import Layout from "@/Layout.vue";
+import Layout from "../../Layout.vue";
+import InventoryStock from "../Dashboard/Partials/InventoryStock.vue";
 
 defineOptions({
     layout: Layout,
 });
 
+// Types
+interface SaleItem {
+    product_id: number;
+    product_name: string;
+    variant: string;
+    cases_sold?: number;
+    total_bottles_sold?: number;
+    purchased_bottles_sold?: number;
+    free_bottles_sold?: number;
+    quantity?: number;
+    total_price: string | number;
+    profit: string | number;
+}
+
+interface Sale {
+    id: number;
+    shop_id: number;
+    shop_name: string;
+    supplier_id: number | null;
+    supplier_name: string;
+    invoice_number: string;
+    total_amount: string | number;
+    total_profit: string | number;
+    sale_date: string;
+    status: string;
+    items: SaleItem[];
+}
+
+interface Shop {
+    id: number;
+    shop_name: string;
+}
+
+interface Product {
+    id: number;
+    name: string;
+}
+
+interface Supplier {
+    id: number;
+    company_name: string;
+}
+
+interface Filters {
+    start_date: string | null;
+    end_date: string | null;
+    shop_id: number | string | null;
+    product_id: number | string | null;
+    supplier_id: number | string | null;
+}
+
+// Props
 const props = defineProps<{
-    sales: {
-        id: number;
-        shop_id: number;
-        shop_name: string;
-        supplier_id: number | null;
-        supplier_name: string;
-        invoice_number: string;
-        total_amount: number;
-        total_profit: number;
-        sale_date: string;
-        status: string;
-        items: {
-            product_id: number;
-            product_name: string;
-            variant: string;
-            quantity: number;
-            total_price: number;
-            profit: number;
-        }[];
-    }[];
-    shops: { id: number; shop_name: string }[];
-    products: { id: number; name: string }[];
-    suppliers: { id: number; company_name: string }[];
-    filters: {
-        start_date: string | null;
-        end_date: string | null;
-        shop_id: number | null;
-        product_id: number | null;
-        supplier_id: number | null;
-    };
+    sales: Sale[];
+    shops?: Shop[];
+    products?: Product[];
+    suppliers?: Supplier[];
+    filters?: Filters;
 }>();
 
+// Reactive data
+const currentLanguage = ref(localStorage.getItem("language") || "en");
+const searchQuery = ref("");
+const expandedSale = ref<number | null>(null);
+const isLoading = ref(false);
+
+// Computed properties
+const totalSales = computed(() => props.sales?.length || 0);
+
+const totalAmount = computed(() => {
+    return (
+        props.sales?.reduce(
+            (sum, sale) => sum + parseFloat(sale.total_amount.toString()),
+            0
+        ) || 0
+    );
+});
+
+const totalProfit = computed(() => {
+    return (
+        props.sales?.reduce(
+            (sum, sale) => sum + parseFloat(sale.total_profit.toString()),
+            0
+        ) || 0
+    );
+});
+
+const totalItemsSold = computed(() => {
+    return (
+        props.sales?.reduce((sum, sale) => {
+            return (
+                sum +
+                (sale.items?.reduce((itemSum, item) => {
+                    return (
+                        itemSum +
+                        (item.total_bottles_sold || item.quantity || 0)
+                    );
+                }, 0) || 0)
+            );
+        }, 0) || 0
+    );
+});
+
+const hasAnyCases = computed(() => {
+    return (
+        props.sales?.some((sale) =>
+            sale.items?.some((item) => item.cases_sold && item.cases_sold > 0)
+        ) || false
+    );
+});
+
+const filteredSales = computed(() => {
+    if (!searchQuery.value || !props.sales) return props.sales;
+
+    const query = searchQuery.value.toLowerCase();
+    return props.sales.filter(
+        (sale) =>
+            sale.invoice_number.toLowerCase().includes(query) ||
+            sale.shop_name.toLowerCase().includes(query) ||
+            sale.supplier_name.toLowerCase().includes(query)
+    );
+});
+
+// Filters
+const filters = ref<Filters>({
+    start_date: props.filters?.start_date || "",
+    end_date: props.filters?.end_date || "",
+    shop_id: props.filters?.shop_id || "",
+    product_id: props.filters?.product_id || "",
+    supplier_id: props.filters?.supplier_id || "",
+});
+
+// Translations
 const translations = {
     en: {
         languageLabel: "English",
@@ -1137,7 +1327,8 @@ const translations = {
         saleDate: "Date",
         status: "Status",
         items: "Items",
-        cashMemo: "Bill",
+        totalItems: "Total Items",
+        cases: "Cases",
         totalSales: "Total Sales",
         totalPrice: "Total",
         profit: "Profit",
@@ -1151,9 +1342,7 @@ const translations = {
         allProducts: "All Products",
         allSuppliers: "All Suppliers",
         applyFilters: "Apply Filters",
-        showItems: "Show Items",
-        hideItems: "Hide Items",
-        viewReceipt: "View Bill",
+        clearFilters: "Clear Filters",
         searchSales: "Search with Invoice",
         pending: "Pending",
         in_progress: "In Progress",
@@ -1164,6 +1353,9 @@ const translations = {
         view: "Bill",
         saleDetails: "Sale Details",
         orderItems: "Sales Items",
+        noSales: "No sales found",
+        noSalesDescription: "Try adjusting your filters or search criteria.",
+        noItemsFound: "No items found for this sale",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -1176,7 +1368,8 @@ const translations = {
         saleDate: "তারিখ",
         status: "অবস্থা",
         items: "আইটেম",
-        cashMemo: "বিল",
+        totalItems: "মোট আইটেম",
+        cases: "কেস",
         totalSales: "মোট বিক্রয়",
         totalPrice: "মোট",
         profit: "লাভ",
@@ -1190,11 +1383,9 @@ const translations = {
         allProducts: "সকল পণ্য",
         allSuppliers: "সকল সরবরাহকারী",
         applyFilters: "ফিল্টার প্রয়োগ করুন",
-        showItems: "আইটেম দেখান",
-        hideItems: "আইটেম লুকান",
-        viewReceipt: "বিল দেখুন",
+        clearFilters: "ফিল্টার পরিষ্কার করুন",
         searchSales: "ইনভয়েস দিয়ে খুঁজুন",
-        pending: "পেন্ডিং",
+        pending: "অপেক্ষায়",
         in_progress: "চলমান",
         completed: "সম্পন্ন",
         actions: "কর্ম",
@@ -1203,52 +1394,27 @@ const translations = {
         view: "বিল",
         saleDetails: "বিক্রয় বিবরণ",
         orderItems: "বিক্রয় আইটেম",
+        noSales: "কোন বিক্রয় পাওয়া যায়নি",
+        noSalesDescription:
+            "ফিল্টার বা অনুসন্ধানের মানদণ্ড সামঞ্জস্য করার চেষ্টা করুন।",
+        noItemsFound: "এই বিক্রয়ের জন্য কোন আইটেম পাওয়া যায়নি",
     },
 };
 
-const currentLanguage = ref(localStorage.getItem("language") || "en");
-const searchQuery = ref("");
-const expandedSale = ref<number | null>(null);
-
-const totalSales = computed(() => props.sales.length);
-const totalAmount = computed(() =>
-    props.sales.reduce((sum, sale) => sum + Number(sale.total_amount), 0)
-);
-const totalProfit = computed(() =>
-    props.sales.reduce((sum, sale) => sum + Number(sale.total_profit), 0)
-);
-
-const filteredSales = computed(() => {
-    if (!searchQuery.value) return props.sales;
-    const query = searchQuery.value.toLowerCase();
-    return props.sales.filter(
-        (sale) =>
-            sale.invoice_number.toLowerCase().includes(query) ||
-            sale.shop_name.toLowerCase().includes(query) ||
-            sale.supplier_name.toLowerCase().includes(query)
-    );
-});
-
-const filters = ref({
-    start_date: props.filters.start_date || "",
-    end_date: props.filters.end_date || "",
-    shop_id: props.filters.shop_id || "",
-    product_id: props.filters.product_id || "",
-    supplier_id: props.filters.supplier_id || "",
-});
-
-function getTranslation(key: string) {
+// Methods
+function getTranslation(key: string): string {
     return translations[currentLanguage.value]?.[key] || key;
 }
 
-function getTranslationLabel(key: string, lang: string) {
+function getTranslationLabel(key: string, lang: string): string {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num: number | string) {
+function toBengaliNumber(num: number | string): string {
     if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+    if (typeof num !== "number" && typeof num !== "string")
+        return num.toString();
+    if (currentLanguage.value !== "bn") return num.toString();
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
     return num
@@ -1256,34 +1422,73 @@ function toBengaliNumber(num: number | string) {
         .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
 }
 
-function changeLanguage(lang: string) {
+function formatCurrency(amount: string | number): string {
+    const num = parseFloat(amount.toString());
+    return isNaN(num) ? "0.00" : num.toFixed(2);
+}
+
+function formatDate(dateString: string): string {
+    if (!dateString) return "";
+
+    try {
+        const date = new Date(dateString);
+        if (currentLanguage.value === "bn") {
+            return toBengaliNumber(date.toLocaleDateString("en-CA")); // YYYY-MM-DD format
+        }
+        return date.toLocaleDateString("en-CA"); // YYYY-MM-DD format
+    } catch (error) {
+        return dateString;
+    }
+}
+
+function changeLanguage(lang: string): void {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
     document.documentElement.lang = lang;
 }
 
-const toggleItems = (saleId: number) => {
+function toggleItems(saleId: number): void {
     expandedSale.value = expandedSale.value === saleId ? null : saleId;
-};
+}
 
-const applyFilters = () => {
+function applyFilters(): void {
+    isLoading.value = true;
     router.get("/sales/report", filters.value, {
         preserveState: true,
         preserveScroll: true,
+        onFinish: () => {
+            isLoading.value = false;
+        },
     });
-};
+}
 
-const viewCashMemo = (saleId: number) => {
+function clearFilters(): void {
+    filters.value = {
+        start_date: "",
+        end_date: "",
+        shop_id: "",
+        product_id: "",
+        supplier_id: "",
+    };
+    applyFilters();
+}
+
+function viewCashMemo(saleId: number): void {
     router.visit(`/sales/cash-memo/${saleId}`);
-};
+}
+
+// Lifecycle
+onMounted(() => {
+    // Set initial language
+    document.documentElement.lang = currentLanguage.value;
+});
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+@import url("https://fonts.maateen.me/kalpurush/font.css");
 
-body,
-html {
-    font-family: "Noto Serif Bengali", Arial, sans-serif;
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
 @keyframes fadeIn {
@@ -1304,7 +1509,7 @@ html {
     }
     to {
         opacity: 1;
-        max-height: 500px;
+        max-height: 1000px;
     }
 }
 
@@ -1314,25 +1519,11 @@ html {
 
 .animate-slide-down {
     animation: slideDown 0.3s ease-out;
+    overflow: hidden;
 }
 
 .rotate-90 {
     transform: rotate(90deg);
-}
-
-.status-pending {
-    background-color: #8c56e3;
-    color: #ffffff;
-}
-
-.status-in_progress {
-    background-color: #3b82f6;
-    color: #ffffff;
-}
-
-.status-completed {
-    background-color: #10b981;
-    color: #ffffff;
 }
 
 /* Custom responsive utilities */
@@ -1342,21 +1533,8 @@ html {
     white-space: nowrap;
 }
 
-.max-w-20 {
-    max-width: 5rem;
-}
-
-.max-w-24 {
-    max-width: 6rem;
-}
-
 .max-w-32 {
     max-width: 8rem;
-}
-
-/* Ensure table doesn't overflow */
-table {
-    table-layout: fixed;
 }
 
 /* Mobile optimizations */
@@ -1367,7 +1545,44 @@ table {
 
     th,
     td {
-        padding: 0.25rem 0.5rem;
+        padding: 0.5rem;
     }
+}
+
+/* Ensure table doesn't overflow */
+.overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Loading animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Improved hover effects */
+.hover\:shadow-md:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Better focus states */
+.focus\:ring-4:focus {
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+        var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+        calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+        var(--tw-shadow, 0 0 #0000);
+}
+
+.focus\:ring-indigo-100:focus {
+    --tw-ring-color: rgb(224 231 255);
 }
 </style>

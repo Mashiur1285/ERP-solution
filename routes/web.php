@@ -22,7 +22,6 @@ Route::post('suppliers/store', [SupplierController::class, 'store'])->name('supp
 Route::put('suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
 Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
 
-
 // deposit
 Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
 Route::Post('deposits/store', [DepositController::class, 'store'])->name('deposits.store');
@@ -34,7 +33,6 @@ Route::put('categories/{id}/update', [CategoryController::class, 'update'])->nam
 Route::delete('categories/{id}/delete', [CategoryController::class, 'destroy'])->name('categories.delete');
 
 //Brands
-
 Route::get('brands/index', [BrandController::class, 'index'])->name('brands.index');
 Route::post('brands/store', [BrandController::class, 'store'])->name('brands.store');
 Route::put('brands/{id}/update', [BrandController::class, 'update'])->name('brands.update');
@@ -54,12 +52,15 @@ Route::Put('shops/{id}', [ShopController::class, 'update'])->name('shops.update'
 
 //Sales
 Route::get('sales', [SalesController::class, 'index'])->name('sales.index');
-Route::get('sales/create', [SalesController::class, 'create'])->name('sales.create');
 Route::post('sales/store', [SalesController::class, 'store'])->name('sales.store');
 Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report');
 Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->name('sales.payment');
 Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->name('sales.payment.store');
 Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->name('sales.cash-memo');
+
+// API Routes for Sales
+Route::get('/api/products-by-supplier', [SalesController::class, 'getProductsBySupplier']);
+Route::get('/api/variant-inventory', [SalesController::class, 'getVariantInventory']);
 
 //Inventory report
 Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->name('inventory.report');

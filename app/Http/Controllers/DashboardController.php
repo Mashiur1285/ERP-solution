@@ -60,7 +60,7 @@ class DashboardController extends Controller
             return $item->profit < 0 ? abs($item->profit) : 0;
         });
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('Dashboard/Dashboard', [
             'suppliers' => $suppliers,
             'shops' => $shops,
             'topDeposits' => $topDeposits,

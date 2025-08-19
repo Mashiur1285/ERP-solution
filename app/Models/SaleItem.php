@@ -13,24 +13,27 @@ class SaleItem extends Model
         'supplier_id',
         'invoice_number',
         'variant',
-        'boxes_sold',
-        'bottles_per_box',
-        'quantity',
-        'free_bottles',
+        'cases_sold',
+        'bottles_per_case',
+        'purchased_bottles_sold',
+        'free_bottles_sold',
+        'total_bottles_sold',
+        'target_bottles_to_sell', // New field - the target number of bottles to sell
         'purchase_unit_price',
+        'selling_price_per_case',
+        'selling_price_per_bottle', // New field - consistent selling price per bottle
         'unit_price',
         'total_price',
-        'quantity',
         'profit',
         'status',
         'delivery_date',
-        'invoice_number',
-        'status',
     ];
 
     protected $casts = [
         'delivery_date' => 'datetime',
         'purchase_unit_price' => 'decimal:2',
+        'selling_price_per_case' => 'decimal:2',
+        'selling_price_per_bottle' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
         'profit' => 'decimal:2',
@@ -44,5 +47,10 @@ class SaleItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

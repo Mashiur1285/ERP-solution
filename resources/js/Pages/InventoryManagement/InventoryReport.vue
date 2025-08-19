@@ -1,7 +1,8 @@
+```vue
 <template>
-    <div>{{ inventoryStock }}</div>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle -->
         <div class="flex justify-end space-x-2 mb-4">
@@ -76,7 +77,7 @@
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            ></path>
+                            />
                         </svg>
                     </div>
                     <input
@@ -106,7 +107,7 @@
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                ></path>
+                                />
                             </svg>
                         </div>
                         <div>
@@ -114,7 +115,11 @@
                                 {{ getTranslation("totalProducts") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-indigo-900"
+                                class="text-2xl lg:text-3xl font-bold text-indigo-900 metric-value"
+                                :class="{
+                                    'large-number':
+                                        totalProducts.toString().length > 10,
+                                }"
                             >
                                 {{ toBengaliNumber(totalProducts) }}
                             </p>
@@ -137,7 +142,7 @@
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                ></path>
+                                />
                             </svg>
                         </div>
                         <div>
@@ -145,7 +150,11 @@
                                 {{ getTranslation("totalQuantity") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-green-900"
+                                class="text-2xl lg:text-3xl font-bold text-green-900 metric-value"
+                                :class="{
+                                    'large-number':
+                                        totalQuantity.toString().length > 10,
+                                }"
                             >
                                 {{ toBengaliNumber(totalQuantity) }}
                             </p>
@@ -168,7 +177,7 @@
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                ></path>
+                                />
                             </svg>
                         </div>
                         <div>
@@ -176,7 +185,11 @@
                                 {{ getTranslation("totalBoxes") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-blue-900"
+                                class="text-2xl lg:text-3xl font-bold text-blue-900 metric-value"
+                                :class="{
+                                    'large-number':
+                                        totalBoxes.toString().length > 10,
+                                }"
                             >
                                 {{ toBengaliNumber(totalBoxes) }}
                             </p>
@@ -199,7 +212,7 @@
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                ></path>
+                                />
                             </svg>
                         </div>
                         <div>
@@ -207,9 +220,14 @@
                                 {{ getTranslation("totalPurchaseValue") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-purple-900"
+                                class="text-2xl lg:text-3xl font-bold text-purple-900 metric-value"
+                                :class="{
+                                    'large-number':
+                                        totalPurchaseValue.toString().length >
+                                        10,
+                                }"
                             >
-                                ৳{{ toBengaliNumber(totalPurchaseValue) }}
+                                ৳{{ toBengaliNumber(totalPurchaseValue, 2) }}
                             </p>
                         </div>
                     </div>
@@ -219,7 +237,7 @@
 
         <!-- Inventory Table -->
         <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
-            <div class="w-full">
+            <div class="w-full overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -289,9 +307,8 @@
                                         <span
                                             class="break-all"
                                             :title="item.product_name"
+                                            >{{ item.product_name }}</span
                                         >
-                                            {{ item.product_name }}
-                                        </span>
                                     </div>
                                 </td>
                                 <td
@@ -310,7 +327,9 @@
                                 >
                                     <div class="text-center font-medium">
                                         {{
-                                            toBengaliNumber(item.total_quantity)
+                                            toBengaliNumber(
+                                                item.total_available_bottles
+                                            )
                                         }}
                                     </div>
                                 </td>
@@ -318,7 +337,11 @@
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
                                 >
                                     <div class="text-center font-medium">
-                                        {{ toBengaliNumber(item.total_boxes) }}
+                                        {{
+                                            toBengaliNumber(
+                                                item.total_available_cases
+                                            )
+                                        }}
                                     </div>
                                 </td>
                                 <td
@@ -327,10 +350,9 @@
                                     <div class="text-right font-medium">
                                         ৳{{
                                             toBengaliNumber(
-                                                Math.round(
-                                                    item.variants[0]
-                                                        ?.unit_price || 0
-                                                )
+                                                item.variants[0]?.unit_price ||
+                                                    0,
+                                                2
                                             )
                                         }}
                                     </div>
@@ -340,9 +362,7 @@
                                 >
                                     <div class="text-right font-medium">
                                         ৳{{
-                                            toBengaliNumber(
-                                                Math.round(item.total_value)
-                                            )
+                                            toBengaliNumber(item.total_value, 2)
                                         }}
                                     </div>
                                 </td>
@@ -372,7 +392,7 @@
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    ></path>
+                                                    />
                                                 </svg>
                                                 {{
                                                     getTranslation(
@@ -417,7 +437,7 @@
                                                             class="text-gray-800 font-medium"
                                                             >{{
                                                                 toBengaliNumber(
-                                                                    item.total_boxes
+                                                                    item.total_available_cases
                                                                 )
                                                             }}</span
                                                         >
@@ -439,12 +459,11 @@
                                                             class="text-gray-800 font-medium"
                                                             >৳{{
                                                                 toBengaliNumber(
-                                                                    Math.round(
-                                                                        item
-                                                                            .variants[0]
-                                                                            ?.unit_price ||
-                                                                            0
-                                                                    )
+                                                                    item
+                                                                        .variants[0]
+                                                                        ?.unit_price ||
+                                                                        0,
+                                                                    2
                                                                 )
                                                             }}</span
                                                         >
@@ -471,7 +490,7 @@
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                                                    ></path>
+                                                    />
                                                 </svg>
                                                 {{
                                                     getTranslation(
@@ -525,9 +544,8 @@
                                                                 )
                                                             }}: ৳{{
                                                                 toBengaliNumber(
-                                                                    Math.round(
-                                                                        variant.unit_price
-                                                                    )
+                                                                    variant.unit_price,
+                                                                    2
                                                                 )
                                                             }}
                                                         </p>
@@ -541,7 +559,7 @@
                                                             }}:
                                                             {{
                                                                 toBengaliNumber(
-                                                                    variant.boxes
+                                                                    variant.cases_available
                                                                 )
                                                             }}
                                                         </p>
@@ -563,13 +581,13 @@
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
                                                                     d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                ></path>
+                                                                />
                                                             </svg>
                                                             <span
                                                                 class="text-sm font-medium text-gray-700"
                                                                 >{{
                                                                     toBengaliNumber(
-                                                                        variant.quantity
+                                                                        variant.total_bottles_available
                                                                     )
                                                                 }}</span
                                                             >
@@ -594,9 +612,9 @@
                                                         >
                                                             ৳{{
                                                                 toBengaliNumber(
-                                                                    Math.round(
-                                                                        variant.total_value
-                                                                    )
+                                                                    variant.total_bottles_available *
+                                                                        variant.unit_price,
+                                                                    2
                                                                 )
                                                             }}
                                                         </p>
@@ -633,7 +651,7 @@
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
                                                                         d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                    ></path>
+                                                                    />
                                                                 </svg>
                                                                 {{
                                                                     getTranslation(
@@ -659,7 +677,7 @@
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
                                                                         d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                    ></path>
+                                                                    />
                                                                 </svg>
                                                                 {{
                                                                     getTranslation(
@@ -685,7 +703,7 @@
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
                                                                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                                                    ></path>
+                                                                    />
                                                                 </svg>
                                                                 {{
                                                                     getTranslation(
@@ -711,7 +729,7 @@
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
                                                                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                                    ></path>
+                                                                    />
                                                                 </svg>
                                                                 {{
                                                                     getTranslation(
@@ -737,7 +755,7 @@
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
                                                                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                                    ></path>
+                                                                    />
                                                                 </svg>
                                                                 {{
                                                                     getTranslation(
@@ -806,7 +824,7 @@
                                                             >
                                                                 {{
                                                                     toBengaliNumber(
-                                                                        variant.quantity
+                                                                        variant.total_bottles_available
                                                                     )
                                                                 }}
                                                             </span>
@@ -819,7 +837,7 @@
                                                             >
                                                                 {{
                                                                     toBengaliNumber(
-                                                                        variant.boxes
+                                                                        variant.cases_available
                                                                     )
                                                                 }}
                                                             </span>
@@ -829,30 +847,27 @@
                                                         >
                                                             <span
                                                                 class="font-bold text-gray-900 text-lg"
-                                                            >
-                                                                ৳{{
+                                                                >৳{{
                                                                     toBengaliNumber(
-                                                                        Math.round(
-                                                                            variant.unit_price
-                                                                        )
+                                                                        variant.unit_price,
+                                                                        2
                                                                     )
-                                                                }}
-                                                            </span>
+                                                                }}</span
+                                                            >
                                                         </td>
                                                         <td
                                                             class="px-4 py-4 text-right"
                                                         >
                                                             <span
                                                                 class="font-bold text-lg text-green-600"
-                                                            >
-                                                                ৳{{
+                                                                >৳{{
                                                                     toBengaliNumber(
-                                                                        Math.round(
-                                                                            variant.total_value
-                                                                        )
+                                                                        variant.total_bottles_available *
+                                                                            variant.unit_price,
+                                                                        2
                                                                     )
-                                                                }}
-                                                            </span>
+                                                                }}</span
+                                                            >
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -924,21 +939,47 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedVariants = ref({});
 
-const totalProducts = computed(() => props.inventoryStock.length);
+// Process inventory stock to include total_quantity, total_boxes, and total_value
+const processedInventory = computed(() => {
+    return props.inventoryStock.map((item) => {
+        const total_quantity = item.variants.reduce(
+            (sum, variant) => sum + variant.total_bottles_available,
+            0
+        );
+        const total_boxes = item.variants.reduce(
+            (sum, variant) => sum + variant.cases_available,
+            0
+        );
+        const total_value = item.variants.reduce(
+            (sum, variant) =>
+                sum + variant.total_bottles_available * variant.unit_price,
+            0
+        );
+
+        return {
+            ...item,
+            total_quantity,
+            total_boxes,
+            total_value,
+        };
+    });
+});
+
+const totalProducts = computed(() => processedInventory.value.length);
 const totalQuantity = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + item.total_quantity, 0)
+    processedInventory.value.reduce((sum, item) => sum + item.total_quantity, 0)
 );
 const totalBoxes = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + (item.total_boxes || 0), 0)
+    processedInventory.value.reduce((sum, item) => sum + item.total_boxes, 0)
 );
 const totalPurchaseValue = computed(() =>
-    props.inventoryStock.reduce((sum, item) => sum + item.total_value, 0)
+    processedInventory.value.reduce((sum, item) => sum + item.total_value, 0)
 );
 
 const filteredInventory = computed(() => {
-    if (!searchQuery.value) return props.inventoryStock;
+    if (!searchQuery.value) return processedInventory.value;
     const query = searchQuery.value.toLowerCase();
-    return props.inventoryStock.filter((item) =>
+    return processedInventory.value.filter((item) =>
         item.product_name.toLowerCase().includes(query)
     );
 });
@@ -951,15 +992,20 @@ function getTranslationLabel(key, lang) {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num) {
+function toBengaliNumber(num, decimals = 0) {
     if (num === null || num === undefined || num === "") return "";
     if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+    if (currentLanguage.value !== "bn") {
+        return decimals > 0 ? Number(num).toFixed(decimals) : num;
+    }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    let formattedNum =
+        decimals > 0 ? Number(num).toFixed(decimals) : num.toString();
+    return formattedNum.replace(
+        /\d/g,
+        (digit) => bengaliDigits[parseInt(digit)]
+    );
 }
 
 function changeLanguage(lang) {
@@ -974,11 +1020,10 @@ function toggleVariants(index) {
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+@import url("https://fonts.maateen.me/kalpurush/font.css");
 
-body,
-html {
-    font-family: "Noto Serif Bengali", Arial, sans-serif;
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
 @keyframes fadeIn {
@@ -1031,7 +1076,6 @@ html {
     transform: rotate(90deg);
 }
 
-/* Custom responsive utilities */
 .truncate {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1042,18 +1086,34 @@ html {
     max-width: 6rem;
 }
 
-/* Ensure table doesn't overflow */
 table {
     table-layout: fixed;
 }
 
-/* Adjust column widths for 6 columns in primary table */
 th,
 td {
     width: 16.67%;
 }
 
-/* Mobile optimizations */
+/* Adjust metrics card text to prevent overflow */
+.metric-value {
+    word-break: break-all;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+/* Reduce font size for very large numbers */
+.metric-value.large-number {
+    font-size: 1.5rem; /* Adjust for smaller screens */
+}
+
+@media (min-width: 1024px) {
+    .metric-value.large-number {
+        font-size: 1.75rem; /* Slightly larger for desktop */
+    }
+}
+
 @media (max-width: 640px) {
     .table-responsive {
         font-size: 0.75rem;
@@ -1065,3 +1125,4 @@ td {
     }
 }
 </style>
+```

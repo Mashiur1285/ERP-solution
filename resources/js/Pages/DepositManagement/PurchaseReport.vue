@@ -1,6 +1,7 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
+        :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle -->
         <div class="flex justify-end space-x-2 mb-4">
@@ -110,12 +111,12 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium text-orange-700">
-                            {{ getTranslation("totalBoxes") }}
+                            {{ getTranslation("totalCases") }}
                         </p>
                         <p
                             class="text-2xl lg:text-3xl font-bold text-orange-900"
                         >
-                            {{ toBengaliNumber(totalBoxes) }}
+                            {{ toBengaliNumber(totalCases) }}
                         </p>
                     </div>
                 </div>
@@ -217,151 +218,744 @@
         <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
             <div
                 v-if="!filteredPurchases.length"
-                class="text-center text-gray-500 py-4"
+                class="text-center text-gray-500 py-3 text-xs"
             >
                 {{ getTranslation("noPurchases") }}
             </div>
-            <div v-else class="w-full">
-                <table class="w-full divide-y divide-gray-200">
+            <div v-else class="w-full overflow-x-auto">
+                <table class="w-full divide-y divide-gray-200 table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                             >
                                 {{ getTranslation("supplier") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                             >
                                 {{ getTranslation("product") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
+                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                             >
                                 {{ getTranslation("variant") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
-                                {{ getTranslation("boxes") }}
-                            </th>
-                            <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                             >
                                 {{ getTranslation("totalBottles") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                             >
-                                {{ getTranslation("unitPrice") }}
+                                {{ getTranslation("totalCases") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                             >
                                 {{ getTranslation("totalAmount") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6 hidden md:table-cell"
                             >
                                 {{ getTranslation("purchaseDate") }}
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr
+                        <template
                             v-for="(purchase, index) in filteredPurchases"
                             :key="index"
-                            class="hover:bg-gray-50 transition-colors"
                         >
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-900"
+                            <tr
+                                class="hover:bg-gray-50 transition-colors cursor-pointer"
+                                @click="toggleRow(index)"
                             >
-                                <span
-                                    class="truncate max-w-24"
-                                    :title="purchase.supplier_name || '-'"
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900 w-1/6"
                                 >
-                                    {{ purchase.supplier_name || "-" }}
-                                </span>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-900"
-                            >
-                                <span
-                                    class="truncate max-w-24"
-                                    :title="purchase.product_name || '-'"
+                                    <div class="flex items-center">
+                                        <svg
+                                            :class="[
+                                                'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
+                                                expandedRows[index]
+                                                    ? 'rotate-90'
+                                                    : '',
+                                            ]"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                        <span
+                                            class="break-all max-w-24"
+                                            :title="
+                                                purchase.supplier_name || '-'
+                                            "
+                                        >
+                                            {{ purchase.supplier_name || "-" }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
                                 >
-                                    {{ purchase.product_name || "-" }}
-                                </span>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 hidden lg:table-cell"
-                            >
-                                <span
-                                    class="truncate max-w-24"
-                                    :title="purchase.variant || 'N/A'"
+                                    <span
+                                        class="break-all max-w-24"
+                                        :title="purchase.product_name || '-'"
+                                    >
+                                        {{ purchase.product_name || "-" }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
                                 >
-                                    {{ purchase.variant || "N/A" }}
-                                </span>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500"
-                            >
-                                <div class="text-right">
-                                    {{
-                                        toBengaliNumber(
-                                            purchase.quantity /
-                                                purchase.bottles_per_box || 0
-                                        )
-                                    }}
-                                </div>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500"
-                            >
-                                <div class="text-right">
-                                    {{
-                                        toBengaliNumber(purchase.quantity || 0)
-                                    }}
-                                </div>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500"
-                            >
-                                <div class="text-right">
-                                    ৳{{
-                                        toBengaliNumber(
-                                            (purchase.unit_price || 0).toFixed(
-                                                2
+                                    <span
+                                        class="break-all max-w-24"
+                                        :title="purchase.variant || 'N/A'"
+                                    >
+                                        {{ purchase.variant || "N/A" }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
+                                >
+                                    <div class="text-right font-medium">
+                                        {{
+                                            toBengaliNumber(
+                                                purchase.total_bottles || 0
                                             )
-                                        )
-                                    }}
-                                </div>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500"
-                            >
-                                <div class="text-right font-medium">
-                                    ৳{{
-                                        toBengaliNumber(
-                                            (purchase.total_value || 0).toFixed(
-                                                2
+                                        }}
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
+                                >
+                                    <div class="text-right font-medium">
+                                        {{
+                                            toBengaliNumber(
+                                                purchase.total_cases || 0
                                             )
-                                        )
+                                        }}
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
+                                >
+                                    <div class="text-right font-medium">
+                                        ৳{{
+                                            toBengaliNumber(
+                                                Number(
+                                                    purchase.total_value || 0
+                                                ).toFixed(2)
+                                            )
+                                        }}
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6 hidden md:table-cell"
+                                >
+                                    {{
+                                        purchase.purchase_date
+                                            ? toBengaliNumber(
+                                                  formatDate(
+                                                      purchase.purchase_date
+                                                  )
+                                              )
+                                            : "-"
                                     }}
-                                </div>
-                            </td>
-                            <td
-                                class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 hidden md:table-cell"
+                                </td>
+                            </tr>
+                            <tr
+                                v-if="expandedRows[index]"
+                                class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                {{
-                                    purchase.purchase_date
-                                        ? toBengaliNumber(
-                                              formatDate(purchase.purchase_date)
-                                          )
-                                        : "-"
-                                }}
-                            </td>
-                        </tr>
+                                <td :colspan="7" class="px-2 lg:px-6 py-6">
+                                    <div class="ml-2 lg:ml-6">
+                                        <!-- Mobile view for details -->
+                                        <div
+                                            class="lg:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border-l-4 border-indigo-500"
+                                        >
+                                            <h4
+                                                class="font-semibold text-gray-800 mb-3 flex items-center"
+                                            >
+                                                <svg
+                                                    class="w-4 h-4 mr-2 text-indigo-600"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
+                                                </svg>
+                                                {{
+                                                    getTranslation(
+                                                        "purchaseDetails"
+                                                    )
+                                                }}
+                                            </h4>
+                                            <div
+                                                class="grid grid-cols-2 gap-3 text-sm"
+                                            >
+                                                <div class="space-y-2">
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "variant"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                purchase.variant ||
+                                                                "N/A"
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "purchasedCases"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                toBengaliNumber(
+                                                                    purchase.purchased_cases ||
+                                                                        0
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "casesFromFree"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                toBengaliNumber(
+                                                                    purchase.cases_from_free ||
+                                                                        0
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "totalCases"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                toBengaliNumber(
+                                                                    purchase.total_cases ||
+                                                                        0
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "purchasedBottles"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                toBengaliNumber(
+                                                                    purchase.quantity ||
+                                                                        0
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "freeBottles"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                toBengaliNumber(
+                                                                    purchase.free_bottles ||
+                                                                        0
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "extraFreeBottles"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                toBengaliNumber(
+                                                                    purchase.extra_free_bottles ||
+                                                                        0
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "unitPrice"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >৳{{
+                                                                toBengaliNumber(
+                                                                    Number(
+                                                                        purchase.unit_price ||
+                                                                            0
+                                                                    ).toFixed(2)
+                                                                )
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <div
+                                                        class="md:hidden flex flex-col"
+                                                    >
+                                                        <span
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            >{{
+                                                                getTranslation(
+                                                                    "purchaseDate"
+                                                                )
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-gray-800 font-medium"
+                                                            >{{
+                                                                purchase.purchase_date
+                                                                    ? toBengaliNumber(
+                                                                          formatDate(
+                                                                              purchase.purchase_date
+                                                                          )
+                                                                      )
+                                                                    : "-"
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Desktop Details Table -->
+                                        <div
+                                            class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+                                        >
+                                            <table
+                                                class="w-full table-fixed bg-white"
+                                            >
+                                                <thead
+                                                    class="bg-gradient-to-r from-indigo-50 to-purple-50"
+                                                >
+                                                    <tr>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-2 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "variant"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "purchasedCases"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "casesFromFree"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "totalCases"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "purchasedBottles"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "freeBottles"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-center"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-1 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "extraFreeBottles"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/6 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                                                        >
+                                                            <div
+                                                                class="flex items-center justify-end"
+                                                            >
+                                                                <svg
+                                                                    class="w-4 h-4 mr-2 text-indigo-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    getTranslation(
+                                                                        "unitPrice"
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody
+                                                    class="divide-y divide-gray-100"
+                                                >
+                                                    <tr
+                                                        class="hover:bg-gray-50 transition-colors"
+                                                    >
+                                                        <td
+                                                            class="px-4 py-4 border-r border-gray-200"
+                                                        >
+                                                            <div
+                                                                class="flex items-center"
+                                                            >
+                                                                <div
+                                                                    class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3"
+                                                                >
+                                                                    <span
+                                                                        class="text-xs font-medium text-indigo-700"
+                                                                        >1</span
+                                                                    >
+                                                                </div>
+                                                                <p
+                                                                    class="font-semibold text-gray-900"
+                                                                    :title="
+                                                                        purchase.variant ||
+                                                                        'N/A'
+                                                                    "
+                                                                >
+                                                                    {{
+                                                                        purchase.variant ||
+                                                                        "N/A"
+                                                                    }}
+                                                                </p>
+                                                            </div>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        purchase.purchased_cases ||
+                                                                            0
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        purchase.cases_from_free ||
+                                                                            0
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        purchase.total_cases ||
+                                                                            0
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        purchase.quantity ||
+                                                                            0
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        purchase.free_bottles ||
+                                                                            0
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center justify-center w-12 h-8 bg-indigo-100 text-indigo-800 rounded-lg font-bold text-sm"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        purchase.extra_free_bottles ||
+                                                                            0
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-right"
+                                                        >
+                                                            <span
+                                                                class="font-bold text-lg text-green-600"
+                                                            >
+                                                                ৳{{
+                                                                    toBengaliNumber(
+                                                                        Number(
+                                                                            purchase.unit_price ||
+                                                                                0
+                                                                        ).toFixed(
+                                                                            2
+                                                                        )
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
                     </tbody>
                 </table>
             </div>
@@ -370,7 +964,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 
@@ -378,12 +972,17 @@ interface Purchase {
     supplier_name: string;
     product_name: string;
     variant: string;
-    bottles_per_box: number;
+    bottles_per_case: number;
     quantity: number;
     free_bottles: number;
-    unit_price: number;
+    extra_free_bottles: number;
+    total_bottles: number;
+    purchased_cases: number;
+    cases_from_free: number;
+    unit_price: number | string;
     total_value: number;
     purchase_date: string;
+    total_cases?: number;
 }
 
 const props = defineProps<{
@@ -405,13 +1004,19 @@ const translations = {
         variant: "Variant",
         boxes: "Boxes",
         totalBottles: "Total Bottles",
-        totalBoxes: "Total Boxes",
+        totalCases: "Total Cases",
+        purchasedBottles: "Purchased Bottles",
+        freeBottles: "Free Bottles",
+        extraFreeBottles: "Extra Free Bottles",
+        purchasedCases: "Purchased Cases",
+        casesFromFree: "Cases from Free",
         unitPrice: "Unit Price",
         totalAmount: "Total Amount",
         purchaseDate: "Purchase Date",
         totalPurchases: "Total Purchases",
         searchPurchases: "Search with Supplier or Product",
         noPurchases: "No purchases found",
+        purchaseDetails: "Purchase Details",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -421,18 +1026,25 @@ const translations = {
         variant: "ভেরিয়েন্ট",
         boxes: "বক্স",
         totalBottles: "মোট বোতল",
-        totalBoxes: "মোট বক্স",
+        totalCases: "মোট কেস",
+        purchasedBottles: "ক্রয়কৃত বোতল",
+        freeBottles: "বিনামূল্যে বোতল",
+        extraFreeBottles: "অতিরিক্ত বিনামূল্যে বোতল",
+        purchasedCases: "ক্রয়কৃত কেস",
+        casesFromFree: "বিনামূল্যে কেস",
         unitPrice: "একক মূল্য",
         totalAmount: "মোট পরিমাণ",
         purchaseDate: "ক্রয়ের তারিখ",
         totalPurchases: "মোট ক্রয়",
         searchPurchases: "সরবরাহকারী বা পণ্য দিয়ে খুঁজুন",
         noPurchases: "কোন ক্রয় পাওয়া যায়নি",
+        purchaseDetails: "ক্রয় বিবরণ",
     },
 };
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
+const expandedRows = ref({});
 
 const totalPurchases = computed(() => props.purchaseHistory.length);
 const totalAmount = computed(() =>
@@ -443,29 +1055,32 @@ const totalAmount = computed(() =>
 );
 const totalBottles = computed(() =>
     props.purchaseHistory.reduce(
-        (sum, purchase) => sum + Number(purchase.quantity),
+        (sum, purchase) => sum + Number(purchase.total_bottles),
         0
     )
 );
-const totalBoxes = computed(() =>
-    props.purchaseHistory.reduce((sum, purchase) => {
-        const boxes = purchase.bottles_per_box
-            ? purchase.quantity / purchase.bottles_per_box
-            : 0;
-        return sum + Math.floor(boxes);
-    }, 0)
+const totalCases = computed(() =>
+    props.purchaseHistory.reduce(
+        (sum, purchase) =>
+            sum + Number(purchase.purchased_cases + purchase.cases_from_free),
+        0
+    )
 );
 
 const filteredPurchases = computed(() => {
-    if (!searchQuery.value) return props.purchaseHistory;
     const query = searchQuery.value.toLowerCase();
-    return props.purchaseHistory.filter(
-        (purchase) =>
-            purchase.supplier_name?.toLowerCase().includes(query) ||
-            false ||
-            purchase.product_name?.toLowerCase().includes(query) ||
-            false
-    );
+    return props.purchaseHistory
+        .filter(
+            (purchase) =>
+                (purchase.total_bottles > 0 || purchase.total_value > 0) &&
+                (purchase.supplier_name?.toLowerCase().includes(query) ||
+                    purchase.product_name?.toLowerCase().includes(query) ||
+                    purchase.variant?.toLowerCase().includes(query))
+        )
+        .map((purchase) => ({
+            ...purchase,
+            total_cases: purchase.purchased_cases + purchase.cases_from_free,
+        }));
 });
 
 function getTranslation(key: string) {
@@ -490,6 +1105,7 @@ function toBengaliNumber(num: number | string) {
 function changeLanguage(lang: string) {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
+    // Set document language for proper font rendering
     document.documentElement.lang = lang;
 }
 
@@ -501,16 +1117,18 @@ function formatDate(dateString: string) {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
 }
+
+function toggleRow(index: number) {
+    expandedRows.value[index] = !expandedRows.value[index];
+}
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap");
+@import url("https://fonts.maateen.me/kalpurush/font.css");
 
-body,
-html {
-    font-family: "Noto Serif Bengali", Arial, sans-serif;
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -522,8 +1140,27 @@ html {
     }
 }
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
 .animate-fade-in {
     animation: fadeIn 1s ease-out;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+}
+
+.rotate-90 {
+    transform: rotate(90deg);
 }
 
 .truncate {
@@ -538,6 +1175,11 @@ html {
 
 table {
     table-layout: fixed;
+}
+
+th,
+td {
+    width: 16.67%;
 }
 
 @media (max-width: 640px) {
