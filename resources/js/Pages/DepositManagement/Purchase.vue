@@ -1,4 +1,4 @@
-```vue
+
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
@@ -220,7 +220,7 @@
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
-import ToastNotification from "./partials/purchasePartials/ToastNotification.vue";
+// import ToastNotification from "./partials/purchasePartials/ToastNotification.vue";
 import ConfirmationModal from "./partials/purchasePartials/ConfirmationModal.vue";
 import Header from "./partials/purchasePartials/Header.vue";
 import ProductInformation from "./partials/purchasePartials/ProductInformation.vue";
@@ -303,7 +303,7 @@ const translations = {
         removeVariant: "Remove Variant",
         variant: "Variant",
         variantName: "Variant Size",
-        selectVariant_en: "Select variant size",
+        selectVariant: "Select variant size",
         variantNameRequired: "Variant {index}: Size is required",
         numberOfCases: "Number of Cases",
         numberOfCasesRequired:
@@ -332,7 +332,7 @@ const translations = {
         freeBottles: "Free Bottles",
         purchasedCases: "Purchased Cases",
         casesFromFree: "Cases from Free",
-        selectVariant_en: "Select variant size",
+        selectVariant: "Select variant size",
         actualRatePerBottle: "Actual Rate per Bottle",
         actualRatePerCase: "Actual Rate per Case",
         remainingDeposit: "Remaining Deposit",
@@ -385,7 +385,7 @@ const translations = {
         removeVariant: "ভেরিয়েন্ট সরান",
         variant: "ভেরিয়েন্ট",
         variantName: "ভেরিয়েন্টের আকার",
-        selectVariant_bn: "ভেরিয়েন্টের আকার নির্বাচন করুন",
+        selectVariant: "ভেরিয়েন্টের আকার নির্বাচন করুন",
         variantNameRequired: "ভেরিয়েন্ট {index}: আকার প্রয়োজন",
         numberOfCases: "কেস সংখ্যা",
         numberOfCasesRequired:
@@ -414,7 +414,7 @@ const translations = {
         freeBottles: "বিনামূল্যে বোতল",
         purchasedCases: "ক্রয়কৃত কেস",
         casesFromFree: "বিনামূল্যে থেকে কেস",
-        selectVariant_bn: "ভেরিয়েন্টের আকার নির্বাচন করুন",
+        selectVariant: "ভেরিয়েন্টের আকার নির্বাচন করুন",
         actualRatePerBottle: "প্রকৃত হার প্রতি বোতল",
         actualRatePerCase: "প্রকৃত হার প্রতি কেস",
         remainingDeposit: "বাকি আমানত",
