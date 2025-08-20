@@ -221,7 +221,7 @@ import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 // import ToastNotification from "./partials/purchasePartials/ToastNotification.vue";
-import ConfirmationModal from "./partials/purchasePartials/ConfirmationModal.vue";
+// import ConfirmationModal from "./partials/purchasePartials/ConfirmationModal.vue";
 import Header from "./partials/purchasePartials/Header.vue";
 import ProductInformation from "./partials/purchasePartials/ProductInformation.vue";
 import VariantsSection from "./partials/purchasePartials/VariantsSection.vue";
