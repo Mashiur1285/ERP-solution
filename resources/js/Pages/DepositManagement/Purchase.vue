@@ -220,12 +220,12 @@
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
-// import ToastNotification from "./partials/purchasePartials/ToastNotification.vue";
-// import ConfirmationModal from "./partials/purchasePartials/ConfirmationModal.vue";
-import Header from "./partials/purchasePartials/Header.vue";
-import ProductInformation from "./partials/purchasePartials/ProductInformation.vue";
-import VariantsSection from "./partials/purchasePartials/VariantsSection.vue";
-import TotalSummary from "./partials/purchasePartials/TotalSummary.vue";
+import ToastNotification from "./Partials/PurchasePartials/ToastNotification.vue";
+import ConfirmationModal from "./Partials/PurchasePartials/ConfirmationModal.vue";
+import Header from "./Partials/PurchasePartials/Header.vue";
+import ProductInformation from "./Partials/PurchasePartials/ProductInformation.vue";
+import VariantsSection from "./Partials/PurchasePartials/VariantsSection.vue";
+import TotalSummary from "./Partials/PurchasePartials/TotalSummary.vue";
 
 interface Supplier {
     id: number;
