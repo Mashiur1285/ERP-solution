@@ -6,7 +6,8 @@ use App\Contracts\SupplierContract;
 use App\Contracts\DepositContract;
 use App\Contracts\SalesContract;
 use App\Contracts\ShopContract;
-use App\Contracts\ProductPurchaseContract; // Add this
+use App\Contracts\ProductPurchaseContract;
+use App\Contracts\ExpenseContract; // Add this
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ class DashboardController extends Controller
         protected DepositContract $depositRepository,
         protected SalesContract $salesRepository,
         protected ShopContract $shopRepository,
-        protected ProductPurchaseContract $productPurchaseRepository // Add this
+        protected ProductPurchaseContract $productPurchaseRepository,
+        protected ExpenseContract $expenseRepository // Add this
     ) {
     }
 
@@ -60,6 +62,14 @@ class DashboardController extends Controller
             return $item->profit < 0 ? abs($item->profit) : 0;
         });
 
+        // Calculate monthly expense metrics
+        $monthlyExpenses = $this->expenseRepository->query()
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->get();
+
+        $totalExpenses = $monthlyExpenses->count();
+        $totalExpenseAmount = $monthlyExpenses->sum('amount');
+
         return Inertia::render('Dashboard/Dashboard', [
             'suppliers' => $suppliers,
             'shops' => $shops,
@@ -71,6 +81,10 @@ class DashboardController extends Controller
                 'due_amount' => $totalDue,
                 'profit' => $totalProfit,
                 'loss' => $totalLoss,
+            ],
+            'monthlyExpenses' => [
+                'total_expenses' => $totalExpenses,
+                'total_amount' => $totalExpenseAmount,
             ],
             'month' => $month,
             'year' => $year,

@@ -640,6 +640,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import Chart from "chart.js/auto";
+import { Chart as ChartJS } from "chart.js/auto";
 
 const props = defineProps({
     inventoryStock: Array,
