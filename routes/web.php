@@ -81,7 +81,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('expenses/store', [ExpenseController::class, 'storeExpense'])->name('expenses.store');
     Route::put('expenses/{id}/update', [ExpenseController::class, 'update'])->name('expenses.update');
-    Route::get('/expenses/report', [ExpenseController::class, 'report'])->name('expenses.report');
 });
 
 require __DIR__ . '/auth.php';
