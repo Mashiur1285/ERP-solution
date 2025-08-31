@@ -645,7 +645,61 @@
                             Inventory Report
                         </Link>
                     </div>
+
+                    <!-- Logout Button -->
+                    <button
+                        @click="showLogoutConfirm = true"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105 mt-auto"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h3a3 3 0 013 3v1"
+                            />
+                        </svg>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Logout</span
+                        >
+                    </button>
                 </nav>
+
+                <!-- Logout Confirmation Modal -->
+                <div
+                    v-if="showLogoutConfirm"
+                    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+                >
+                    <div
+                        class="bg-white rounded-lg shadow-md p-6 max-w-sm w-full"
+                    >
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            Confirm Logout
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-6">
+                            Are you sure you want to log out?
+                        </p>
+                        <div class="flex justify-end space-x-3">
+                            <button
+                                @click="showLogoutConfirm = false"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                            >
+                                No
+                            </button>
+                            <button
+                                @click="logout"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                            >
+                                Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Main Content -->
@@ -658,7 +712,7 @@
 
 <script setup>
 import { ref, watch } from "vue";
-import { Link, usePage } from "@inertiajs/vue3";
+import { Link, useForm, usePage } from "@inertiajs/vue3";
 
 const suppliersMenuOpen = ref(false);
 const depositsMenuOpen = ref(true);
@@ -666,6 +720,21 @@ const salesMenuOpen = ref(false);
 const inventoryMenuOpen = ref(false);
 const expensesMenuOpen = ref(false);
 const collapsed = ref(false);
+const showLogoutConfirm = ref(false);
+
+// Logout form
+const logoutForm = useForm({});
+
+const logout = () => {
+    logoutForm.post(route("logout"), {
+        onSuccess: () => {
+            showLogoutConfirm.value = false;
+        },
+        onError: (errors) => {
+            console.error("Logout error:", errors);
+        },
+    });
+};
 
 const toggleSuppliersMenu = () => {
     console.log(

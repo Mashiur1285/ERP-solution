@@ -5,39 +5,29 @@
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle and Logout -->
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex justify-end space-x-2">
-                <button
-                    @click="changeLanguage('en')"
-                    :class="[
-                        'px-4 py-2 rounded-md font-medium transition-colors',
-                        currentLanguage === 'en'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                    ]"
-                >
-                    {{ translations.en.languageLabel }}
-                </button>
-                <button
-                    @click="changeLanguage('bn')"
-                    :class="[
-                        'px-4 py-2 rounded-md font-medium transition-colors',
-                        currentLanguage === 'bn'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                    ]"
-                >
-                    {{ translations.bn.languageLabel }}
-                </button>
-            </div>
-            <form @submit.prevent="logout">
-                <button
-                    type="submit"
-                    class="px-4 py-2 rounded-md font-medium text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 transition-all duration-300"
-                >
-                    {{ t("logout") }}
-                </button>
-            </form>
+        <div class="flex justify-end space-x-2">
+            <button
+                @click="changeLanguage('en')"
+                :class="[
+                    'px-4 py-2 rounded-md font-medium transition-colors',
+                    currentLanguage === 'en'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                ]"
+            >
+                {{ translations.en.languageLabel }}
+            </button>
+            <button
+                @click="changeLanguage('bn')"
+                :class="[
+                    'px-4 py-2 rounded-md font-medium transition-colors',
+                    currentLanguage === 'bn'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                ]"
+            >
+                {{ translations.bn.languageLabel }}
+            </button>
         </div>
 
         <!-- Dashboard Title -->
@@ -107,6 +97,12 @@
             :navigateToNextMonth="navigateToNextMonth"
             :loading="loading"
         />
+        <InventoryStock
+            :inventoryStock="inventoryStock"
+            :t="t"
+            :toBengaliNumber="toBengaliNumber"
+            :animatedInventoryStock="animatedInventoryStock"
+        />
 
         <ExpensesOverview
             :monthlyExpenses="monthlyExpenses"
@@ -120,13 +116,6 @@
             :navigateToPreviousMonth="navigateToPreviousMonth"
             :navigateToNextMonth="navigateToNextMonth"
             :loading="loading"
-        />
-
-        <InventoryStock
-            :inventoryStock="inventoryStock"
-            :t="t"
-            :toBengaliNumber="toBengaliNumber"
-            :animatedInventoryStock="animatedInventoryStock"
         />
     </div>
 </template>
