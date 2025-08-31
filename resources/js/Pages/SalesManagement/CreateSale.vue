@@ -610,7 +610,10 @@ const onSupplierChange = async () => {
             `/api/products-by-supplier?supplier_id=${saleForm.value.supplier_id}`
         );
         const data = await response.json();
-        availableProducts.value = data.products || [];
+        // Ensure availableProducts is an array, converting object with numeric keys if necessary
+        availableProducts.value = Array.isArray(data.products)
+            ? data.products
+            : Object.values(data.products || {});
     } catch (error) {
         console.error("Error fetching products:", error);
         showToast.value = true;

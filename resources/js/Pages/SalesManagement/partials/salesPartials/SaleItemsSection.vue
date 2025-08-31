@@ -1091,6 +1091,7 @@ const getItemProfit = (item: SaleItem): number => {
 };
 
 const getProductVariants = (productId: number): ProductVariant[] => {
+    console.log("availableProducts:", props.availableProducts);
     if (!props.availableProducts || !Array.isArray(props.availableProducts)) {
         return [];
     }
@@ -1098,6 +1099,7 @@ const getProductVariants = (productId: number): ProductVariant[] => {
     const product = props.availableProducts.find(
         (p) => p && p.product_id === productId
     );
+    console.log("Selected product:", product);
     return product && product.variants ? product.variants : [];
 };
 

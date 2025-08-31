@@ -63,7 +63,7 @@ class SalesController extends Controller
 
         $products = $this->productPurchaseRepository->getProductsBySupplier($supplierId);
 
-        return response()->json(['products' => $products]);
+        return response()->json(['products' => $products->toArray()]);
     }
 
     public function getVariantInventory(Request $request)
