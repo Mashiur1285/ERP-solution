@@ -135,7 +135,7 @@
                         <p class="text-sm font-medium text-blue-700">
                             Total Suppliers
                         </p>
-                        <p class="text-2xl lg:text-3xl font-bold text-blue-900">
+                        <p class="text-lg lg:text-lg font-bold text-blue-900">
                             {{ Object.keys(groupedDeposits).length }}
                         </p>
                     </div>
@@ -165,9 +165,7 @@
                         <p class="text-sm font-medium text-green-700">
                             Total Deposits
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-green-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-green-900">
                             ৳{{ formatCurrency(totalDepositAmount) }}
                         </p>
                     </div>
@@ -197,9 +195,7 @@
                         <p class="text-sm font-medium text-orange-700">
                             Total Used
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-orange-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-orange-900">
                             ৳{{ formatCurrency(totalUsedAmount) }}
                         </p>
                     </div>
@@ -229,9 +225,7 @@
                         <p class="text-sm font-medium text-indigo-700">
                             Total Remaining
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-indigo-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
                             ৳{{ formatCurrency(totalRemainingAmount) }}
                         </p>
                     </div>

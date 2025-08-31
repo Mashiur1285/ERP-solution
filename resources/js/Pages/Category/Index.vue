@@ -157,9 +157,7 @@
                         <p class="text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalCategories") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-indigo-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
                             {{ toBengaliNumber(totalCategories) }}
                         </p>
                     </div>
@@ -189,9 +187,7 @@
                         <p class="text-sm font-medium text-green-700">
                             {{ getTranslation("withDescription") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-green-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-green-900">
                             {{ toBengaliNumber(categoriesWithDescription) }}
                         </p>
                     </div>
@@ -221,7 +217,7 @@
                         <p class="text-sm font-medium text-blue-700">
                             {{ getTranslation("recentlyAdded") }}
                         </p>
-                        <p class="text-2xl lg:text-3xl font-bold text-blue-900">
+                        <p class="text-lg lg:text-lg font-bold text-blue-900">
                             {{ toBengaliNumber(recentCategories) }}
                         </p>
                     </div>
@@ -251,9 +247,7 @@
                         <p class="text-sm font-medium text-purple-700">
                             {{ getTranslation("activeCategories") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-purple-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-purple-900">
                             {{ toBengaliNumber(totalCategories) }}
                         </p>
                     </div>

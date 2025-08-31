@@ -1,4 +1,4 @@
-<!-- resources/js/Pages/ExpenseManagement/Expense.vue -->
+```vue
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
@@ -138,8 +138,8 @@
             <div
                 class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-indigo-500 rounded-lg mr-3">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-indigo-500 rounded-lg">
                         <svg
                             class="w-6 h-6 text-white"
                             fill="none"
@@ -158,9 +158,7 @@
                         <p class="text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalExpenses") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-indigo-900"
-                        >
+                        <p class="text-lg font-bold text-indigo-900">
                             {{ toBengaliNumber(totalExpenses) }}
                         </p>
                     </div>
@@ -170,8 +168,8 @@
             <div
                 class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-500 rounded-lg mr-3">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-green-500 rounded-lg">
                         <svg
                             class="w-6 h-6 text-white"
                             fill="none"
@@ -190,11 +188,8 @@
                         <p class="text-sm font-medium text-green-700">
                             {{ getTranslation("totalAmount") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-green-900"
-                        >
+                        <p class="text-lg font-bold text-green-900">
                             {{ toBengaliNumber(totalAmount) }}
-                            {{ getTranslation("currency") }}
                         </p>
                     </div>
                 </div>
@@ -203,8 +198,8 @@
             <div
                 class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-blue-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-blue-500 rounded-lg mr-3">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-blue-500 rounded-lg">
                         <svg
                             class="w-6 h-6 text-white"
                             fill="none"
@@ -223,7 +218,7 @@
                         <p class="text-sm font-medium text-blue-700">
                             {{ getTranslation("recentExpenses") }}
                         </p>
-                        <p class="text-2xl lg:text-3xl font-bold text-blue-900">
+                        <p class="text-lg font-bold text-blue-900">
                             {{ toBengaliNumber(recentExpenses) }}
                         </p>
                     </div>
@@ -343,7 +338,7 @@
                                 <td
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/4 hidden md:table-cell"
                                 >
-                                    <div class="text-center">
+                                    <div class="text-left">
                                         {{ toBengaliNumber(expense.amount) }}
                                         {{ getTranslation("currency") }}
                                     </div>
@@ -789,19 +784,35 @@ const submitExpense = (expenseData: {
     form.description = expenseData.description;
     form.amount = expenseData.amount;
 
-    const url = "/expenses/store";
+    const url = editMode.value
+        ? route("expenses.update", { id: currentExpense.value?.id })
+        : route("expenses.store");
 
-    form.post(url, {
-        preserveState: false,
-        onSuccess: () => {
-            closeExpenseModal();
-            console.log("Expense created successfully");
-        },
-        onError: (errors) => {
-            console.error("Expense creation errors:", errors);
-            alert("Failed to create expense: " + JSON.stringify(errors));
-        },
-    });
+    if (editMode.value) {
+        form.put(url, {
+            preserveState: false,
+            onSuccess: () => {
+                closeExpenseModal();
+                console.log("Expense updated successfully");
+            },
+            onError: (errors) => {
+                console.error("Expense update errors:", errors);
+                alert("Failed to update expense: " + JSON.stringify(errors));
+            },
+        });
+    } else {
+        form.post(url, {
+            preserveState: false,
+            onSuccess: () => {
+                closeExpenseModal();
+                console.log("Expense created successfully");
+            },
+            onError: (errors) => {
+                console.error("Expense creation errors:", errors);
+                alert("Failed to create expense: " + JSON.stringify(errors));
+            },
+        });
+    }
 };
 
 const editExpense = (expense: Expense) => {
@@ -922,3 +933,4 @@ button:hover:not(:disabled) {
     transition-duration: 300ms;
 }
 </style>
+```

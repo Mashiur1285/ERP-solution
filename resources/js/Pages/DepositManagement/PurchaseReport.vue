@@ -82,9 +82,7 @@
                         <p class="text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalPurchases") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-indigo-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
                             {{ toBengaliNumber(totalPurchases) }}
                         </p>
                     </div>
@@ -113,9 +111,7 @@
                         <p class="text-sm font-medium text-orange-700">
                             {{ getTranslation("totalCases") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-orange-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-orange-900">
                             {{ toBengaliNumber(totalCases) }}
                         </p>
                     </div>
@@ -144,9 +140,7 @@
                         <p class="text-sm font-medium text-purple-700">
                             {{ getTranslation("totalBottles") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-purple-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-purple-900">
                             {{ toBengaliNumber(totalBottles) }}
                         </p>
                     </div>
@@ -175,9 +169,7 @@
                         <p class="text-sm font-medium text-green-700">
                             {{ getTranslation("totalAmount") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-green-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-green-900">
                             ৳{{ toBengaliNumber(totalAmount) }}
                         </p>
                     </div>
