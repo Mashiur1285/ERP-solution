@@ -157,9 +157,7 @@
                         <p class="text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalBrands") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-indigo-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
                             {{ toBengaliNumber(totalBrands) }}
                         </p>
                     </div>
@@ -189,9 +187,7 @@
                         <p class="text-sm font-medium text-green-700">
                             {{ getTranslation("withDescription") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-green-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-green-900">
                             {{ toBengaliNumber(brandsWithDescription) }}
                         </p>
                     </div>
@@ -221,7 +217,7 @@
                         <p class="text-sm font-medium text-blue-700">
                             {{ getTranslation("recentlyAdded") }}
                         </p>
-                        <p class="text-2xl lg:text-3xl font-bold text-blue-900">
+                        <p class="text-lg lg:text-lg font-bold text-blue-900">
                             {{ toBengaliNumber(recentBrands) }}
                         </p>
                     </div>
@@ -251,9 +247,7 @@
                         <p class="text-sm font-medium text-purple-700">
                             {{ getTranslation("activeBrands") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-purple-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-purple-900">
                             {{ toBengaliNumber(totalBrands) }}
                         </p>
                     </div>

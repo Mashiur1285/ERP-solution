@@ -1,3 +1,4 @@
+```vue
 <template>
     <div class="min-h-screen bg-gray-50 p-4">
         <div
@@ -7,7 +8,7 @@
             <div
                 :class="[
                     'relative bg-gradient-to-b from-purple-50 to-indigo-50 text-gray-900 rounded-l-xl flex flex-col transition-all duration-300',
-                    collapsed ? 'w-20' : 'w-64',
+                    collapsed ? 'w-20' : 'w-63',
                 ]"
             >
                 <!-- Header: Logo and Collapse Button -->
@@ -196,7 +197,7 @@
                             />
                         </svg>
                         <span v-if="!collapsed" class="font-medium"
-                            >Purchase Management</span
+                            >Purchase</span
                         >
                         <svg
                             v-if="!collapsed"
@@ -374,9 +375,7 @@
                                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                             />
                         </svg>
-                        <span v-if="!collapsed" class="font-medium"
-                            >Sales Management</span
-                        >
+                        <span v-if="!collapsed" class="font-medium">Sales</span>
                         <svg
                             v-if="!collapsed"
                             class="w-4 h-4 ml-auto transition-transform duration-200"
@@ -507,6 +506,76 @@
                         </Link>
                     </div>
 
+                    <!-- Expense Management Menu -->
+                    <button
+                        @click="toggleExpensesMenu"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                        </svg>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Expense</span
+                        >
+                        <svg
+                            v-if="!collapsed"
+                            class="w-4 h-4 ml-auto transition-transform duration-200"
+                            :class="{ 'rotate-180': expensesMenuOpen }"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            />
+                        </svg>
+                    </button>
+                    <div
+                        v-if="expensesMenuOpen && !collapsed"
+                        class="pl-8 mt-2 space-y-2"
+                    >
+                        <Link
+                            href="/expenses"
+                            class="block px-4 py-2 text-sm rounded-lg hover:bg-purple-300 transition duration-200 flex items-center transform hover:scale-105"
+                            :class="{
+                                'bg-indigo-300':
+                                    $page.url.startsWith('/expenses'),
+                            }"
+                            @click.stop="logNavigation('/expenses')"
+                            :preserveState="true"
+                            :preserveScroll="true"
+                            @error="handleNavigationError"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                />
+                            </svg>
+                            Expense Management
+                        </Link>
+                    </div>
+
                     <!-- Inventory Management Menu -->
                     <button
                         @click="toggleInventoryMenu"
@@ -526,7 +595,7 @@
                             />
                         </svg>
                         <span v-if="!collapsed" class="font-medium"
-                            >Inventory Management</span
+                            >Inventory</span
                         >
                         <svg
                             v-if="!collapsed"
@@ -576,7 +645,61 @@
                             Inventory Report
                         </Link>
                     </div>
+
+                    <!-- Logout Button -->
+                    <button
+                        @click="showLogoutConfirm = true"
+                        class="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-purple-300 transition duration-200 transform hover:scale-105 mt-auto"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h3a3 3 0 013 3v1"
+                            />
+                        </svg>
+                        <span v-if="!collapsed" class="font-medium"
+                            >Logout</span
+                        >
+                    </button>
                 </nav>
+
+                <!-- Logout Confirmation Modal -->
+                <div
+                    v-if="showLogoutConfirm"
+                    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+                >
+                    <div
+                        class="bg-white rounded-lg shadow-md p-6 max-w-sm w-full"
+                    >
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            Confirm Logout
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-6">
+                            Are you sure you want to log out?
+                        </p>
+                        <div class="flex justify-end space-x-3">
+                            <button
+                                @click="showLogoutConfirm = false"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                            >
+                                No
+                            </button>
+                            <button
+                                @click="logout"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                            >
+                                Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Main Content -->
@@ -589,13 +712,29 @@
 
 <script setup>
 import { ref, watch } from "vue";
-import { Link, usePage } from "@inertiajs/vue3";
+import { Link, useForm, usePage } from "@inertiajs/vue3";
 
 const suppliersMenuOpen = ref(false);
 const depositsMenuOpen = ref(true);
 const salesMenuOpen = ref(false);
 const inventoryMenuOpen = ref(false);
+const expensesMenuOpen = ref(false);
 const collapsed = ref(false);
+const showLogoutConfirm = ref(false);
+
+// Logout form
+const logoutForm = useForm({});
+
+const logout = () => {
+    logoutForm.post(route("logout"), {
+        onSuccess: () => {
+            showLogoutConfirm.value = false;
+        },
+        onError: (errors) => {
+            console.error("Logout error:", errors);
+        },
+    });
+};
 
 const toggleSuppliersMenu = () => {
     console.log(
@@ -629,6 +768,14 @@ const toggleInventoryMenu = () => {
     inventoryMenuOpen.value = !inventoryMenuOpen.value;
 };
 
+const toggleExpensesMenu = () => {
+    console.log(
+        "Toggling Expense Management Menu. Current state:",
+        expensesMenuOpen.value
+    );
+    expensesMenuOpen.value = !expensesMenuOpen.value;
+};
+
 const logNavigation = (url) => {
     console.log("Navigating to:", url);
 };
@@ -646,11 +793,13 @@ watch(
             depositsMenuOpen.value = false;
             inventoryMenuOpen.value = false;
             suppliersMenuOpen.value = false;
+            expensesMenuOpen.value = false;
         } else if (url.includes("/inventory")) {
             inventoryMenuOpen.value = true;
             salesMenuOpen.value = false;
             depositsMenuOpen.value = false;
             suppliersMenuOpen.value = false;
+            expensesMenuOpen.value = false;
         } else if (
             url.includes("/deposits") ||
             url.includes("/categories") ||
@@ -661,8 +810,16 @@ watch(
             salesMenuOpen.value = false;
             inventoryMenuOpen.value = false;
             suppliersMenuOpen.value = false;
+            expensesMenuOpen.value = false;
         } else if (url.includes("/suppliers")) {
             suppliersMenuOpen.value = true;
+            depositsMenuOpen.value = false;
+            salesMenuOpen.value = false;
+            inventoryMenuOpen.value = false;
+            expensesMenuOpen.value = false;
+        } else if (url.includes("/expenses")) {
+            expensesMenuOpen.value = true;
+            suppliersMenuOpen.value = false;
             depositsMenuOpen.value = false;
             salesMenuOpen.value = false;
             inventoryMenuOpen.value = false;
@@ -671,6 +828,7 @@ watch(
             depositsMenuOpen.value = false;
             salesMenuOpen.value = false;
             inventoryMenuOpen.value = false;
+            expensesMenuOpen.value = false;
         }
     },
     { immediate: true }
@@ -705,3 +863,4 @@ nav::-webkit-scrollbar-thumb:hover {
     background: rgba(107, 114, 128, 0.7);
 }
 </style>
+```

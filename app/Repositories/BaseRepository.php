@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Contracts\BaseContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 
 abstract class BaseRepository implements BaseContract
@@ -50,6 +51,11 @@ abstract class BaseRepository implements BaseContract
     {
         return $this->model->get();
 
+    }
+
+    public function query(): Builder
+    {
+        return $this->model->query();
     }
 
 }

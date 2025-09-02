@@ -159,7 +159,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
     public function getProductsBySupplier(int $supplierId): Collection
     {
-        return $this->getInventoryStock()->where('supplier_id', $supplierId);
+        return $this->getInventoryStock()->where('supplier_id', $supplierId)->values();
     }
 
     public function updateInventory(Model $product, string $variant, int $soldPurchasedBottles, int $soldFreeBottles = 0): void

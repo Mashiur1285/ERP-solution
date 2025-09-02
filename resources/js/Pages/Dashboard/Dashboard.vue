@@ -1,11 +1,11 @@
-<!-- Dashboard.vue -->
+```vue
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
-        <!-- Language Toggle -->
-        <div class="flex justify-end space-x-2 mb-4">
+        <!-- Language Toggle and Logout -->
+        <div class="flex justify-end space-x-2">
             <button
                 @click="changeLanguage('en')"
                 :class="[
@@ -97,23 +97,37 @@
             :navigateToNextMonth="navigateToNextMonth"
             :loading="loading"
         />
-
         <InventoryStock
             :inventoryStock="inventoryStock"
             :t="t"
             :toBengaliNumber="toBengaliNumber"
             :animatedInventoryStock="animatedInventoryStock"
         />
+
+        <ExpensesOverview
+            :monthlyExpenses="monthlyExpenses"
+            :month="month"
+            :year="year"
+            :animatedTotalExpenses="animatedTotalExpenses"
+            :animatedTotalAmount="animatedTotalAmount"
+            :t="t"
+            :toBengaliNumber="toBengaliNumber"
+            :selectedMonthYear="selectedMonthYear"
+            :navigateToPreviousMonth="navigateToPreviousMonth"
+            :navigateToNextMonth="navigateToNextMonth"
+            :loading="loading"
+        />
     </div>
 </template>
 
 <script setup>
 import { defineProps, ref, onMounted, computed, watch, reactive } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, useForm, Link } from "@inertiajs/vue3";
 import TopSuppliers from "./Partials/TopSuppliers.vue";
 import TopDepositSuppliers from "./Partials/TopDepositSuppliers.vue";
 import TotalShops from "./Partials/TotalShops.vue";
 import SalesOverview from "./Partials/SalesOverview.vue";
+import ExpensesOverview from "./Partials/ExpenseOverview.vue";
 import InventoryStock from "./Partials/InventoryStock.vue";
 import Layout from "@/Layout.vue";
 
@@ -125,6 +139,7 @@ const props = defineProps({
     suppliers: Array,
     shops: Array,
     monthlySales: Object,
+    monthlyExpenses: Object,
     month: Number,
     year: Number,
     inventoryStock: Array,
@@ -144,9 +159,11 @@ const translations = {
         registeredShops: "Registered shops in the system",
         shop: "Shop",
         salesOverview: "Sales Overview",
+        expensesOverview: "Expenses Overview",
         previousMonth: "Previous month",
         nextMonth: "Next month",
         salesBreakdown: "Sales Breakdown",
+        expensesBreakdown: "Expenses Breakdown",
         paid: "Paid",
         due: "Due",
         totalSales: "Total Sales",
@@ -155,6 +172,8 @@ const translations = {
         profitAndLoss: "Profit & Loss",
         profit: "Profit",
         loss: "Loss",
+        totalExpenses: "Total Expenses",
+        totalAmount: "Total Amount",
         inventoryStock: "Inventory Stock",
         totalQuantity: "Total Quantity",
         totalValue: "Total Value",
@@ -171,6 +190,7 @@ const translations = {
         quantity: "Quantity",
         unitPrice: "Unit Price",
         stockLevel: "Stock Level",
+        logout: "Logout",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -184,9 +204,11 @@ const translations = {
         registeredShops: "সিস্টেমে নিবন্ধিত দোকান",
         shop: "দোকান",
         salesOverview: "বিক্রয় ওভারভিউ",
+        expensesOverview: "ব্যয় ওভারভিউ",
         previousMonth: "পূর্ববর্তী মাস",
         nextMonth: "পরবর্তী মাস",
         salesBreakdown: "বিক্রয় বিভাজন",
+        expensesBreakdown: "ব্যয় বিভাজন",
         paid: "প্রদত্ত",
         due: "বাকি",
         totalSales: "মোট বিক্রয়",
@@ -195,6 +217,8 @@ const translations = {
         profitAndLoss: "লাভ ও ক্ষতি",
         profit: "লাভ",
         loss: "ক্ষতি",
+        totalExpenses: "মোট ব্যয়",
+        totalAmount: "মোট পরিমাণ",
         inventoryStock: "ইনভেন্টরি স্টক",
         totalQuantity: "মোট পরিমাণ",
         totalValue: "মোট মূল্য",
@@ -211,6 +235,7 @@ const translations = {
         quantity: "পরিমাণ",
         unitPrice: "একক দাম",
         stockLevel: "স্টক লেভেল",
+        logout: "লগআউট",
     },
 };
 
@@ -226,6 +251,8 @@ const animatedDueAmount = ref(0);
 const animatedProfit = ref(0);
 const animatedLoss = ref(0);
 const animatedTotalShops = ref(0);
+const animatedTotalExpenses = ref(0);
+const animatedTotalAmount = ref(0);
 const animatedInventoryStock = reactive({});
 const selectedMonth = ref(props.month - 1);
 const selectedYear = ref(props.year);
@@ -250,6 +277,16 @@ const changeLanguage = (lang) => {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
     document.documentElement.lang = lang;
+};
+
+// Logout function
+const logout = () => {
+    const form = useForm({});
+    form.post(route("logout"), {
+        onSuccess: () => {
+            router.visit(route("login"));
+        },
+    });
 };
 
 // Navigation functions
@@ -284,6 +321,7 @@ const navigateToMonth = (month, year) => {
         onSuccess: (page) => {
             const { total_sales, paid_amount, due_amount, profit, loss } =
                 page.props.monthlySales;
+            const { total_expenses, total_amount } = page.props.monthlyExpenses;
             const duration = 1000;
             animateNumber(
                 animatedTotalSales,
@@ -305,6 +343,18 @@ const navigateToMonth = (month, year) => {
             );
             animateNumber(animatedProfit, profit || 0, duration, "profit");
             animateNumber(animatedLoss, loss || 0, duration, "loss");
+            animateNumber(
+                animatedTotalExpenses,
+                total_expenses || 0,
+                duration,
+                "totalExpenses"
+            );
+            animateNumber(
+                animatedTotalAmount,
+                total_amount || 0,
+                duration,
+                "totalAmount"
+            );
         },
         onError: (errors) => {
             console.error("Navigation error:", errors);
@@ -451,6 +501,7 @@ onMounted(() => {
 
     const { total_sales, paid_amount, due_amount, profit, loss } =
         props.monthlySales || {};
+    const { total_expenses, total_amount } = props.monthlyExpenses || {};
     if (
         typeof total_sales !== "number" ||
         typeof paid_amount !== "number" ||
@@ -465,6 +516,26 @@ onMounted(() => {
         animateNumber(animatedDueAmount, due_amount, duration, "dueAmount");
         animateNumber(animatedProfit, profit, duration, "profit");
         animateNumber(animatedLoss, loss, duration, "loss");
+    }
+
+    if (
+        typeof total_expenses !== "number" ||
+        typeof total_amount !== "number"
+    ) {
+        console.warn("Invalid monthlyExpenses data:", props.monthlyExpenses);
+    } else {
+        animateNumber(
+            animatedTotalExpenses,
+            total_expenses,
+            duration,
+            "totalExpenses"
+        );
+        animateNumber(
+            animatedTotalAmount,
+            total_amount,
+            duration,
+            "totalAmount"
+        );
     }
 
     animateNumber(
@@ -511,6 +582,33 @@ watch(
         );
         animateNumber(animatedProfit, newVal.profit, duration, "profit");
         animateNumber(animatedLoss, newVal.loss, duration, "loss");
+    },
+    { deep: true }
+);
+
+watch(
+    () => props.monthlyExpenses,
+    (newVal) => {
+        const duration = 1000;
+        if (
+            typeof newVal.total_expenses !== "number" ||
+            typeof newVal.total_amount !== "number"
+        ) {
+            console.warn("Invalid monthlyExpenses data in watch:", newVal);
+            return;
+        }
+        animateNumber(
+            animatedTotalExpenses,
+            newVal.total_expenses,
+            duration,
+            "totalExpenses"
+        );
+        animateNumber(
+            animatedTotalAmount,
+            newVal.total_amount,
+            duration,
+            "totalAmount"
+        );
     },
     { deep: true }
 );
@@ -584,3 +682,4 @@ const getBarWidth = (amount) => {
     --tw-gradient-to: #f9fafb;
 }
 </style>
+```

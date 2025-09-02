@@ -115,7 +115,7 @@
                                 {{ getTranslation("totalProducts") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-indigo-900 metric-value"
+                                class="text-lg lg:text-lg font-bold text-indigo-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalProducts.toString().length > 10,
@@ -150,7 +150,7 @@
                                 {{ getTranslation("totalQuantity") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-green-900 metric-value"
+                                class="text-lg lg:text-lg font-bold text-green-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalQuantity.toString().length > 10,
@@ -185,7 +185,7 @@
                                 {{ getTranslation("totalBoxes") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-blue-900 metric-value"
+                                class="text-lg lg:text-lg font-bold text-blue-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalBoxes.toString().length > 10,
@@ -220,7 +220,7 @@
                                 {{ getTranslation("totalPurchaseValue") }}
                             </p>
                             <p
-                                class="text-2xl lg:text-3xl font-bold text-purple-900 metric-value"
+                                class="text-lg lg:text-lg font-bold text-purple-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalPurchaseValue.toString().length >

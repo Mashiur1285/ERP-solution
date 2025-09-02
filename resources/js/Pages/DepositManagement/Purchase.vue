@@ -359,7 +359,8 @@ const translations = {
         purchaseSuccess: "Purchase added successfully!",
         purchaseError: "Please fix the following errors: {errors}",
         insufficientDeposit:
-            "Purchase amount (৳{totalCost}) exceeds supplier's remaining deposit (৳{deposit})",
+            "Purchase amount ({totalCost} BDT) exceeds supplier's remaining deposit ({deposit} BDT)",
+        currency: "BDT",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -440,7 +441,8 @@ const translations = {
         purchaseSuccess: "ক্রয় সফলভাবে যোগ করা হয়েছে!",
         purchaseError: "নিম্নলিখিত ত্রুটিগুলি ঠিক করুন: {errors}",
         insufficientDeposit:
-            "ক্রয়ের পরিমাণ (৳{totalCost}) সরবরাহকারীর বাকি আমানত (৳{deposit}) অতিক্রম করেছে",
+            "ক্রয়ের পরিমাণ ({totalCost} টাকা) সরবরাহকারীর বাকি আমানত ({deposit} টাকা) অতিক্রম করেছে",
+        currency: "টাকা",
     },
 };
 
@@ -613,6 +615,9 @@ const t = (key: string, params: Record<string, any> = {}) => {
 
 // Utility function to convert numbers to Bengali digits
 const toBengaliNumber = (num: number | string): string => {
+    if (currentLanguage.value === "en") {
+        return String(num);
+    }
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
     return String(num).replace(
         /[0-9]/g,

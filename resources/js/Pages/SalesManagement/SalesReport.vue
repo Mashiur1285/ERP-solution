@@ -82,9 +82,7 @@
                         <p class="text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalSales") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-indigo-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
                             {{ toBengaliNumber(totalSales) }}
                         </p>
                     </div>
@@ -114,9 +112,7 @@
                         <p class="text-sm font-medium text-green-700">
                             {{ getTranslation("totalAmount") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-green-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-green-900">
                             ৳{{ toBengaliNumber(formatCurrency(totalAmount)) }}
                         </p>
                     </div>
@@ -147,7 +143,7 @@
                             {{ getTranslation("totalProfit") }}
                         </p>
                         <p
-                            class="text-2xl lg:text-3xl font-bold"
+                            class="text-lg lg:text-lg font-bold"
                             :class="
                                 totalProfit >= 0
                                     ? 'text-purple-900'
@@ -183,9 +179,7 @@
                         <p class="text-sm font-medium text-orange-700">
                             {{ getTranslation("totalItems") }}
                         </p>
-                        <p
-                            class="text-2xl lg:text-3xl font-bold text-orange-900"
-                        >
+                        <p class="text-lg lg:text-lg font-bold text-orange-900">
                             {{ toBengaliNumber(totalItemsSold) }}
                         </p>
                     </div>

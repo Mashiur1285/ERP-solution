@@ -302,19 +302,6 @@
                         >
                             {{ t("sellingPricePerCaseRequired") }}
                         </p>
-                        <p
-                            v-if="!includeFreeBottles"
-                            class="mt-1 text-xs text-orange-600"
-                        >
-                            ৳{{
-                                formatNumber(
-                                    getCalculatedPricePerBottle(item),
-                                    2
-                                )
-                            }}
-                            × {{ safeNumber(item.bottles_per_case) }}
-                            {{ t("bottles") }}
-                        </p>
                     </div>
                 </div>
 
@@ -343,20 +330,6 @@
                             readonly
                             disabled
                         />
-                        <p class="mt-1 text-xs text-green-600">
-                            {{ safeNumber(item.cases_to_sell) }}
-                            {{ t("cases") }} ×
-                            {{ getEffectiveBottlesPerCase(item) }}
-                            {{
-                                includeFreeBottles
-                                    ? t("bottlesPerCase") +
-                                      " (+" +
-                                      (item.purchase_metadata
-                                          ?.free_bottles_per_case || 0) +
-                                      " free)"
-                                    : t("bottlesPerCase")
-                            }}
-                        </p>
                     </div>
 
                     <!-- Selling Price per Bottle -->
@@ -382,17 +355,6 @@
                             readonly
                             disabled
                         />
-                        <p class="mt-1 text-xs text-blue-600">
-                            ৳{{
-                                formatNumber(
-                                    item.selling_price_per_case || 0,
-                                    2
-                                )
-                            }}
-                            ÷
-                            {{ getEffectiveBottlesPerCase(item) }}
-                            {{ t("bottles") }}
-                        </p>
                     </div>
 
                     <!-- Free Bottles per Case (only with free bottles mode) -->
@@ -415,9 +377,6 @@
                             readonly
                             disabled
                         />
-                        <p class="mt-1 text-xs text-gray-500">
-                            {{ t("fromPurchase") }}
-                        </p>
                     </div>
                 </div>
 
@@ -1091,6 +1050,7 @@ const getItemProfit = (item: SaleItem): number => {
 };
 
 const getProductVariants = (productId: number): ProductVariant[] => {
+    console.log("availableProducts:", props.availableProducts);
     if (!props.availableProducts || !Array.isArray(props.availableProducts)) {
         return [];
     }
@@ -1098,6 +1058,7 @@ const getProductVariants = (productId: number): ProductVariant[] => {
     const product = props.availableProducts.find(
         (p) => p && p.product_id === productId
     );
+    console.log("Selected product:", product);
     return product && product.variants ? product.variants : [];
 };
 
