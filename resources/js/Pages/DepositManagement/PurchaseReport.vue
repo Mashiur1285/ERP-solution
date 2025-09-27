@@ -58,7 +58,7 @@
         </div>
 
         <!-- Total Metrics -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div
                 class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
             >
@@ -215,7 +215,7 @@
                 {{ getTranslation("noPurchases") }}
             </div>
             <div v-else class="w-full overflow-x-auto">
-                <table class="w-full divide-y divide-gray-200 table-fixed">
+                <table class="w-full divide-y divide-gray-200 table-fixed table-responsive">
                     <thead class="bg-gray-50">
                         <tr>
                             <th
@@ -990,13 +990,13 @@ defineOptions({
 const translations = {
     en: {
         languageLabel: "English",
-        purchaseReport: "Purchase Report",
+        purchaseReport: "Lifting Report",
         supplier: "Supplier",
         product: "Product",
         variant: "Variant",
         boxes: "Boxes",
         totalBottles: "Total Bottles",
-        totalCases: "Total Cases",
+        totalCases: "Lifted Products",
         purchasedBottles: "Purchased Bottles",
         freeBottles: "Free Bottles",
         extraFreeBottles: "Extra Free Bottles",
@@ -1005,14 +1005,14 @@ const translations = {
         unitPrice: "Unit Price",
         totalAmount: "Total Amount",
         purchaseDate: "Purchase Date",
-        totalPurchases: "Total Purchases",
+        totalPurchases: "Total Lifting",
         searchPurchases: "Search with Supplier or Product",
-        noPurchases: "No purchases found",
-        purchaseDetails: "Purchase Details",
+        noPurchases: "No lifting found",
+        purchaseDetails: "Lifting Details",
     },
     bn: {
         languageLabel: "বাংলা",
-        purchaseReport: "ক্রয় রিপোর্ট",
+        purchaseReport: "লিফটিং রিপোর্ট",
         supplier: "সরবরাহকারী",
         product: "পণ্য",
         variant: "ভেরিয়েন্ট",
@@ -1027,10 +1027,10 @@ const translations = {
         unitPrice: "একক মূল্য",
         totalAmount: "মোট পরিমাণ",
         purchaseDate: "ক্রয়ের তারিখ",
-        totalPurchases: "মোট ক্রয়",
+        totalPurchases: "মোট লিফটিং",
         searchPurchases: "সরবরাহকারী বা পণ্য দিয়ে খুঁজুন",
-        noPurchases: "কোন ক্রয় পাওয়া যায়নি",
-        purchaseDetails: "ক্রয় বিবরণ",
+        noPurchases: "কোন লিফটিং পাওয়া যায়নি",
+        purchaseDetails: "লিফটিং বিবরণ",
     },
 };
 

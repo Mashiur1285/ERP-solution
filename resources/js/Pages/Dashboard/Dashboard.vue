@@ -80,7 +80,19 @@
                 :toBengaliNumber="toBengaliNumber"
             />
         </div>
-
+        <ExpensesOverview
+            :monthlyExpenses="monthlyExpenses"
+            :month="month"
+            :year="year"
+            :animatedTotalExpenses="animatedTotalExpenses"
+            :animatedTotalAmount="animatedTotalAmount"
+            :t="t"
+            :toBengaliNumber="toBengaliNumber"
+            :selectedMonthYear="selectedMonthYear"
+            :navigateToPreviousMonth="navigateToPreviousMonth"
+            :navigateToNextMonth="navigateToNextMonth"
+            :loading="loading"
+        />
         <SalesOverview
             :monthlySales="monthlySales"
             :month="month"
@@ -102,20 +114,6 @@
             :t="t"
             :toBengaliNumber="toBengaliNumber"
             :animatedInventoryStock="animatedInventoryStock"
-        />
-
-        <ExpensesOverview
-            :monthlyExpenses="monthlyExpenses"
-            :month="month"
-            :year="year"
-            :animatedTotalExpenses="animatedTotalExpenses"
-            :animatedTotalAmount="animatedTotalAmount"
-            :t="t"
-            :toBengaliNumber="toBengaliNumber"
-            :selectedMonthYear="selectedMonthYear"
-            :navigateToPreviousMonth="navigateToPreviousMonth"
-            :navigateToNextMonth="navigateToNextMonth"
-            :loading="loading"
         />
     </div>
 </template>
@@ -154,8 +152,8 @@ const translations = {
         activeSuppliers: "Active suppliers in the system",
         supplier: "Supplier",
         id: "ID",
-        topDepositSuppliers: "Top Deposit Suppliers",
-        totalShops: "Total Shops",
+        topDepositSuppliers: "Deposit Remaining",
+        totalShops: "Shops",
         registeredShops: "Registered shops in the system",
         shop: "Shop",
         salesOverview: "Sales Overview",
@@ -166,8 +164,8 @@ const translations = {
         expensesBreakdown: "Expenses Breakdown",
         paid: "Paid",
         due: "Due",
-        totalSales: "Total Sales",
-        paidAmount: "Paid Amount",
+        totalSales: "Total Revenue",
+        paidAmount: "Amount Received",
         dueAmount: "Due Amount",
         profitAndLoss: "Profit & Loss",
         profit: "Profit",
@@ -178,7 +176,7 @@ const translations = {
         totalQuantity: "Total Quantity",
         totalValue: "Total Value",
         totalProducts: "Total Products",
-        totalBoxes: "Total Boxes",
+        totalBoxes: "Total Cases",
         totalPurchaseValue: "Total Purchase Value",
         searchProducts: "Search products...",
         showChart: "Show Chart",
@@ -186,7 +184,7 @@ const translations = {
         products: "Products",
         variantDetails: "Variant Details",
         variant: "Variant",
-        boxes: "Boxes",
+        boxes: "Cases",
         quantity: "Quantity",
         unitPrice: "Unit Price",
         stockLevel: "Stock Level",
@@ -199,8 +197,8 @@ const translations = {
         activeSuppliers: "সিস্টেমে সক্রিয় সরবরাহকারী",
         supplier: "সরবরাহকারী",
         id: "আইডি",
-        topDepositSuppliers: "শীর্ষ আমানত সরবরাহকারী",
-        totalShops: "মোট দোকান",
+        topDepositSuppliers: "অবশিষ্ট জমা",
+        totalShops: "দোকান",
         registeredShops: "সিস্টেমে নিবন্ধিত দোকান",
         shop: "দোকান",
         salesOverview: "বিক্রয় ওভারভিউ",
@@ -211,8 +209,8 @@ const translations = {
         expensesBreakdown: "ব্যয় বিভাজন",
         paid: "প্রদত্ত",
         due: "বাকি",
-        totalSales: "মোট বিক্রয়",
-        paidAmount: "প্রদত্ত পরিমাণ",
+        totalSales: "মোট আয়",
+        paidAmount: "প্রাপ্ত অর্থ",
         dueAmount: "বাকি পরিমাণ",
         profitAndLoss: "লাভ ও ক্ষতি",
         profit: "লাভ",
@@ -223,7 +221,7 @@ const translations = {
         totalQuantity: "মোট পরিমাণ",
         totalValue: "মোট মূল্য",
         totalProducts: "মোট পণ্য",
-        totalBoxes: "মোট বক্স",
+        totalBoxes: "মোট কেস (কার্টুন)",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
         searchProducts: "পণ্য অনুসন্ধান করুন...",
         showChart: "চার্ট দেখান",

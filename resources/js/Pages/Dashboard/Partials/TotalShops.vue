@@ -46,8 +46,10 @@
                 <span class="font-medium text-gray-700">{{
                     shop.shop_name || t("shop") + " " + (index + 1)
                 }}</span>
-                <span class="text-sm text-gray-500"
-                    >{{ t("id") }}: {{ toBengaliNumber(shop.id) }}</span
+                <span class="text-sm text-red-500"
+                    >{{ t("due") }}: ৳{{
+                        toBengaliNumber(shop.total_due)
+                    }}</span
                 >
             </div>
         </div>
