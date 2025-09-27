@@ -182,16 +182,16 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-blue-700">
-                                {{ getTranslation("totalBoxes") }}
+                                {{ getTranslation("totalCases") }}
                             </p>
                             <p
                                 class="text-lg lg:text-lg font-bold text-blue-900 metric-value"
                                 :class="{
                                     'large-number':
-                                        totalBoxes.toString().length > 10,
+                                        totalCases.toString().length > 10,
                                 }"
                             >
-                                {{ toBengaliNumber(totalBoxes) }}
+                                {{ toBengaliNumber(totalCases) }}
                             </p>
                         </div>
                     </div>
@@ -259,7 +259,7 @@
                             <th
                                 class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
                             >
-                                {{ getTranslation("boxes") }}
+                                {{ getTranslation("cases") }}
                             </th>
                             <th
                                 class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden md:table-cell"
@@ -429,7 +429,7 @@
                                                             class="text-xs text-gray-500 font-medium"
                                                             >{{
                                                                 getTranslation(
-                                                                    "boxes"
+                                                                    "cases"
                                                                 )
                                                             }}</span
                                                         >
@@ -554,7 +554,7 @@
                                                         >
                                                             {{
                                                                 getTranslation(
-                                                                    "boxes"
+                                                                    "cases"
                                                                 )
                                                             }}:
                                                             {{
@@ -707,7 +707,7 @@
                                                                 </svg>
                                                                 {{
                                                                     getTranslation(
-                                                                        "boxes"
+                                                                        "cases"
                                                                     )
                                                                 }}
                                                             </div>
@@ -902,12 +902,12 @@ const translations = {
         variant: "Variant",
         variantCount: "Variant Count",
         quantity: "Quantity",
-        boxes: "Boxes",
+        cases: "Cases",
         unitPrice: "Unit Price",
         totalValue: "Total Value",
         totalProducts: "Total Products",
-        totalQuantity: "Total Quantity",
-        totalBoxes: "Total Boxes",
+        totalQuantity: "Total Products and Variants",
+        totalCases: "Total Cases",
         totalPurchaseValue: "Total Purchase Value",
         searchProducts: "Search products...",
         productDetails: "Product Details",
@@ -921,12 +921,12 @@ const translations = {
         variant: "ভেরিয়েন্ট",
         variantCount: "ভেরিয়েন্ট সংখ্যা",
         quantity: "পরিমাণ",
-        boxes: "বক্স",
+        cases: "কেস",
         unitPrice: "ইউনিট মূল্য",
         totalValue: "মোট মূল্য",
         totalProducts: "মোট পণ্য",
-        totalQuantity: "মোট পরিমাণ",
-        totalBoxes: "মোট বক্স",
+        totalQuantity: "মোট পণ্য এবং ভেরিয়েন্ট",
+        totalCases: "মোট কেস",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
         searchProducts: "পণ্য অনুসন্ধান করুন...",
         productDetails: "পণ্য বিবরণ",
@@ -939,14 +939,14 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedVariants = ref({});
 
-// Process inventory stock to include total_quantity, total_boxes, and total_value
+// Process inventory stock to include total_quantity, total_cases, and total_value
 const processedInventory = computed(() => {
     return props.inventoryStock.map((item) => {
         const total_quantity = item.variants.reduce(
             (sum, variant) => sum + variant.total_bottles_available,
             0
         );
-        const total_boxes = item.variants.reduce(
+        const total_cases = item.variants.reduce(
             (sum, variant) => sum + variant.cases_available,
             0
         );
@@ -959,7 +959,7 @@ const processedInventory = computed(() => {
         return {
             ...item,
             total_quantity,
-            total_boxes,
+            total_cases,
             total_value,
         };
     });
@@ -969,8 +969,8 @@ const totalProducts = computed(() => processedInventory.value.length);
 const totalQuantity = computed(() =>
     processedInventory.value.reduce((sum, item) => sum + item.total_quantity, 0)
 );
-const totalBoxes = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_boxes, 0)
+const totalCases = computed(() =>
+    processedInventory.value.reduce((sum, item) => sum + item.total_cases, 0)
 );
 const totalPurchaseValue = computed(() =>
     processedInventory.value.reduce((sum, item) => sum + item.total_value, 0)
