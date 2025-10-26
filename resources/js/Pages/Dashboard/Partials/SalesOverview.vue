@@ -141,7 +141,7 @@
                                 <p
                                     class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse-slow"
                                 >
-                                    ৳{{ toBengaliNumber(animatedTotalSales) }}
+                                    ৳{{ toBengaliNumber(animatedTotalSales, 2) }}
                                 </p>
                             </div>
                         </div>
@@ -184,7 +184,7 @@
                                 <p
                                     class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent animate-pulse-slow"
                                 >
-                                    ৳{{ toBengaliNumber(animatedPaidAmount) }}
+                                    ৳{{ toBengaliNumber(animatedPaidAmount, 2) }}
                                 </p>
                             </div>
                         </div>
@@ -227,7 +227,7 @@
                                 <p
                                     class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse-slow"
                                 >
-                                    ৳{{ toBengaliNumber(animatedDueAmount) }}
+                                    ৳{{ toBengaliNumber(animatedDueAmount, 2) }}
                                 </p>
                             </div>
                         </div>
@@ -510,7 +510,7 @@
                                     <p
                                         class="text-2xl font-bold text-emerald-600 animate-pulse-slow"
                                     >
-                                        ৳{{ toBengaliNumber(animatedProfit) }}
+                                        ৳{{ toBengaliNumber(animatedProfit, 2) }}
                                     </p>
                                 </div>
                             </div>
@@ -618,7 +618,7 @@
                                     <p
                                         class="text-2xl font-bold text-rose-600 animate-pulse-slow"
                                     >
-                                        ৳{{ toBengaliNumber(animatedLoss) }}
+                                        ৳{{ toBengaliNumber(animatedLoss, 2) }}
                                     </p>
                                 </div>
                             </div>

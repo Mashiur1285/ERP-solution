@@ -27,7 +27,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $suppliers = $this->supplierRepository->all();
-        $shops = $this->shopRepository->all();
+        $shops = $this->shopRepository->getAllShopsWithDues();
         $topDeposits = $this->depositRepository
             ->totalRemainingDepositsBySupplier()
             ->take(5);
