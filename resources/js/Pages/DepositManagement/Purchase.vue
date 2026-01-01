@@ -13,6 +13,102 @@
             @close="closeToast"
         />
 
+        <CategoryModal
+            v-if="showCategoryModal"
+            @close="showCategoryModal = false"
+            @submit="handleCategoryCreate"
+        />
+
+        <BrandModal
+            v-if="showBrandModal"
+            @close="showBrandModal = false"
+            @submit="handleBrandCreate"
+        />
+
+        <div
+            v-if="showSupplierModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 p-4"
+        >
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">
+                        {{ t("addSupplier") }}
+                    </h3>
+                    <button
+                        class="p-2 rounded-full hover:bg-gray-100"
+                        @click="showSupplierModal = false"
+                    >
+                        <svg
+                            class="w-5 h-5 text-gray-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="text-sm font-medium text-gray-700">
+                        {{ t("companyName") }}*
+                        <input
+                            v-model="supplierQuickForm.company_name"
+                            class="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        />
+                    </label>
+                    <label class="text-sm font-medium text-gray-700">
+                        {{ t("phoneNumber") }}*
+                        <input
+                            v-model="supplierQuickForm.phone_number"
+                            class="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        />
+                    </label>
+                    <label class="text-sm font-medium text-gray-700 md:col-span-2">
+                        {{ t("address") }}*
+                        <input
+                            v-model="supplierQuickForm.address"
+                            class="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        />
+                    </label>
+                    <label class="text-sm font-medium text-gray-700">
+                        {{ t("branchName") }}
+                        <input
+                            v-model="supplierQuickForm.branch_name"
+                            class="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        />
+                    </label>
+                    <label class="text-sm font-medium text-gray-700">
+                        {{ t("emergencyPhoneNumber") }}
+                        <input
+                            v-model="supplierQuickForm.emergency_phone_number"
+                            class="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        />
+                    </label>
+                </div>
+
+                <div class="flex justify-end mt-6 space-x-3">
+                    <button
+                        class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        @click="showSupplierModal = false"
+                    >
+                        {{ t("cancel") }}
+                    </button>
+                    <button
+                        class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow"
+                        @click="handleSupplierCreate"
+                    >
+                        {{ t("save") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Confirmation Modal -->
         <ConfirmationModal
             :show="showModal"
@@ -90,13 +186,16 @@
                 <div class="mb-8">
                     <ProductInformation
                         :product-form="productForm"
-                        :suppliers="props.suppliers"
-                        :categories="props.categories"
-                        :brands="props.brands"
+                        :suppliers="suppliersList"
+                        :categories="categoriesList"
+                        :brands="brandsList"
                         :is-submitted="isSubmitted"
                         :current-language="currentLanguage"
                         :t="t"
                         :to-bengali-number="toBengaliNumber"
+                        @add-category="showCategoryModal = true"
+                        @add-brand="showBrandModal = true"
+                        @add-supplier="showSupplierModal = true"
                     />
                 </div>
 
@@ -226,6 +325,8 @@ import Header from "./Partials/PurchasePartials/Header.vue";
 import ProductInformation from "./Partials/PurchasePartials/ProductInformation.vue";
 import VariantsSection from "./Partials/PurchasePartials/VariantsSection.vue";
 import TotalSummary from "./Partials/PurchasePartials/TotalSummary.vue";
+import CategoryModal from "../Category/Partials/CategoryModal.vue";
+import BrandModal from "../Brand/Partials/BrandModal.vue";
 
 interface Supplier {
     id: number;
@@ -269,6 +370,17 @@ defineOptions({
 
 // Language handling
 const currentLanguage = ref(localStorage.getItem("language") || "en");
+const csrfToken =
+    (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
+        ?.content || "";
+
+const categoriesList = ref([...props.categories]);
+const brandsList = ref([...props.brands]);
+const suppliersList = ref([...props.suppliers]);
+
+const showCategoryModal = ref(false);
+const showBrandModal = ref(false);
+const showSupplierModal = ref(false);
 
 // Variant options with predefined bottle counts
 const variantOptions: VariantOption[] = [
@@ -361,6 +473,17 @@ const translations = {
         insufficientDeposit:
             "Purchase amount ({totalCost} BDT) exceeds supplier's remaining deposit ({deposit} BDT)",
         currency: "BDT",
+        noResults: "No results found",
+        quickCreateSuccess: "Created successfully",
+        quickCreateError: "Could not create item",
+        addSupplier: "Add Supplier",
+        companyName: "Company Name",
+        phoneNumber: "Phone Number",
+        address: "Address",
+        branchName: "Branch Name",
+        emergencyPhoneNumber: "Emergency Phone",
+        cancel: "Cancel",
+        save: "Save",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -443,6 +566,17 @@ const translations = {
         insufficientDeposit:
             "ক্রয়ের পরিমাণ ({totalCost} টাকা) সরবরাহকারীর বাকি আমানত ({deposit} টাকা) অতিক্রম করেছে",
         currency: "টাকা",
+        noResults: "কোন ফলাফল পাওয়া যায়নি",
+        quickCreateSuccess: "সফলভাবে তৈরি হয়েছে",
+        quickCreateError: "তৈরি করা যায়নি",
+        addSupplier: "সরবরাহকারী যোগ করুন",
+        companyName: "কোম্পানির নাম",
+        phoneNumber: "ফোন নম্বর",
+        address: "ঠিকানা",
+        branchName: "শাখার নাম",
+        emergencyPhoneNumber: "জরুরি ফোন",
+        cancel: "বাতিল",
+        save: "সংরক্ষণ",
     },
 };
 
@@ -468,6 +602,113 @@ const showModal = ref(false);
 const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref("success");
+const supplierQuickForm = ref({
+    company_name: "",
+    branch_name: "",
+    phone_number: "",
+    emergency_phone_number: "",
+    address: "",
+    email: "",
+    country: "",
+    city: "",
+    website: "",
+    notes: "",
+});
+
+const pushToast = (message: string, type: "success" | "error" = "success") => {
+    toastMessage.value = message;
+    toastType.value = type;
+    showToast.value = true;
+    setTimeout(() => (showToast.value = false), 3000);
+};
+
+const postJson = async (url: string, payload: Record<string, any>) => {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        const validationMessage =
+            data?.message ||
+            (data?.errors &&
+                Object.values(data.errors)
+                    .flat()
+                    .join(", "));
+        throw new Error(validationMessage || "Request failed");
+    }
+
+    return data;
+};
+
+const handleCategoryCreate = async (data: {
+    name: string;
+    description: string | null;
+}) => {
+    try {
+        const result = await postJson("/categories/quick-store", data);
+        categoriesList.value.push(result.category);
+        productForm.value.category_id = result.category.id.toString();
+        showCategoryModal.value = false;
+        pushToast(t("quickCreateSuccess"), "success");
+    } catch (error) {
+        pushToast(error.message || t("quickCreateError"), "error");
+    }
+};
+
+const handleBrandCreate = async (data: {
+    brand_name: string;
+    description: string | null;
+}) => {
+    try {
+        const payload = { name: data.brand_name, description: data.description };
+        const result = await postJson("/brands/quick-store", payload);
+        brandsList.value.push(result.brand);
+        productForm.value.brand_id = result.brand.id.toString();
+        showBrandModal.value = false;
+        pushToast(t("quickCreateSuccess"), "success");
+    } catch (error) {
+        pushToast(error.message || t("quickCreateError"), "error");
+    }
+};
+
+const handleSupplierCreate = async () => {
+    try {
+        const result = await postJson(
+            "/suppliers/quick-store",
+            supplierQuickForm.value
+        );
+        suppliersList.value.push({
+            ...result.supplier,
+            remaining_deposit: result.supplier.remaining_deposit || 0,
+        });
+        productForm.value.supplier_id = result.supplier.id.toString();
+        showSupplierModal.value = false;
+        pushToast(t("quickCreateSuccess"), "success");
+        supplierQuickForm.value = {
+            company_name: "",
+            branch_name: "",
+            phone_number: "",
+            emergency_phone_number: "",
+            address: "",
+            email: "",
+            country: "",
+            city: "",
+            website: "",
+            notes: "",
+        };
+    } catch (error) {
+        pushToast(error.message || t("quickCreateError"), "error");
+    }
+};
 
 // Helper functions for calculations
 const getVariantTotalBottles = (variant: ProductVariant) => {

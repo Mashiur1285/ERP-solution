@@ -246,6 +246,46 @@
                     </div>
                 </div>
 
+                <!-- Top Selling and Low Stock Products -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            {{ t("topSellingProducts") }}
+                        </h3>
+                        <ul class="space-y-2">
+                            <li
+                                v-for="product in topSellingProducts"
+                                :key="product.name"
+                                class="bg-gray-100 p-3 rounded-lg flex justify-between items-center"
+                            >
+                                <span>{{ product.name }}</span>
+                                <span class="font-bold">{{
+                                    toBengaliNumber(product.total_sold)
+                                }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            {{ t("lowStockProducts") }}
+                        </h3>
+                        <ul class="space-y-2">
+                            <li
+                                v-for="product in lowStockProducts"
+                                :key="product.product_name"
+                                class="bg-gray-100 p-3 rounded-lg flex justify-between items-center"
+                            >
+                                <span>{{ product.product_name }}</span>
+                                <span class="font-bold">{{
+                                    toBengaliNumber(
+                                        product.total_available_bottles
+                                    )
+                                }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
                 <!-- Chart View -->
                 <div v-if="viewMode === 'chart'" class="mb-6">
                     <canvas ref="inventoryChart" class="w-full h-80"></canvas>
@@ -644,6 +684,8 @@ import { Chart as ChartJS } from "chart.js/auto";
 
 const props = defineProps({
     inventoryStock: Array,
+    topSellingProducts: Array,
+    lowStockProducts: Array,
     t: Function,
     toBengaliNumber: Function,
     animatedInventoryStock: Object,

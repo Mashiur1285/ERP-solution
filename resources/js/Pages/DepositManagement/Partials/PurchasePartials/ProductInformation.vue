@@ -78,43 +78,62 @@
                             />
                         </svg>
                     </div>
-                    <select
-                        v-model="productForm.category_id"
-                        id="category_id"
-                        class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 appearance-none"
-                        :class="{
-                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                isSubmitted && !productForm.category_id,
-                        }"
-                        required
-                    >
-                        <option value="" disabled>
-                            {{ t("selectCategory") }}
-                        </option>
-                        <option
-                            v-for="category in categories"
-                            :key="category.id"
-                            :value="category.id"
-                        >
-                            {{ category.name }}
-                        </option>
-                    </select>
-                    <div
-                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                    >
-                        <svg
-                            class="w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 9l-7 7-7-7"
+                    <div class="flex">
+                        <div class="relative flex-1">
+                            <input
+                                v-model="categorySearch"
+                                @focus="showCategoryDropdown = true"
+                                @input="showCategoryDropdown = true"
+                                id="category_id"
+                                type="text"
+                                :placeholder="t('selectCategory')"
+                                class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                :class="{
+                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                        isSubmitted && !productForm.category_id,
+                                }"
+                                autocomplete="off"
                             />
-                        </svg>
+                            <div
+                                v-if="showCategoryDropdown"
+                                class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto z-20"
+                            >
+                                <button
+                                    v-for="category in filteredCategories"
+                                    :key="category.id"
+                                    type="button"
+                                    class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-sm text-gray-700"
+                                    @click="selectCategory(category)"
+                                >
+                                    {{ category.name }}
+                                </button>
+                                <div
+                                    v-if="!filteredCategories.length"
+                                    class="px-4 py-3 text-sm text-gray-500"
+                                >
+                                    {{ t("noResults") }}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="ml-2 px-3 py-3 rounded-lg border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center justify-center"
+                            @click="$emit('add-category')"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                />
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <p
@@ -149,43 +168,62 @@
                             />
                         </svg>
                     </div>
-                    <select
-                        v-model="productForm.brand_id"
-                        id="brand_id"
-                        class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 appearance-none"
-                        :class="{
-                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                isSubmitted && !productForm.brand_id,
-                        }"
-                        required
-                    >
-                        <option value="" disabled>
-                            {{ t("selectBrand") }}
-                        </option>
-                        <option
-                            v-for="brand in brands"
-                            :key="brand.id"
-                            :value="brand.id"
-                        >
-                            {{ brand.brand_name }}
-                        </option>
-                    </select>
-                    <div
-                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                    >
-                        <svg
-                            class="w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 9l-7 7-7-7"
+                    <div class="flex">
+                        <div class="relative flex-1">
+                            <input
+                                v-model="brandSearch"
+                                @focus="showBrandDropdown = true"
+                                @input="showBrandDropdown = true"
+                                id="brand_id"
+                                type="text"
+                                :placeholder="t('selectBrand')"
+                                class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                :class="{
+                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                        isSubmitted && !productForm.brand_id,
+                                }"
+                                autocomplete="off"
                             />
-                        </svg>
+                            <div
+                                v-if="showBrandDropdown"
+                                class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto z-20"
+                            >
+                                <button
+                                    v-for="brand in filteredBrands"
+                                    :key="brand.id"
+                                    type="button"
+                                    class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-sm text-gray-700"
+                                    @click="selectBrand(brand)"
+                                >
+                                    {{ brand.brand_name }}
+                                </button>
+                                <div
+                                    v-if="!filteredBrands.length"
+                                    class="px-4 py-3 text-sm text-gray-500"
+                                >
+                                    {{ t("noResults") }}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="ml-2 px-3 py-3 rounded-lg border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center justify-center"
+                            @click="$emit('add-brand')"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                />
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <p
@@ -220,47 +258,68 @@
                             />
                         </svg>
                     </div>
-                    <select
-                        v-model="productForm.supplier_id"
-                        id="supplier_id"
-                        class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 appearance-none"
-                        :class="{
-                            'border-red-400 focus:border-red-500 focus:ring-red-200':
-                                isSubmitted && !productForm.supplier_id,
-                        }"
-                        required
-                    >
-                        <option value="" disabled>
-                            {{ t("selectSupplier") }}
-                        </option>
-                        <option
-                            v-for="supplier in suppliers"
-                            :key="supplier.id"
-                            :value="supplier.id"
-                        >
-                            {{ supplier.company_name }} (৳{{
-                                toBengaliNumber(
-                                    supplier.remaining_deposit.toFixed(2)
-                                )
-                            }})
-                        </option>
-                    </select>
-                    <div
-                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                    >
-                        <svg
-                            class="w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 9l-7 7-7-7"
+                    <div class="flex">
+                        <div class="relative flex-1">
+                            <input
+                                v-model="supplierSearch"
+                                @focus="showSupplierDropdown = true"
+                                @input="showSupplierDropdown = true"
+                                id="supplier_id"
+                                type="text"
+                                :placeholder="t('selectSupplier')"
+                                class="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                :class="{
+                                    'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                        isSubmitted && !productForm.supplier_id,
+                                }"
+                                autocomplete="off"
                             />
-                        </svg>
+                            <div
+                                v-if="showSupplierDropdown"
+                                class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto z-20"
+                            >
+                                <button
+                                    v-for="supplier in filteredSuppliers"
+                                    :key="supplier.id"
+                                    type="button"
+                                    class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-sm text-gray-700"
+                                    @click="selectSupplier(supplier)"
+                                >
+                                    {{ supplier.company_name }} (৳{{
+                                        toBengaliNumber(
+                                            supplier.remaining_deposit.toFixed(
+                                                2
+                                            )
+                                        )
+                                    }})
+                                </button>
+                                <div
+                                    v-if="!filteredSuppliers.length"
+                                    class="px-4 py-3 text-sm text-gray-500"
+                                >
+                                    {{ t("noResults") }}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="ml-2 px-3 py-3 rounded-lg border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center justify-center"
+                            @click="$emit('add-supplier')"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                />
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <p
@@ -278,7 +337,9 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed, defineEmits, defineProps, ref, watch } from "vue";
+
+const props = defineProps<{
     productForm: {
         product_name: string;
         category_id: string;
@@ -297,6 +358,92 @@ defineProps<{
     t: (key: string, params?: Record<string, any>) => string;
     toBengaliNumber: (num: number | string) => string;
 }>();
+
+const emit = defineEmits<{
+    (e: "add-category"): void;
+    (e: "add-brand"): void;
+    (e: "add-supplier"): void;
+}>();
+
+const categorySearch = ref("");
+const brandSearch = ref("");
+const supplierSearch = ref("");
+const showCategoryDropdown = ref(false);
+const showBrandDropdown = ref(false);
+const showSupplierDropdown = ref(false);
+
+const filteredCategories = computed(() =>
+    props.categories.filter((c) =>
+        c.name.toLowerCase().includes(categorySearch.value.toLowerCase())
+    )
+);
+
+const filteredBrands = computed(() =>
+    props.brands.filter((b) =>
+        b.brand_name.toLowerCase().includes(brandSearch.value.toLowerCase())
+    )
+);
+
+const filteredSuppliers = computed(() =>
+    props.suppliers.filter((s) =>
+        s.company_name.toLowerCase().includes(supplierSearch.value.toLowerCase())
+    )
+);
+
+const selectCategory = (category: { id: number; name: string }) => {
+    props.productForm.category_id = category.id.toString();
+    categorySearch.value = category.name;
+    showCategoryDropdown.value = false;
+};
+
+const selectBrand = (brand: { id: number; brand_name: string }) => {
+    props.productForm.brand_id = brand.id.toString();
+    brandSearch.value = brand.brand_name;
+    showBrandDropdown.value = false;
+};
+
+const selectSupplier = (supplier: {
+    id: number;
+    company_name: string;
+    remaining_deposit: number;
+}) => {
+    props.productForm.supplier_id = supplier.id.toString();
+    supplierSearch.value = supplier.company_name;
+    showSupplierDropdown.value = false;
+};
+
+watch(
+    () => props.productForm.category_id,
+    (newVal) => {
+        if (!newVal) return;
+        const selected = props.categories.find(
+            (c) => c.id.toString() === newVal.toString()
+        );
+        if (selected) categorySearch.value = selected.name;
+    }
+);
+
+watch(
+    () => props.productForm.brand_id,
+    (newVal) => {
+        if (!newVal) return;
+        const selected = props.brands.find(
+            (b) => b.id.toString() === newVal.toString()
+        );
+        if (selected) brandSearch.value = selected.brand_name;
+    }
+);
+
+watch(
+    () => props.productForm.supplier_id,
+    (newVal) => {
+        if (!newVal) return;
+        const selected = props.suppliers.find(
+            (s) => s.id.toString() === newVal.toString()
+        );
+        if (selected) supplierSearch.value = selected.company_name;
+    }
+);
 </script>
 
 <style scoped>

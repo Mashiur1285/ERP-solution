@@ -51,6 +51,21 @@ class SupplierController extends Controller
         $this->supplierRepository->create($data);
     }
 
+    public function quickStore(StoreSupplierRequest $request)
+    {
+        $data = $request->validated();
+        $supplier = $this->supplierRepository->create($data);
+
+        if (!$supplier) {
+            return response()->json(['message' => 'Failed to create'], 422);
+        }
+
+        // Ensure remaining_deposit is present for UI rendering
+        $supplier->remaining_deposit = $supplier->remaining_deposit ?? 0;
+
+        return response()->json(['supplier' => $supplier], 201);
+    }
+
     /**
      * Display the specified resource.
      */

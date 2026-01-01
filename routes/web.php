@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('suppliers/store', [SupplierController::class, 'store'])->name('suppliers.store');
     Route::put('suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
     Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
+    Route::post('suppliers/quick-store', [SupplierController::class, 'quickStore'])->name('suppliers.quick-store');
 
     // Deposits
     Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
@@ -43,12 +44,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('categories/store', [CategoryController::class, 'store'])->name('categories.store');
     Route::put('categories/{id}/update', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('categories/{id}/delete', [CategoryController::class, 'destroy'])->name('categories.delete');
+    Route::post('categories/quick-store', [CategoryController::class, 'quickStore'])->name('categories.quick-store');
 
     // Brands
     Route::get('brands/index', [BrandController::class, 'index'])->name('brands.index');
     Route::post('brands/store', [BrandController::class, 'store'])->name('brands.store');
     Route::put('brands/{id}/update', [BrandController::class, 'update'])->name('brands.update');
     Route::delete('brands/{id}/delete', [BrandController::class, 'destroy'])->name('brands.delete');
+    Route::post('brands/quick-store', [BrandController::class, 'quickStore'])->name('brands.quick-store');
 
     // Purchases/Products
     Route::get('purchases', [ProductPurchaseController::class, 'index'])->name('purchases.index');

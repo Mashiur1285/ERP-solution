@@ -26,14 +26,27 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        $shopDuesDate = $request->query('shop_dues_date', Carbon::now()->toDateString());
+        $dailySalesDate = $request->query('daily_sales_date', Carbon::now()->toDateString());
+
+        // Get date range for the graph (default last 6 days including today)
+        $graphEndDate = $request->query('graph_end_date', Carbon::now()->toDateString());
+        $graphStartDate = $request->query('graph_start_date', Carbon::now()->subDays(5)->toDateString());
+
         $suppliers = $this->supplierRepository->all();
-        $shops = $this->shopRepository->getAllShopsWithDues();
+        $shops = $this->shopRepository->getAllShopsWithDues($shopDuesDate);
+        $dateWiseSalesData = $this->shopRepository->getDateWiseSalesData($graphStartDate, $graphEndDate);
         $topDeposits = $this->depositRepository
             ->totalRemainingDepositsBySupplier()
             ->take(5);
 
         // Fetch inventory stock
         $inventoryStock = $this->productPurchaseRepository->getInventoryStock();
+        $topSellingProducts = $this->productPurchaseRepository->getTopSellingProducts(5);
+        $lowStockProducts = $this->productPurchaseRepository->getLowStockProducts(10);
+        $todaysLiftingCount = $this->productPurchaseRepository->query()
+            ->whereDate('date', $dailySalesDate)
+            ->count();
 
         // Get month and year from query parameters, default to current month
         $month = $request->query('month', Carbon::now()->month);
@@ -48,7 +61,7 @@ class DashboardController extends Controller
         $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
 
         $monthlySales = $this->salesRepository->query()
-            ->whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->with('items')
             ->get();
 
@@ -70,11 +83,27 @@ class DashboardController extends Controller
         $totalExpenses = $monthlyExpenses->count();
         $totalExpenseAmount = $monthlyExpenses->sum('amount');
 
+        $sales = $this->salesRepository->query()
+            ->whereDate('created_at', $dailySalesDate)
+            ->with('items', 'shop')
+            ->get();
+
+        $todaysExpensesAmount = $this->expenseRepository->query()
+            ->whereDate('created_at', $dailySalesDate)
+            ->sum('amount');
+
+        $totalShopsSold = $sales->pluck('shop_id')->unique()->count();
+        $totalCasesSold = $sales->flatMap->items->sum('cases_sold');
+
+
         return Inertia::render('Dashboard/Dashboard', [
             'suppliers' => $suppliers,
             'shops' => $shops,
+            'dateWiseSalesData' => $dateWiseSalesData,
             'topDeposits' => $topDeposits,
             'inventoryStock' => $inventoryStock,
+            'topSellingProducts' => $topSellingProducts,
+            'lowStockProducts' => $lowStockProducts,
             'monthlySales' => [
                 'total_sales' => $totalSales,
                 'paid_amount' => $totalPaid,
@@ -88,6 +117,11 @@ class DashboardController extends Controller
             ],
             'month' => $month,
             'year' => $year,
+            'sales' => $sales,
+            'totalShopsSold' => $totalShopsSold,
+            'totalCasesSold' => $totalCasesSold,
+            'todaysExpensesAmount' => $todaysExpensesAmount,
+            'todaysLiftingCount' => $todaysLiftingCount,
         ]);
     }
 }
