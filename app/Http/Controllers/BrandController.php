@@ -76,6 +76,21 @@ class BrandController extends Controller
         return redirect()->route('brands.index')->with('success', 'Brand updated successfully');
     }
 
+    public function quickStore(StoreBrandRequest $request)
+    {
+        $data = $request->validated();
+        $data['brand_name'] = $data['name'];
+        unset($data['name']);
+
+        $brand = $this->brandRepository->create($data);
+
+        if (!$brand) {
+            return response()->json(['message' => 'Failed to create'], 422);
+        }
+
+        return response()->json(['brand' => $brand], 201);
+    }
+
     /**
      * Remove the specified resource from storage.
      */

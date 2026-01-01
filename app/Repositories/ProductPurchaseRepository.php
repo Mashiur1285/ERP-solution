@@ -234,4 +234,22 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             'total_cases' => $variantData['number_of_cases'] ?? 0,
         ];
     }
+
+    public function getTopSellingProducts(int $limit): Collection
+    {
+        return DB::table('sale_items')
+            ->select('products.name', DB::raw('SUM(sale_items.total_bottles_sold) as total_sold'))
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->groupBy('products.name')
+            ->orderByDesc('total_sold')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getLowStockProducts(int $threshold): Collection
+    {
+        return $this->getInventoryStock()->filter(function ($product) use ($threshold) {
+            return $product['total_available_bottles'] < $threshold;
+        });
+    }
 }

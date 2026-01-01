@@ -47,6 +47,18 @@ class CategoryController extends Controller
             ->with('error', 'Failed to create category.');
     }
 
+    public function quickStore(StoreCategoryRequest $request)
+    {
+        $data = $request->validated();
+        $category = $this->categoryRepository->create($data);
+
+        if (!$category) {
+            return response()->json(['message' => 'Failed to create'], 422);
+        }
+
+        return response()->json(['category' => $category], 201);
+    }
+
     /**
      * Display the specified resource.
      */

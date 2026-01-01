@@ -1,7 +1,6 @@
-```vue
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="p-3 space-y-4 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle and Logout -->
@@ -30,35 +29,45 @@
             </button>
         </div>
 
-        <!-- Dashboard Title -->
-        <div
-            class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"
-        >
-            <h1
-                class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
-            >
-                <div
-                    class="p-2 mr-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center shadow-lg"
-                >
-                    <svg
-                        class="w-8 h-8 text-indigo-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                        />
-                    </svg>
-                </div>
-                {{ t("dashboardTitle") }}
-            </h1>
-        </div>
-
         <!-- Child Components -->
+        <SalesOverview
+            :monthlySales="monthlySales"
+            :month="month"
+            :year="year"
+            :animatedTotalSales="animatedTotalSales"
+            :animatedPaidAmount="animatedPaidAmount"
+            :animatedDueAmount="animatedDueAmount"
+            :animatedProfit="animatedProfit"
+            :animatedLoss="animatedLoss"
+            :t="t"
+            :toBengaliNumber="toBengaliNumber"
+            :selectedMonthYear="selectedMonthYear"
+            :navigateToPreviousMonth="navigateToPreviousMonth"
+            :navigateToNextMonth="navigateToNextMonth"
+            :loading="loading"
+            :shops="shops"
+            :dateWiseSalesData="dateWiseSalesData"
+            :sales="sales"
+            :totalShopsSold="totalShopsSold"
+            :totalCasesSold="totalCasesSold"
+            :todaysExpensesAmount="todaysExpensesAmount"
+            :topSellingProducts="topSellingProducts"
+            :lowStockProducts="lowStockProducts"
+            :todaysLiftingCount="todaysLiftingCount"
+            :inventoryStock="inventoryStock"
+        />
+
+        <!-- InventoryStock
+        <InventoryStock
+            :inventoryStock="inventoryStock"
+            :topSellingProducts="topSellingProducts"
+            :lowStockProducts="lowStockProducts"
+            :t="t"
+            :toBengaliNumber="toBengaliNumber"
+            :animatedInventoryStock="animatedInventoryStock"
+        /> -->
+        <!-- Total Suppliers / Deposit Remaining / Total Shops -->
+        <!--
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <TopSuppliers
                 :suppliers="suppliers"
@@ -80,6 +89,8 @@
                 :toBengaliNumber="toBengaliNumber"
             />
         </div>
+        -->
+        <!-- ExpensesOverview
         <ExpensesOverview
             :monthlyExpenses="monthlyExpenses"
             :month="month"
@@ -92,29 +103,7 @@
             :navigateToPreviousMonth="navigateToPreviousMonth"
             :navigateToNextMonth="navigateToNextMonth"
             :loading="loading"
-        />
-        <SalesOverview
-            :monthlySales="monthlySales"
-            :month="month"
-            :year="year"
-            :animatedTotalSales="animatedTotalSales"
-            :animatedPaidAmount="animatedPaidAmount"
-            :animatedDueAmount="animatedDueAmount"
-            :animatedProfit="animatedProfit"
-            :animatedLoss="animatedLoss"
-            :t="t"
-            :toBengaliNumber="toBengaliNumber"
-            :selectedMonthYear="selectedMonthYear"
-            :navigateToPreviousMonth="navigateToPreviousMonth"
-            :navigateToNextMonth="navigateToNextMonth"
-            :loading="loading"
-        />
-        <InventoryStock
-            :inventoryStock="inventoryStock"
-            :t="t"
-            :toBengaliNumber="toBengaliNumber"
-            :animatedInventoryStock="animatedInventoryStock"
-        />
+        /> -->
     </div>
 </template>
 
@@ -136,11 +125,21 @@ const props = defineProps({
     topDeposits: Array,
     suppliers: Array,
     shops: Array,
+    dateWiseSalesData: Array,
     monthlySales: Object,
     monthlyExpenses: Object,
     month: Number,
     year: Number,
     inventoryStock: Array,
+    topSellingProducts: Array,
+    lowStockProducts: Array,
+    sales: Array,
+    totalShopsSold: Number,
+    totalCasesSold: Number,
+    todaysExpensesAmount: Number,
+    topSellingProducts: Array,
+    lowStockProducts: Array,
+    todaysLiftingCount: Number,
 });
 
 // Translation object
@@ -156,7 +155,6 @@ const translations = {
         totalShops: "Shops",
         registeredShops: "Registered shops in the system",
         shop: "Shop",
-        salesOverview: "Sales Overview",
         expensesOverview: "Expenses Overview",
         previousMonth: "Previous month",
         nextMonth: "Next month",
@@ -173,6 +171,8 @@ const translations = {
         totalExpenses: "Total Expenses",
         totalAmount: "Total Amount",
         inventoryStock: "Inventory Stock",
+        topSellingProducts: "Top Selling Products",
+        lowStockProducts: "Low Stock Products",
         totalQuantity: "Total Quantity",
         totalValue: "Total Value",
         totalProducts: "Total Products",
@@ -189,6 +189,27 @@ const translations = {
         unitPrice: "Unit Price",
         stockLevel: "Stock Level",
         logout: "Logout",
+        shopDues: "Shop Dues",
+        amount: "Amount",
+        shops: "Shops",
+        dailySales: "Daily Sales",
+        shopName: "Shop Name",
+        total: "Total",
+        totalShopsSold: "Total Shops Sold",
+        totalCasesSold: "Total Cases Sold",
+        todaysSnapshot: "Today's Snapshot",
+        todaysSell: "Today's Sales",
+        totalShops: "Total Shops",
+        totalCases: "Total Cases (Box)",
+        monthlySell: "This Month's Sales",
+        todaysExpenses: "Today's Expenses",
+        topProduct: "Top Product",
+        lowStock: "Low Stock",
+        todaysLifting: "Today's Lifting",
+        fastMoving: "Fast Moving",
+        fastMovingLowStock: "Fast Moving (Low Stock)",
+        slowMoving: "Slow Moving",
+        slowMovingHighStock: "Slow Moving (High Stock)",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -201,7 +222,6 @@ const translations = {
         totalShops: "দোকান",
         registeredShops: "সিস্টেমে নিবন্ধিত দোকান",
         shop: "দোকান",
-        salesOverview: "বিক্রয় ওভারভিউ",
         expensesOverview: "ব্যয় ওভারভিউ",
         previousMonth: "পূর্ববর্তী মাস",
         nextMonth: "পরবর্তী মাস",
@@ -218,6 +238,8 @@ const translations = {
         totalExpenses: "মোট ব্যয়",
         totalAmount: "মোট পরিমাণ",
         inventoryStock: "ইনভেন্টরি স্টক",
+        topSellingProducts: "সর্বাধিক বিক্রিত পণ্য",
+        lowStockProducts: "কম স্টক পণ্য",
         totalQuantity: "মোট পরিমাণ",
         totalValue: "মোট মূল্য",
         totalProducts: "মোট পণ্য",
@@ -234,6 +256,27 @@ const translations = {
         unitPrice: "একক দাম",
         stockLevel: "স্টক লেভেল",
         logout: "লগআউট",
+        shopDues: "দোকানের বাকি",
+        amount: "টাকার পরিমাণ",
+        shops: "দোকান",
+        dailySales: "দৈনিক বিক্রয়",
+        shopName: " দোকানের নাম",
+        total: "মোট",
+        totalShopsSold: "মোট দোকান বিক্রি",
+        totalCasesSold: "মোট কেস বিক্রি",
+        todaysSnapshot: "আজকের সারাংশ",
+        todaysSell: "আজকের বিক্রয়",
+        totalShops: "মোট দোকান",
+        totalCases: "মোট কেস (বক্স)",
+        monthlySell: "এই মাসের বিক্রয়",
+        todaysExpenses: "আজকের খরচ",
+        topProduct: "শীর্ষ পণ্য",
+        lowStock: "কম স্টক",
+        todaysLifting: "আজকের লিফটিং",
+        fastMoving: "দ্রুত বিক্রিত",
+        fastMovingLowStock: "দ্রুত বিক্রিত (কম স্টক)",
+        slowMoving: "ধীর বিক্রিত",
+        slowMovingHighStock: "ধীর বিক্রিত (বেশি স্টক)",
     },
 };
 
@@ -680,4 +723,3 @@ const getBarWidth = (amount) => {
     --tw-gradient-to: #f9fafb;
 }
 </style>
-```

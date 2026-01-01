@@ -15,4 +15,8 @@ interface ProductPurchaseContract
     public function updateInventory(Model $product, string $variant, int $soldPurchasedBottles, int $soldFreeBottles = 0): void;
 
     public function getVariantInventory(int $productId, string $variant): ?array;
+
+    public function getTopSellingProducts(int $limit): Collection;
+
+    public function getLowStockProducts(int $threshold): Collection;
 }

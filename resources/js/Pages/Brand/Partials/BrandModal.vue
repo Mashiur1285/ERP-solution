@@ -19,9 +19,7 @@
                 @click.stop
             >
                 <!-- Modal header -->
-                <div
-                    class="bg-gradient-to-r from-indigo-200 to-purple-200 px-6 py-4"
-                >
+                <div class="bg-white px-6 py-4 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h3
                             id="modal-title"
@@ -67,7 +65,7 @@
                         </h3>
                         <button
                             @click="$emit('close')"
-                            class="text-gray-800 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-white hover:bg-opacity-20"
+                            class="text-gray-800 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
                             aria-label="Close modal"
                         >
                             <svg
@@ -88,7 +86,7 @@
                 </div>
 
                 <!-- Modal body -->
-                <div class="px-6 py-6">
+                <div class="px-6 py-6 bg-white">
                     <div class="space-y-6">
                         <!-- Brand Name -->
                         <div>
@@ -216,7 +214,7 @@
                         <!-- Preview Section -->
                         <div
                             v-if="brandForm.brand_name"
-                            class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100"
+                                class="bg-white rounded-xl p-4 border border-gray-200"
                         >
                             <h4
                                 class="text-sm font-semibold text-gray-800 mb-3 flex items-center"
@@ -303,7 +301,7 @@
                     </button>
                     <button
                         @click="submit"
-                        class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-200 to-purple-200 text-gray-800 font-semibold rounded-xl hover:from-indigo-300 hover:to-purple-300 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                        class="w-full sm:w-auto px-6 py-3 bg-white text-gray-800 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 flex items-center justify-center space-x-2 shadow"
                         :disabled="isLoading"
                     >
                         <svg

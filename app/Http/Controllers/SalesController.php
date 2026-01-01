@@ -345,6 +345,9 @@ class SalesController extends Controller
         $query = $this->salesRepository->query()->with(['shop', 'items.product', 'supplier']);
 
         // Apply filters
+        if ($request->id) {
+            $query->where('id', $request->id);
+        }
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('sale_date', [$request->start_date, $request->end_date]);
         }
@@ -416,6 +419,7 @@ class SalesController extends Controller
             'products' => $products,
             'suppliers' => $suppliers,
             'filters' => [
+                'id' => $request->id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'shop_id' => $request->shop_id,
