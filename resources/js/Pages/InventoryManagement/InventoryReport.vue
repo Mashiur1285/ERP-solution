@@ -58,36 +58,31 @@
             </h1>
         </div>
 
-        <!-- Search and Total Metrics -->
-        <div class="space-y-6 mb-6">
-            <!-- Search Field -->
-            <div class="flex justify-end">
-                <div class="relative w-full sm:w-80">
-                    <div
-                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                    >
-                        <svg
-                            class="w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                        </svg>
-                    </div>
-                    <input
-                        v-model="searchQuery"
-                        type="text"
-                        :placeholder="getTranslation('searchProducts')"
-                        class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
-                    />
+        <!-- Search & Filter Fields -->
+        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
+            <DateRangePicker
+                v-model:startDate="dateStart"
+                v-model:endDate="dateEnd"
+                :language="currentLanguage"
+                class="w-full sm:w-auto"
+            />
+            <div class="relative w-full sm:w-80">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </div>
+                <input
+                    v-model="searchQuery"
+                    type="text"
+                    :placeholder="getTranslation('searchProducts')"
+                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                />
             </div>
+        </div>
+
+        <!-- Total Metrics -->
+        <div class="space-y-6 mb-6">
 
             <!-- Total Metrics -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -887,6 +882,7 @@
 <script setup>
 import { defineProps, ref, computed } from "vue";
 import Layout from "@/Layout.vue";
+import DateRangePicker from "../../Components/DateRangePicker.vue";
 
 defineOptions({ layout: Layout });
 
@@ -939,6 +935,12 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedVariants = ref({});
 
+// Date range state (default: today) – decorative for inventory snapshot
+const _todayInv = new Date();
+const _todayStrInv = `${_todayInv.getFullYear()}-${String(_todayInv.getMonth() + 1).padStart(2, "0")}-${String(_todayInv.getDate()).padStart(2, "0")}`;
+const dateStart = ref(_todayStrInv);
+const dateEnd = ref(_todayStrInv);
+
 // Process inventory stock to include total_quantity, total_cases, and total_value
 const processedInventory = computed(() => {
     return props.inventoryStock.map((item) => {
@@ -965,23 +967,41 @@ const processedInventory = computed(() => {
     });
 });
 
-const totalProducts = computed(() => processedInventory.value.length);
+const totalProducts = computed(() => filteredInventory.value.length);
 const totalQuantity = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_quantity, 0)
+    filteredInventory.value.reduce((sum, item) => sum + item.total_quantity, 0)
 );
 const totalCases = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_cases, 0)
+    filteredInventory.value.reduce((sum, item) => sum + item.total_cases, 0)
 );
 const totalPurchaseValue = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_value, 0)
+    filteredInventory.value.reduce((sum, item) => sum + item.total_value, 0)
 );
 
 const filteredInventory = computed(() => {
-    if (!searchQuery.value) return processedInventory.value;
-    const query = searchQuery.value.toLowerCase();
-    return processedInventory.value.filter((item) =>
-        item.product_name.toLowerCase().includes(query)
-    );
+    let result = processedInventory.value;
+
+    // Apply date range filter
+    if (dateStart.value || dateEnd.value) {
+        result = result.filter((item) => {
+            const pDateStr = item.purchase_date ? String(item.purchase_date).split('T')[0] : null;
+            if (!pDateStr) return false;
+            
+            if (dateStart.value && pDateStr < dateStart.value) return false;
+            if (dateEnd.value && pDateStr > dateEnd.value) return false;
+            return true;
+        });
+    }
+
+    // Apply search filter
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter((item) =>
+            item.product_name.toLowerCase().includes(query)
+        );
+    }
+
+    return result;
 });
 
 function getTranslation(key) {

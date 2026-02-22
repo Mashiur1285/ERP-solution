@@ -69,6 +69,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             products.id,
             products.name as product_name,
             products.supplier_id,
+            products.date as purchase_date,
             suppliers.company_name as supplier_name,
             variant_data
         FROM products
@@ -97,6 +98,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'product_name' => $item->product_name,
                 'supplier_id' => $item->supplier_id,
                 'supplier_name' => $item->supplier_name,
+                'purchase_date' => $item->purchase_date,
                 'variant' => $variant['variant'] ?? 'N/A',
                 'purchased_bottles_available' => $currentPurchased,
                 'free_bottles_available' => $currentFree,
@@ -133,6 +135,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                     'product_name' => $variantGroup->first()['product_name'],
                     'supplier_id' => $variantGroup->first()['supplier_id'],
                     'supplier_name' => $variantGroup->first()['supplier_name'],
+                    'purchase_date' => $variantGroup->first()['purchase_date'],
                     'variant' => $variantName,
                     'purchased_bottles_available' => $totalPurchasedBottles,
                     'free_bottles_available' => $totalFreeBottles,
@@ -150,6 +153,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'product_id' => $productGroup->first()['product_id'],
                 'supplier_id' => $productGroup->first()['supplier_id'],
                 'supplier_name' => $productGroup->first()['supplier_name'],
+                'purchase_date' => $productGroup->first()['purchase_date'],
                 'variants' => $aggregatedVariants,
                 'total_available_bottles' => $aggregatedVariants->sum('total_bottles_available'),
                 'total_available_cases' => $aggregatedVariants->sum('cases_available'),

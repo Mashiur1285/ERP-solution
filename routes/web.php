@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductPurchaseController;
 use App\Http\Controllers\SalesController; // Fixed: Correct namespace
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\LiftController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -53,10 +54,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('brands/{id}/delete', [BrandController::class, 'destroy'])->name('brands.delete');
     Route::post('brands/quick-store', [BrandController::class, 'quickStore'])->name('brands.quick-store');
 
-    // Purchases/Products
+    // Purchases/Products (legacy)
     Route::get('purchases', [ProductPurchaseController::class, 'index'])->name('purchases.index');
     Route::post('products-store', [ProductPurchaseController::class, 'storeProductPurchase'])->name('products.store');
     Route::get('/purchases/report', [ProductPurchaseController::class, 'purchaseReport'])->name('purchases.report');
+
+    // Lifts (new purchase system)
+    Route::get('lifts', [LiftController::class, 'index'])->name('lifts.index');
+    Route::post('lifts/store', [LiftController::class, 'store'])->name('lifts.store');
+    Route::get('lifts/report', [LiftController::class, 'report'])->name('lifts.report');
+    Route::get('/api/product-catalog/search', [LiftController::class, 'searchProducts']);
+    Route::post('/api/product-catalog/quick-store', [LiftController::class, 'quickStoreProduct']);
 
     // Shops
     Route::get('shops', [ShopController::class, 'index'])->name('shops.index');
@@ -76,6 +84,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API Routes for Sales
     Route::get('/api/products-by-supplier', [SalesController::class, 'getProductsBySupplier']);
     Route::get('/api/variant-inventory', [SalesController::class, 'getVariantInventory']);
+    Route::get('/api/inventory/search', [SalesController::class, 'searchInventoryProducts']);
 
     // Inventory Report
     Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->name('inventory.report');

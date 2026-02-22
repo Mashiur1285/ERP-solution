@@ -80,57 +80,43 @@
             </div>
         </div>
 
-        <!-- Search and Add Button -->
-        <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-        >
-            <!-- Search Field -->
-            <div class="relative w-full sm:w-80">
-                <div
-                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                >
-                    <svg
-                        class="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                    </svg>
-                </div>
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    :placeholder="getTranslation('searchExpenses')"
-                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
-                />
-            </div>
-
-            <!-- Add Expense Button -->
-            <button
-                @click="showExpenseModal = true"
-                class="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-            >
-                <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+        <!-- Search, Filter & Add Button -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <!-- Date Range Picker -->
+            <DateRangePicker
+                v-model:startDate="dateStart"
+                v-model:endDate="dateEnd"
+                :language="currentLanguage"
+                class="w-full sm:w-auto"
+            />
+            
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <!-- Search Field -->
+                <div class="relative w-full sm:w-80">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        :placeholder="getTranslation('searchExpenses')"
+                        class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
                     />
-                </svg>
-                <span>{{ getTranslation("addExpense") }}</span>
-            </button>
+                </div>
+
+                <!-- Add Expense Button -->
+                <button
+                    @click="showExpenseModal = true"
+                    class="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl w-full sm:w-auto whitespace-nowrap"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>{{ getTranslation("addExpense") }}</span>
+                </button>
+            </div>
         </div>
 
         <!-- Summary Metrics -->
@@ -639,6 +625,7 @@ import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import ExpenseModal from "./Partials/ExpenseModal.vue";
+import DateRangePicker from "../../Components/DateRangePicker.vue";
 
 interface Expense {
     id: number;
@@ -707,22 +694,41 @@ const editMode = ref(false);
 const currentExpense = ref<Expense | null>(null);
 const expandedExpenses = ref({});
 
+// Date range state (default: today)
+const _todayExp = new Date();
+const _todayStrExp = `${_todayExp.getFullYear()}-${String(_todayExp.getMonth() + 1).padStart(2, "0")}-${String(_todayExp.getDate()).padStart(2, "0")}`;
+const dateStart = ref(_todayStrExp);
+const dateEnd = ref(_todayStrExp);
+
 const form = useForm({
     reason: "",
     description: null,
     amount: null,
 });
 
-// Filter expenses based on search query
+// Filter expenses based on search query + date range
 const filteredExpenses = computed(() => {
-    if (!searchQuery.value) return props.expenses;
     const query = searchQuery.value.toLowerCase();
-    return props.expenses.filter(
-        (expense) =>
-            expense.reason.toLowerCase().includes(query) ||
-            (expense.description &&
-                expense.description.toLowerCase().includes(query))
-    );
+
+    return props.expenses.filter((expense) => {
+        // Date range filter by created_at
+        if (dateStart.value || dateEnd.value) {
+            const eDateStr = expense.created_at ? String(expense.created_at).split('T')[0] : null;
+            if (!eDateStr) return false;
+            if (dateStart.value && eDateStr < dateStart.value) return false;
+            if (dateEnd.value && eDateStr > dateEnd.value) return false;
+        }
+
+        // Search filter
+        if (query) {
+            return (
+                expense.reason.toLowerCase().includes(query) ||
+                (expense.description &&
+                    expense.description.toLowerCase().includes(query))
+            );
+        }
+        return true;
+    });
 });
 
 // Summary statistics

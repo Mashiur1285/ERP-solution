@@ -1,15 +1,15 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="min-h-screen bg-gray-100 flex flex-col"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
-        <!-- Toast Notification -->
+        <!-- Toast -->
         <ToastNotification
             :show="showToast"
             :message="toastMessage"
             :type="toastType"
             :t="t"
-            @close="closeToast"
+            @close="showToast = false"
         />
 
         <!-- Confirmation Modal -->
@@ -20,167 +20,354 @@
             :current-language="currentLanguage"
             :t="t"
             :to-bengali-number="toBengaliNumber"
-            @close="closeModal"
+            @close="showModal = false"
             @confirm="confirmSale"
         />
 
         <!-- Header -->
-        <SalesHeader
-            :current-language="currentLanguage"
-            :t="t"
-            @change-language="changeLanguage"
-        />
+        <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div class="p-1.5 bg-indigo-100 rounded-lg">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                </div>
+                {{ t('salesManagement') }}
+            </h1>
+            <div class="flex gap-2">
+                <button
+                    @click="changeLanguage('en')"
+                    :class="['px-3 py-1.5 rounded text-sm font-medium transition-colors', currentLanguage === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200']"
+                >English</button>
+                <button
+                    @click="changeLanguage('bn')"
+                    :class="['px-3 py-1.5 rounded text-sm font-medium transition-colors', currentLanguage === 'bn' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200']"
+                >বাংলা</button>
+            </div>
+        </div>
 
-        <!-- Main Form Container -->
-        <div
-            class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl"
-        >
-            <!-- Form Header -->
-            <div class="flex items-center justify-between mb-8">
-                <h2
-                    class="text-2xl font-semibold text-gray-800 flex items-center"
-                >
-                    <div class="p-2 mr-3 bg-indigo-200 rounded-full">
-                        <svg
-                            class="w-6 h-6 text-indigo-700"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+        <!-- POS Layout -->
+        <div class="flex flex-1 gap-4 p-4 min-h-0">
+
+            <!-- LEFT: Product search + cart -->
+            <div class="flex-1 space-y-4 overflow-y-auto">
+
+                <!-- Product Search -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ t('searchProduct') }}
+                    </label>
+                    <div class="relative" ref="searchBoxRef">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg v-if="!searchLoading" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <svg v-else class="w-4 h-4 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </div>
+                        <input
+                            v-model="searchQuery"
+                            @input="onSearchInput"
+                            @focus="onSearchFocus"
+                            type="text"
+                            :placeholder="detectedSupplierName ? t('searchAllOrPickFromSupplier') : t('typeToSearch')"
+                            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                        />
+                        <!-- Dropdown -->
+                        <div
+                            v-if="showSearchDropdown && dropdownVisible"
+                            class="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                            />
-                        </svg>
+                            <!-- Suggestions: same supplier (shown when query is empty) -->
+                            <template v-if="!searchQuery.trim() && suggestedProducts.length > 0">
+                                <div class="px-3 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center gap-1.5">
+                                    <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    <span class="text-xs font-semibold text-indigo-600">{{ t('moreFromSupplier') }}: {{ detectedSupplierName }}</span>
+                                </div>
+                                <div
+                                    v-for="product in suggestedProducts"
+                                    :key="'sug-' + product.product_id"
+                                    @mousedown.prevent="selectProduct(product)"
+                                    class="flex items-center justify-between px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-colors"
+                                >
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">{{ product.product_name }}</p>
+                                        <p class="text-xs text-gray-400 mt-0.5">{{ product.variants?.length || 0 }} {{ t('variants') }}</p>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-4 flex-shrink-0">
+                                        {{ product.total_available_bottles }} {{ t('bottlesAvailable') }}
+                                    </span>
+                                </div>
+                                <div class="px-3 py-2 border-t border-gray-100 text-center">
+                                    <span class="text-xs text-gray-400">{{ t('typeToSearchAll') }}</span>
+                                </div>
+                            </template>
+
+                            <!-- Search results (shown when typing) -->
+                            <template v-else-if="searchQuery.trim()">
+                                <div v-if="searchResults.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">
+                                    {{ t('noProductsFound') }}
+                                </div>
+                                <div
+                                    v-for="product in searchResults"
+                                    :key="'res-' + product.product_id"
+                                    @mousedown.prevent="selectProduct(product)"
+                                    class="flex items-center justify-between px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-colors"
+                                    :class="{ 'bg-indigo-50/30': detectedSupplierId && product.supplier_id === detectedSupplierId }"
+                                >
+                                    <div>
+                                        <div class="flex items-center gap-1.5">
+                                            <p class="text-sm font-medium text-gray-800">{{ product.product_name }}</p>
+                                            <span v-if="detectedSupplierId && product.supplier_id === detectedSupplierId"
+                                                class="text-xs bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-medium">
+                                                {{ t('sameSupplier') }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5">
+                                            {{ product.supplier_name }} &middot; {{ product.variants?.length || 0 }} {{ t('variants') }}
+                                        </p>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-4 flex-shrink-0">
+                                        {{ product.total_available_bottles }} {{ t('bottlesAvailable') }}
+                                    </span>
+                                </div>
+                            </template>
+
+                            <!-- Empty state when no cart items and empty query -->
+                            <template v-else>
+                                <div class="px-4 py-6 text-center text-gray-400 text-sm">
+                                    {{ t('typeToSearch') }}
+                                </div>
+                            </template>
+                        </div>
                     </div>
-                    {{ t("createNewSale") }}
-                </h2>
-            </div>
+                </div>
 
-            <!-- Sale Information Section -->
-            <div class="mb-8">
-                <SaleInformation
-                    :sale-form="saleForm"
-                    :shops="props.shops"
-                    :suppliers="props.suppliers"
-                    :is-submitted="isSubmitted"
-                    :current-language="currentLanguage"
-                    :t="t"
-                    :to-bengali-number="toBengaliNumber"
-                    @supplier-change="onSupplierChange"
-                />
-            </div>
-
-            <!-- Products Section -->
-            <div class="mb-8" v-if="saleForm.supplier_id">
-                <SaleItemsSection
-                    :sale-form="saleForm"
-                    :available-products="availableProducts"
-                    :include-free-bottles="includeFreeBottles"
-                    :is-submitted="isSubmitted"
-                    :current-language="currentLanguage"
-                    :t="t"
-                    :to-bengali-number="toBengaliNumber"
-                    :show-toggle="showToggleButton"
-                    @add-item="addSaleItem"
-                    @remove-item="removeSaleItem"
-                    @item-change="handleItemChange"
-                    @variant-change="onVariantChange"
-                    @toggle-free-bottles="onToggleFreeBottles"
-                    @item-input-complete="checkToggleVisibility"
-                />
-            </div>
-
-            <!-- Total Summary -->
-            <div class="mb-8" v-if="saleForm.items.length > 0">
-                <SaleTotalSummary
-                    :sale-form="saleForm"
-                    :sale-summary="saleSummary"
-                    :include-free-bottles="includeFreeBottles"
-                    :available-products="availableProducts"
-                    :current-language="currentLanguage"
-                    :t="t"
-                    :to-bengali-number="toBengaliNumber"
-                />
-            </div>
-
-            <!-- Action Buttons -->
-            <div
-                class="flex justify-end space-x-4 pt-6 border-t border-gray-200"
-            >
-                <button
-                    @click="resetForm"
-                    class="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center space-x-2"
-                >
-                    <svg
-                        class="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
+                <!-- Cart Items -->
+                <div v-if="cartItems.length === 0" class="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    <span>{{ t("resetForm") }}</span>
-                </button>
-                <button
-                    @click="openModal"
-                    class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-                    :disabled="isLoading || saleForm.items.length === 0"
-                >
-                    <svg
-                        v-if="isLoading"
-                        class="w-5 h-5 animate-spin"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <p class="text-gray-400 text-sm">{{ t('searchToAddProducts') }}</p>
+                </div>
+
+                <div v-for="(item, index) in cartItems" :key="index" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                    <!-- Item header -->
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 bg-indigo-600 text-white text-xs rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                {{ index + 1 }}
+                            </span>
+                            <span class="font-semibold text-gray-800 text-sm">{{ item.product_name }}</span>
+                        </div>
+                        <button
+                            @click="removeCartItem(index)"
+                            class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Fields row -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- Variant -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('variant') }}</label>
+                            <select
+                                v-model="item.selected_variant"
+                                @change="onVariantSelect(index)"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none bg-white"
+                                :class="{ 'border-red-300': isSubmitted && !item.selected_variant }"
+                            >
+                                <option value="">{{ t('selectVariant') }}</option>
+                                <option v-for="v in item.available_variants" :key="v.variant" :value="v.variant">
+                                    {{ v.variant }}
+                                    ({{ v.purchased_bottles_available + v.free_bottles_available }} {{ t('avail') }})
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Cases -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('cases') }}</label>
+                            <input
+                                v-model.number="item.cases"
+                                type="number"
+                                min="1"
+                                :placeholder="t('cases')"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
+                                :class="{ 'border-red-300': isSubmitted && !(item.cases > 0) }"
+                            />
+                            <p v-if="item.bottles_per_case" class="text-xs text-gray-400 mt-0.5">
+                                {{ item.bottles_per_case }}/{{ t('case') }}
+                                <span v-if="item.free_bottles_per_case > 0" class="text-green-600">+{{ item.free_bottles_per_case }} {{ t('free') }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Price per case -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('pricePerCase') }} (৳)</label>
+                            <input
+                                v-model.number="item.price_per_case"
+                                type="number"
+                                min="0"
+                                :placeholder="t('pricePerCase')"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
+                                :class="{ 'border-red-300': isSubmitted && !(item.price_per_case > 0) }"
+                            />
+                            <p v-if="getItemSubtotal(item) > 0" class="text-xs text-indigo-600 mt-0.5 font-medium">
+                                ৳{{ formatNumber(getItemSubtotal(item)) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT: Sticky invoice panel -->
+            <div class="w-72 flex-shrink-0">
+                <div class="sticky top-4 space-y-3">
+
+                    <!-- Sale Details card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-3">
+                        <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">{{ t('saleDetails') }}</h3>
+
+                        <!-- Shop -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('shopName') }}*</label>
+                            <select
+                                v-model="shopId"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none bg-white"
+                                :class="{ 'border-red-300': isSubmitted && !shopId }"
+                            >
+                                <option value="">{{ t('selectShop') }}</option>
+                                <option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.shop_name }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Suppliers (auto from cart) -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('supplier') }}</label>
+                            <div v-if="cartSuppliers.length === 0"
+                                class="px-3 py-2 rounded-lg border border-dashed border-gray-200 text-xs text-gray-400 text-center">
+                                {{ t('suppliersFromCart') }}
+                            </div>
+                            <div v-else class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="sup in cartSuppliers"
+                                    :key="sup.id"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700"
+                                >
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                    </svg>
+                                    {{ sup.name }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('saleDate') }}*</label>
+                            <input
+                                v-model="saleDate"
+                                type="date"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
+                                :class="{ 'border-red-300': isSubmitted && !saleDate }"
+                            />
+                        </div>
+
+                        <!-- Free bottles toggle -->
+                        <div class="flex items-center justify-between py-1">
+                            <span class="text-xs font-medium text-gray-600">{{ t('includeFreeBottles') }}</span>
+                            <button
+                                @click="includeFreeBottles = !includeFreeBottles"
+                                :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors', includeFreeBottles ? 'bg-indigo-600' : 'bg-gray-300']"
+                            >
+                                <span :class="['inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform', includeFreeBottles ? 'translate-x-4' : 'translate-x-1']" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Invoice panel -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                        <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2 mb-3">{{ t('saleSummary') }}</h3>
+
+                        <div v-if="cartItems.length === 0" class="text-center text-gray-400 text-xs py-4">
+                            {{ t('noItems') }}
+                        </div>
+
+                        <div v-else class="space-y-1.5">
+                            <!-- Per-item breakdown -->
+                            <div v-for="(item, index) in cartItems" :key="index" class="flex justify-between text-xs">
+                                <span class="text-gray-600 truncate max-w-[130px]">
+                                    {{ item.product_name }}
+                                    <span v-if="item.selected_variant" class="text-gray-400">({{ item.selected_variant }})</span>
+                                </span>
+                                <span class="font-medium text-gray-800 ml-2 flex-shrink-0">
+                                    ৳{{ formatNumber(getItemSubtotal(item)) }}
+                                </span>
+                            </div>
+
+                            <div class="border-t border-gray-100 pt-2 mt-2 space-y-1">
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>{{ t('totalCases') }}</span>
+                                    <span>{{ saleSummary.totalCases }}</span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>{{ t('totalBottles') }}</span>
+                                    <span>{{ saleSummary.totalBottles }}</span>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-gray-200 pt-2 flex justify-between items-center">
+                                <span class="text-sm font-semibold text-gray-700">{{ t('totalAmount') }}</span>
+                                <span class="text-lg font-bold text-indigo-700">৳{{ formatNumber(saleSummary.totalAmount) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <button
+                        @click="openModal"
+                        :disabled="isLoading || cartItems.length === 0"
+                        class="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                    </svg>
-                    <svg
-                        v-else
-                        class="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                        <svg v-if="isLoading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {{ isLoading ? t('processing') : t('confirmSale') }}
+                    </button>
+
+                    <button
+                        @click="resetForm"
+                        class="w-full py-2.5 border border-gray-300 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                        />
-                    </svg>
-                    <span>{{
-                        isLoading ? t("processing") : t("createSale")
-                    }}</span>
-                </button>
+                        {{ t('resetForm') }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import ToastNotification from "./partials/salesPartials/ToastNotification.vue";
 import SalesConfirmationModal from "./partials/salesPartials/SalesConfirmationModal.vue";
-import SalesHeader from "./partials/salesPartials/SalesHeader.vue";
-import SaleInformation from "./partials/salesPartials/SaleInformation.vue";
-import SaleItemsSection from "./partials/salesPartials/SaleItemsSection.vue";
-import SaleTotalSummary from "./partials/salesPartials/ SaleTotalSummary.vue";
 
 interface Shop {
     id: number;
@@ -192,14 +379,6 @@ interface Supplier {
     company_name: string;
 }
 
-interface Product {
-    product_id: number;
-    product_name: string;
-    supplier_id: number;
-    supplier_name: string;
-    variants: ProductVariant[];
-}
-
 interface ProductVariant {
     variant: string;
     purchased_bottles_available: number;
@@ -208,21 +387,31 @@ interface ProductVariant {
     bottles_per_case: number;
     purchase_rate: number;
     cases_available: number;
-    variant_metadata: any;
+    variant_metadata: Record<string, any>;
 }
 
-interface SaleItem {
+interface SearchProduct {
     product_id: number;
-    variant: string;
-    cases_to_sell: number;
-    selling_price_per_case: number;
+    product_name: string;
+    supplier_id: number;
+    supplier_name: string;
+    variants: ProductVariant[];
+    total_available_bottles: number;
+    total_available_cases: number;
+}
+
+interface CartItem {
+    product_id: number;
+    product_name: string;
+    supplier_id: number;
+    supplier_name: string;
+    available_variants: ProductVariant[];
+    selected_variant: string;
     bottles_per_case: number;
+    free_bottles_per_case: number;
     purchase_rate: number;
-    available_inventory?: any;
-    purchase_metadata?: any;
-    // Calculated fields
-    total_bottles_to_sell?: number;
-    selling_price_per_bottle?: number;
+    cases: number;
+    price_per_case: number;
 }
 
 const props = defineProps<{
@@ -230,632 +419,471 @@ const props = defineProps<{
     suppliers: Supplier[];
 }>();
 
-defineOptions({
-    layout: Layout,
-});
+defineOptions({ layout: Layout });
 
-// Language handling
+// Language
 const currentLanguage = ref(localStorage.getItem("language") || "en");
-const includeFreeBottles = ref(true);
-const availableProducts = ref<Product[]>([]);
-const showToggleButton = ref(false);
 
-const translations = {
+const translations: Record<string, Record<string, string>> = {
     en: {
-        languageLabel: "English",
         salesManagement: "Sales Management",
-        createNewSale: "Create New Sale",
-        includeFreeBottles: "Include Free Bottles",
-        withoutFreeBottles: "Without Free Bottles",
-        saleInformation: "Sale Information",
-        shopName: "Shop Name",
-        selectShop: "Select a shop",
-        shopRequired: "Please select a shop",
+        searchProduct: "Search Product",
+        typeToSearch: "Type product name to search...",
+        searchMoreProducts: "Search more products from this supplier...",
+        noProductsFound: "No products found",
+        variants: "variants",
+        bottlesAvailable: "bottles available",
+        searchToAddProducts: "Search a product above to start adding items",
         supplier: "Supplier",
-        selectSupplier: "Select a supplier",
-        supplierRequired: "Please select a supplier",
-        saleDate: "Sale Date",
-        saleDateRequired: "Sale date is required",
-        saleItems: "Sale Items",
-        addItem: "Add Item",
-        removeItem: "Remove Item",
-        product: "Product",
-        selectProduct: "Select a product",
-        productRequired: "Product is required",
+        autoDetected: "auto-detected",
         variant: "Variant",
         selectVariant: "Select variant",
-        variantRequired: "Variant is required",
-        casesToSell: "Cases to Sell",
-        casesToSellRequired: "Cases to sell must be greater than 0",
-        sellingPricePerCase: "Selling Price per Case (৳)",
-        sellingPricePerCaseRequired:
-            "Selling price per case must be greater than 0",
-        totalBottlesCalculated: "Total Bottles",
-        sellingPricePerBottleCalculated: "Selling Price per Bottle",
-        calculated: "calculated",
-        calculationBreakdown: "Calculation Breakdown",
-        inputCases: "Input Cases",
-        effectiveBottlesPerCase: "Effective Bottles per Case",
-        totalBottlesToSell: "Total Bottles to Sell",
-        totalBottlesToSellRequired:
-            "Total bottles to sell must be greater than 0",
-        sellingPricePerBottle: "Selling Price per Bottle (৳)",
-        sellingPricePerBottleRequired:
-            "Selling price per bottle must be greater than 0",
-        casesNeededCalculated: "Cases Needed",
-        sellingPricePerCaseCalculated: "Selling Price per Case",
-        freeBottlesPerCase: "Free Bottles per Case",
-        extraFreeBottles: "Extra Free Bottles",
-        bottlesPerCase: "Bottles per Case",
-        availableInventory: "Available Inventory",
-        purchasedBottles: "Purchased Bottles",
-        freeBottles: "Free Bottles",
-        totalAvailable: "Total Available",
-        purchaseRate: "Purchase Rate per Bottle",
-        purchaseRateInfo: "Purchase Rate Information",
-        perBottle: "Per Bottle",
-        perCase: "Per Case",
-        profit: "Profit",
-        totalProfit: "Total Profit",
-        totalAmount: "Total Amount",
+        cases: "Cases",
+        case: "case",
+        free: "free",
+        pricePerCase: "Price / Case",
+        avail: "avail",
+        shopName: "Shop Name",
+        selectShop: "Select a shop",
+        saleDate: "Sale Date",
+        includeFreeBottles: "Include Free Bottles",
+        saleDetails: "Sale Details",
+        saleSummary: "Sale Summary",
+        noItems: "No items added yet",
         totalCases: "Total Cases",
         totalBottles: "Total Bottles",
-        saleSummary: "Sale Summary",
+        totalAmount: "Total Amount",
         confirmSale: "Confirm Sale",
+        processing: "Processing...",
+        resetForm: "Reset",
         confirmSalePrompt: "Are you sure you want to create this sale?",
         cancel: "Cancel",
         confirm: "Confirm",
-        resetForm: "Reset Form",
-        processing: "Processing...",
-        createSale: "Create Sale",
+        totalItems: "Total Items",
+        profit: "Profit",
+        loss: "Loss",
+        expectedProfit: "Expected Profit",
         formReset: "Form has been reset",
         saleSuccess: "Sale created successfully!",
-        saleError: "Please fix the following errors",
-        insufficientInventory: "Insufficient inventory for this item",
-        loadingProducts: "Loading products...",
-        noProductsAvailable: "No products available for selected supplier",
-        item: "Item",
-        itemSummary: "Item Summary",
-        totalItems: "Total Items",
-        profitAnalysis: "Profit Analysis",
-        expectedProfit: "Expected Profit",
-        loss: "Loss",
-        itemsBreakdown: "Items Breakdown",
-        cases: "Cases",
-        fromPurchase: "from purchase",
-        autoPopulatedFromPurchase: "Auto-populated from purchase data",
-        purchaseData: "Purchase Data",
-        caseBuyingPrice: "Case Buying Price",
-        calculatedCases: "Calculated Cases",
-        bottlesBreakdown: "Bottles Breakdown",
-        includes: "includes",
-        includingFreeBottles: "including free bottles",
-        targetBottles: "Target Bottles",
-        actualBottles: "Actual Bottles",
-        difference: "Difference",
-        target: "target",
-        bottles: "bottles",
-        pricePerBottle: "Price per Bottle",
+        saleError: "Please fill in all required fields",
+        supplierRequired: "Please select a supplier",
+        productAlreadyInCart: "This product is already in the cart",
+        selectSupplier: "Select a supplier",
+        moreFromSupplier: "More from",
+        typeToSearchAll: "Or type to search all suppliers",
+        sameSupplier: "same supplier",
+        searchAllOrPickFromSupplier: "Search all products or pick from supplier below",
+        suppliersFromCart: "Auto-filled from selected products",
     },
     bn: {
-        languageLabel: "বাংলা",
         salesManagement: "বিক্রয় ব্যবস্থাপনা",
-        createNewSale: "নতুন বিক্রয় তৈরি করুন",
-        includeFreeBottles: "বিনামূল্যে বোতল অন্তর্ভুক্ত করুন",
-        withoutFreeBottles: "বিনামূল্যে বোতল ছাড়া",
-        saleInformation: "বিক্রয়ের তথ্য",
-        shopName: "দোকানের নাম",
-        selectShop: "একটি দোকান নির্বাচন করুন",
-        shopRequired: "অনুগ্রহ করে একটি দোকান নির্বাচন করুন",
+        searchProduct: "পণ্য খুঁজুন",
+        typeToSearch: "পণ্যের নাম লিখুন...",
+        searchMoreProducts: "এই সরবরাহকারীর আরও পণ্য খুঁজুন...",
+        noProductsFound: "কোনো পণ্য পাওয়া যায়নি",
+        variants: "ভেরিয়েন্ট",
+        bottlesAvailable: "বোতল উপলব্ধ",
+        searchToAddProducts: "পণ্য যোগ করতে উপরে সার্চ করুন",
         supplier: "সরবরাহকারী",
-        selectSupplier: "একটি সরবরাহকারী নির্বাচন করুন",
-        supplierRequired: "অনুগ্রহ করে একটি সরবরাহকারী নির্বাচন করুন",
-        saleDate: "বিক্রয়ের তারিখ",
-        saleDateRequired: "বিক্রয়ের তারিখ প্রয়োজন",
-        saleItems: "বিক্রয়ের আইটেম",
-        addItem: "আইটেম যোগ করুন",
-        removeItem: "আইটেম সরান",
-        product: "পণ্য",
-        selectProduct: "একটি পণ্য নির্বাচন করুন",
-        productRequired: "পণ্য প্রয়োজন",
+        autoDetected: "স্বয়ংক্রিয়",
         variant: "ভেরিয়েন্ট",
         selectVariant: "ভেরিয়েন্ট নির্বাচন করুন",
-        variantRequired: "ভেরিয়েন্ট প্রয়োজন",
-        casesToSell: "বিক্রয়ের কেস",
-        casesToSellRequired: "বিক্রয়ের কেস ০-এর বেশি হতে হবে",
-        sellingPricePerCase: "কেস প্রতি বিক্রয় মূল্য (৳)",
-        sellingPricePerCaseRequired:
-            "কেস প্রতি বিক্রয় মূল্য ০-এর বেশি হতে হবে",
-        totalBottlesCalculated: "মোট বোতল",
-        sellingPricePerBottleCalculated: "বোতল প্রতি বিক্রয় মূল্য",
-        calculated: "গণনাকৃত",
-        calculationBreakdown: "গণনার বিবরণ",
-        inputCases: "ইনপুট কেস",
-        effectiveBottlesPerCase: "কার্যকর বোতল প্রতি কেস",
-        totalBottlesToSell: "মোট বিক্রয়ের বোতল",
-        totalBottlesToSellRequired: "মোট বিক্রয়ের বোতল ০-এর বেশি হতে হবে",
-        sellingPricePerBottle: "বোতল প্রতি বিক্রয় মূল্য (৳)",
-        sellingPricePerBottleRequired:
-            "বোতল প্রতি বিক্রয় মূল্য ০-এর বেশি হতে হবে",
-        casesNeededCalculated: "প্রয়োজনীয় কেস",
-        sellingPricePerCaseCalculated: "কেস প্রতি বিক্রয় মূল্য",
-        freeBottlesPerCase: "কেস প্রতি বিনামূল্যে বোতল",
-        extraFreeBottles: "অতিরিক্ত বিনামূল্যে বোতল",
-        bottlesPerCase: "কেস প্রতি বোতল",
-        availableInventory: "উপলব্ধ ইনভেন্টরি",
-        purchasedBottles: "ক্রয়কৃত বোতল",
-        freeBottles: "বিনামূল্যে বোতল",
-        totalAvailable: "মোট উপলব্ধ",
-        purchaseRate: "বোতল প্রতি ক্রয় হার",
-        purchaseRateInfo: "ক্রয় হারের তথ্য",
-        perBottle: "প্রতি বোতল",
-        perCase: "প্রতি কেস",
-        profit: "লাভ",
-        totalProfit: "মোট লাভ",
-        totalAmount: "মোট পরিমাণ",
+        cases: "কেস",
+        case: "কেস",
+        free: "ফ্রি",
+        pricePerCase: "কেস প্রতি মূল্য",
+        avail: "উপলব্ধ",
+        shopName: "দোকানের নাম",
+        selectShop: "দোকান নির্বাচন করুন",
+        saleDate: "বিক্রয়ের তারিখ",
+        includeFreeBottles: "বিনামূল্যে বোতল",
+        saleDetails: "বিক্রয়ের তথ্য",
+        saleSummary: "বিক্রয় সারাংশ",
+        noItems: "কোনো আইটেম যোগ করা হয়নি",
         totalCases: "মোট কেস",
         totalBottles: "মোট বোতল",
-        saleSummary: "বিক্রয় সারাংশ",
+        totalAmount: "মোট পরিমাণ",
         confirmSale: "বিক্রয় নিশ্চিত করুন",
+        processing: "প্রক্রিয়াকরণ...",
+        resetForm: "রিসেট",
         confirmSalePrompt: "আপনি কি নিশ্চিতভাবে এই বিক্রয়টি তৈরি করতে চান?",
         cancel: "বাতিল",
         confirm: "নিশ্চিত করুন",
-        resetForm: "ফর্ম রিসেট করুন",
-        processing: "প্রক্রিয়াকরণ...",
-        createSale: "বিক্রয় তৈরি করুন",
+        totalItems: "মোট আইটেম",
+        profit: "লাভ",
+        loss: "ক্ষতি",
+        expectedProfit: "প্রত্যাশিত লাভ",
         formReset: "ফর্ম রিসেট করা হয়েছে",
         saleSuccess: "বিক্রয় সফলভাবে তৈরি করা হয়েছে!",
-        saleError: "নিম্নলিখিত ত্রুটিগুলি ঠিক করুন",
-        insufficientInventory: "এই আইটেমের জন্য অপর্যাপ্ত ইনভেন্টরি",
-        loadingProducts: "পণ্য লোড হচ্ছে...",
-        noProductsAvailable: "নির্বাচিত সরবরাহকারীর জন্য কোন পণ্য উপলব্ধ নেই",
-        item: "আইটেম",
-        itemSummary: "আইটেম সারাংশ",
-        totalItems: "মোট আইটেম",
-        profitAnalysis: "লাভ বিশ্লেষণ",
-        expectedProfit: "প্রত্যাশিত লাভ",
-        loss: "ক্ষতি",
-        itemsBreakdown: "আইটেম বিবরণ",
-        cases: "কেস",
-        fromPurchase: "ক্রয় থেকে",
-        autoPopulatedFromPurchase: "ক্রয় ডেটা থেকে স্বয়ংক্রিয়ভাবে পূরণ",
-        purchaseData: "ক্রয় ডেটা",
-        caseBuyingPrice: "কেস ক্রয় মূল্য",
-        calculatedCases: "গণনাকৃত কেস",
-        bottlesBreakdown: "বোতল বিবরণ",
-        includes: "অন্তর্ভুক্ত",
-        includingFreeBottles: "বিনামূল্যে বোতল সহ",
-        targetBottles: "লক্ষ্য বোতল",
-        actualBottles: "প্রকৃত বোতল",
-        difference: "পার্থক্য",
-        target: "লক্ষ্য",
-        bottles: "বোতল",
-        pricePerBottle: "বোতল প্রতি মূল্য",
+        saleError: "অনুগ্রহ করে সব তথ্য পূরণ করুন",
+        supplierRequired: "সরবরাহকারী নির্বাচন করুন",
+        productAlreadyInCart: "এই পণ্যটি ইতিমধ্যে কার্টে আছে",
+        selectSupplier: "সরবরাহকারী নির্বাচন করুন",
+        moreFromSupplier: "এই সরবরাহকারী থেকে আরও",
+        typeToSearchAll: "অথবা সব সরবরাহকারী সার্চ করুন",
+        sameSupplier: "একই সরবরাহকারী",
+        searchAllOrPickFromSupplier: "সব পণ্য সার্চ করুন অথবা নিচে থেকে বেছে নিন",
+        suppliersFromCart: "পণ্য যোগ করলে সরবরাহকারী দেখাবে",
     },
 };
 
-const saleForm = ref({
-    shop_id: "",
-    supplier_id: "",
-    sale_date: new Date().toISOString().split("T")[0],
-    include_free_bottles: true,
-    items: [] as SaleItem[],
+const t = (key: string, _params?: Record<string, any>) => translations[currentLanguage.value]?.[key] ?? key;
+
+const toBengaliNumber = (num: number | string): string => {
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
+};
+
+const changeLanguage = (lang: string) => {
+    currentLanguage.value = lang;
+    localStorage.setItem("language", lang);
+    document.documentElement.lang = lang;
+};
+
+const formatNumber = (value: number, decimals = 2): string => {
+    return Number(value || 0).toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    });
+};
+
+const safeNumber = (v: any): number => {
+    const n = Number(v);
+    return isNaN(n) ? 0 : n;
+};
+
+// Form state
+const shopId = ref<number | string>("");
+const saleDate = ref(new Date().toISOString().split("T")[0]);
+const includeFreeBottles = ref(true);
+const cartItems = ref<CartItem[]>([]);
+
+// Search state
+const searchQuery = ref("");
+const searchResults = ref<SearchProduct[]>([]);
+const suggestedProducts = ref<SearchProduct[]>([]);
+const searchLoading = ref(false);
+const showSearchDropdown = ref(false);
+const searchBoxRef = ref<HTMLElement | null>(null);
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Unique suppliers currently in the cart
+const cartSuppliers = computed(() => {
+    const seen = new Set<number>();
+    const list: { id: number; name: string }[] = [];
+    for (const item of cartItems.value) {
+        if (!seen.has(item.supplier_id)) {
+            seen.add(item.supplier_id);
+            list.push({ id: item.supplier_id, name: item.supplier_name });
+        }
+    }
+    return list;
 });
 
+// Primary supplier for backend (first item's supplier)
+const primarySupplierId = computed(() =>
+    cartItems.value.length > 0 ? cartItems.value[0].supplier_id : null
+);
+
+// Most recently added item's supplier — used for suggestions context
+const detectedSupplierId = computed(() =>
+    cartItems.value.length > 0 ? cartItems.value[cartItems.value.length - 1].supplier_id : null
+);
+const detectedSupplierName = computed(() =>
+    cartItems.value.length > 0 ? cartItems.value[cartItems.value.length - 1].supplier_name : ""
+);
+
+// Dropdown is visible if there's something to show
+const dropdownVisible = computed(() =>
+    !searchQuery.value.trim()
+        ? suggestedProducts.value.length > 0
+        : searchResults.value.length > 0 || searchQuery.value.length > 0
+);
+
+// UI state
 const isSubmitted = ref(false);
 const isLoading = ref(false);
 const showModal = ref(false);
 const showToast = ref(false);
 const toastMessage = ref("");
-const toastType = ref("success");
+const toastType = ref<"success" | "error">("success");
 
-// Helper function to safely convert values to numbers
-const safeNumber = (value: any): number => {
-    const num = Number(value);
-    return isNaN(num) ? 0 : num;
-};
-
-// Check if toggle button should be visible
-const checkToggleVisibility = () => {
-    const hasValidItem = saleForm.value.items.some(
-        (item) =>
-            item.product_id &&
-            item.variant &&
-            safeNumber(item.cases_to_sell) > 0 &&
-            safeNumber(item.selling_price_per_case) > 0
-    );
-    showToggleButton.value = hasValidItem;
-};
-
-// Watch for changes in form items to check toggle visibility
-watch(() => saleForm.value.items, checkToggleVisibility, { deep: true });
-
-// Computed properties for summary with corrected logic
-const saleSummary = computed(() => {
-    if (!saleForm.value.items || !Array.isArray(saleForm.value.items)) {
-        return {
-            totalCases: 0,
-            totalAmount: 0,
-            totalProfit: 0,
-            totalBottlesToSell: 0,
-            totalActualBottles: 0,
-            totalPurchasedBottles: 0,
-            totalFreeBottles: 0,
-            itemCount: 0,
-        };
+// Click outside to close dropdown
+const handleClickOutside = (e: MouseEvent) => {
+    if (searchBoxRef.value && !searchBoxRef.value.contains(e.target as Node)) {
+        showSearchDropdown.value = false;
     }
+};
 
-    const items = saleForm.value.items;
-    let totalCases = 0;
-    let totalAmount = 0;
-    let totalProfit = 0;
-    let totalBottlesToSell = 0;
-    let totalActualBottles = 0;
-    let totalPurchasedBottles = 0;
-    let totalFreeBottles = 0;
-
-    items.forEach((item) => {
-        const cases = safeNumber(item.cases_to_sell);
-        const pricePerCase = safeNumber(item.selling_price_per_case);
-        const bottlesPerCase = safeNumber(item.bottles_per_case);
-        const purchaseRate = safeNumber(item.purchase_rate);
-
-        if (
-            !cases ||
-            !pricePerCase ||
-            !bottlesPerCase ||
-            !item.purchase_metadata
-        )
-            return;
-
-        const freeBottlesPerCase = safeNumber(
-            item.purchase_metadata.free_bottles_per_case
-        );
-
-        // Calculate the actual selling price per bottle (always based on with free bottles)
-        const effectiveBottlesPerCaseWithFree =
-            bottlesPerCase + freeBottlesPerCase;
-        const actualSellingPricePerBottle =
-            pricePerCase / effectiveBottlesPerCaseWithFree;
-
-        totalCases += cases;
-
-        if (includeFreeBottles.value) {
-            // WITH free bottles calculation
-            const totalBottles = cases * effectiveBottlesPerCaseWithFree;
-            const purchasedBottles = cases * bottlesPerCase;
-            const freeBottles = cases * freeBottlesPerCase;
-
-            totalBottlesToSell += totalBottles;
-            totalActualBottles += totalBottles;
-            totalPurchasedBottles += purchasedBottles;
-            totalFreeBottles += freeBottles;
-
-            // Calculate total amount and profit
-            const itemAmount = totalBottles * actualSellingPricePerBottle;
-            const purchaseCost = totalBottles * purchaseRate;
-
-            totalAmount += itemAmount;
-            totalProfit += itemAmount - purchaseCost;
-        } else {
-            // WITHOUT free bottles calculation
-            const totalBottles = cases * bottlesPerCase; // Only purchased bottles
-
-            totalBottlesToSell += totalBottles;
-            totalActualBottles += totalBottles;
-            totalPurchasedBottles += totalBottles;
-
-            // Calculate total amount and profit using the SAME selling price per bottle
-            const itemAmount = totalBottles * actualSellingPricePerBottle;
-            const purchaseCost = totalBottles * purchaseRate;
-
-            totalAmount += itemAmount;
-            totalProfit += itemAmount - purchaseCost;
-        }
-    });
-
-    return {
-        totalCases,
-        totalAmount,
-        totalProfit,
-        totalBottlesToSell,
-        totalActualBottles,
-        totalPurchasedBottles,
-        totalFreeBottles,
-        itemCount: items.length,
-    };
+onMounted(() => {
+    document.documentElement.lang = currentLanguage.value;
+    document.addEventListener("mousedown", handleClickOutside);
 });
 
-// Translation function
-const t = (key: string, params: Record<string, any> = {}) => {
-    let translation = translations[currentLanguage.value][key] || key;
-    for (const [param, value] of Object.entries(params)) {
-        translation = translation.replace(`{${param}}`, value);
+onUnmounted(() => {
+    document.removeEventListener("mousedown", handleClickOutside);
+});
+
+// Search
+const onSearchFocus = () => {
+    showSearchDropdown.value = true;
+    // When focused with empty query and a supplier is detected, load their products as suggestions
+    if (!searchQuery.value.trim() && detectedSupplierId.value && suggestedProducts.value.length === 0) {
+        fetchSuggestions(detectedSupplierId.value);
     }
-    return translation;
 };
 
-// Utility function to convert numbers to Bengali digits
-const toBengaliNumber = (num: number | string): string => {
-    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return String(num).replace(
-        /[0-9]/g,
-        (digit) => bengaliDigits[parseInt(digit)]
-    );
+const onSearchInput = () => {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    showSearchDropdown.value = true;
+    if (!searchQuery.value.trim()) {
+        searchResults.value = [];
+        return;
+    }
+    searchDebounceTimer = setTimeout(() => fetchProducts(), 300);
 };
 
-// Language change handler
-const changeLanguage = (lang: string) => {
-    currentLanguage.value = lang;
-    localStorage.setItem("language", lang);
-    // Set document language for proper font rendering
-    document.documentElement.lang = lang;
+const fetchSuggestions = async (supplierId: number) => {
+    try {
+        const res = await fetch(`/api/products-by-supplier?supplier_id=${supplierId}`);
+        const data = await res.json();
+        const all: SearchProduct[] = Array.isArray(data.products)
+            ? data.products
+            : Object.values(data.products || {});
+        // Exclude products already in cart
+        suggestedProducts.value = all.filter(
+            p => !cartItems.value.some(c => c.product_id === p.product_id)
+        );
+    } catch {
+        suggestedProducts.value = [];
+    }
 };
 
-// Toggle free bottles handler
-const onToggleFreeBottles = () => {
-    includeFreeBottles.value = !includeFreeBottles.value;
-    saleForm.value.include_free_bottles = includeFreeBottles.value;
+const fetchProducts = async () => {
+    searchLoading.value = true;
+    try {
+        const res = await fetch(`/api/inventory/search?q=${encodeURIComponent(searchQuery.value)}`);
+        const data: SearchProduct[] = await res.json();
+        searchResults.value = data;
+    } catch {
+        searchResults.value = [];
+    } finally {
+        searchLoading.value = false;
+    }
 };
 
-// Supplier change handler
-const onSupplierChange = async () => {
-    if (!saleForm.value.supplier_id) {
-        availableProducts.value = [];
+const selectProduct = (product: SearchProduct) => {
+    // Check if product already in cart (same product_id)
+    const exists = cartItems.value.some(item => item.product_id === product.product_id);
+    if (exists) {
+        showToastMessage("productAlreadyInCart", "error");
+        showSearchDropdown.value = false;
+        searchQuery.value = "";
         return;
     }
 
-    try {
-        const response = await fetch(
-            `/api/products-by-supplier?supplier_id=${saleForm.value.supplier_id}`
-        );
-        const data = await response.json();
-        // Ensure availableProducts is an array, converting object with numeric keys if necessary
-        availableProducts.value = Array.isArray(data.products)
-            ? data.products
-            : Object.values(data.products || {});
-    } catch (error) {
-        console.error("Error fetching products:", error);
-        showToast.value = true;
-        toastMessage.value = "Error loading products";
-        toastType.value = "error";
-    }
-};
-
-// Variant change handler
-const onVariantChange = async (
-    itemIndex: number,
-    productId: number,
-    variant: string
-) => {
-    try {
-        const response = await fetch(
-            `/api/variant-inventory?product_id=${productId}&variant=${variant}`
-        );
-        const inventory = await response.json();
-
-        // Get the purchase metadata from the product's variant data
-        const product = availableProducts.value.find(
-            (p) => p.product_id === productId
-        );
-        const variantData = product?.variants.find(
-            (v) => v.variant === variant
-        );
-
-        if (saleForm.value.items[itemIndex]) {
-            const item = saleForm.value.items[itemIndex];
-            item.bottles_per_case = safeNumber(inventory.bottles_per_case);
-            item.purchase_rate = safeNumber(inventory.purchase_rate);
-            item.available_inventory = inventory;
-
-            // Store purchase metadata for free bottles calculation
-            if (variantData && variantData.variant_metadata) {
-                item.purchase_metadata = variantData.variant_metadata;
-            }
-        }
-    } catch (error) {
-        console.error("Error fetching variant inventory:", error);
-    }
-};
-
-// Item change handler
-const handleItemChange = (index: number, field: string, value: any) => {
-    if (field !== "calculated" && saleForm.value.items[index]) {
-        saleForm.value.items[index][field] = value;
-        checkToggleVisibility(); // Check if toggle should be shown
-    }
-};
-
-// Add sale item handler
-const addSaleItem = () => {
-    saleForm.value.items.push({
-        product_id: 0,
-        variant: "",
-        cases_to_sell: 0,
-        selling_price_per_case: 0,
+    cartItems.value.push({
+        product_id: product.product_id,
+        product_name: product.product_name,
+        supplier_id: product.supplier_id,
+        supplier_name: product.supplier_name,
+        available_variants: product.variants || [],
+        selected_variant: "",
         bottles_per_case: 0,
+        free_bottles_per_case: 0,
         purchase_rate: 0,
-        available_inventory: null,
-        purchase_metadata: null,
-        total_bottles_to_sell: 0,
-        selling_price_per_bottle: 0,
+        cases: 0,
+        price_per_case: 0,
     });
-};
 
-// Remove sale item handler
-const removeSaleItem = (index: number) => {
-    if (saleForm.value.items.length > 1) {
-        saleForm.value.items.splice(index, 1);
+    // Auto-select variant if only one
+    const lastIdx = cartItems.value.length - 1;
+    if (product.variants?.length === 1) {
+        cartItems.value[lastIdx].selected_variant = product.variants[0].variant;
+        onVariantSelect(lastIdx);
     }
-    checkToggleVisibility(); // Check if toggle should be shown after removal
+
+    showSearchDropdown.value = false;
+    searchQuery.value = "";
+    searchResults.value = [];
+
+    // Refresh suggestions to exclude the newly added product
+    if (detectedSupplierId.value) {
+        fetchSuggestions(detectedSupplierId.value);
+    }
 };
 
-// Form reset handler
-const resetForm = () => {
-    saleForm.value = {
-        shop_id: "",
-        supplier_id: "",
-        sale_date: new Date().toISOString().split("T")[0],
-        include_free_bottles: true,
-        items: [],
+const onVariantSelect = (index: number) => {
+    const item = cartItems.value[index];
+    const variantData = item.available_variants.find(v => v.variant === item.selected_variant);
+    if (variantData) {
+        item.bottles_per_case = safeNumber(variantData.bottles_per_case);
+        item.purchase_rate = safeNumber(variantData.purchase_rate);
+        item.free_bottles_per_case = safeNumber(variantData.variant_metadata?.free_bottles_per_case ?? 0);
+    }
+};
+
+const removeCartItem = (index: number) => {
+    cartItems.value.splice(index, 1);
+    if (cartItems.value.length === 0) {
+        suggestedProducts.value = [];
+    }
+};
+
+// Subtotal per item (what customer pays for this item)
+const getItemSubtotal = (item: CartItem): number => {
+    const cases = safeNumber(item.cases);
+    const pricePerCase = safeNumber(item.price_per_case);
+    const bottlesPerCase = safeNumber(item.bottles_per_case);
+    const freePerCase = safeNumber(item.free_bottles_per_case);
+
+    if (!cases || !pricePerCase || !bottlesPerCase) return 0;
+
+    const effectiveBPC = bottlesPerCase + freePerCase;
+    const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+    const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bottlesPerCase;
+    return targetBottles * pricePerBottle;
+};
+
+// Invoice summary
+const saleSummary = computed(() => {
+    let totalCases = 0;
+    let totalBottles = 0;
+    let totalAmount = 0;
+    let totalProfit = 0;
+
+    for (const item of cartItems.value) {
+        const cases = safeNumber(item.cases);
+        const pricePerCase = safeNumber(item.price_per_case);
+        const bpc = safeNumber(item.bottles_per_case);
+        const freePerCase = safeNumber(item.free_bottles_per_case);
+        const purchaseRate = safeNumber(item.purchase_rate);
+
+        if (!cases || !bpc) continue;
+
+        const effectiveBPC = bpc + freePerCase;
+        const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+        const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bpc;
+        const subtotal = targetBottles * pricePerBottle;
+        const cost = targetBottles * purchaseRate;
+
+        totalCases += cases;
+        totalBottles += targetBottles;
+        totalAmount += subtotal;
+        totalProfit += subtotal - cost;
+    }
+
+    return {
+        totalCases,
+        totalBottles,
+        totalAmount,
+        totalProfit,
+        itemCount: cartItems.value.length,
+        totalBottlesToSell: totalBottles,
     };
-    availableProducts.value = [];
-    isSubmitted.value = false;
-    showToggleButton.value = false;
-    includeFreeBottles.value = true;
+});
+
+const showToastMessage = (msg: string, type: "success" | "error" = "success") => {
+    toastMessage.value = msg;
+    toastType.value = type;
     showToast.value = true;
-    toastMessage.value = "formReset";
-    toastType.value = "success";
-    setTimeout(() => {
-        showToast.value = false;
-    }, 3000);
+    setTimeout(() => { showToast.value = false; }, 3000);
 };
 
-// Open confirmation modal
+const resetForm = () => {
+    cartItems.value = [];
+    shopId.value = "";
+    saleDate.value = new Date().toISOString().split("T")[0];
+    includeFreeBottles.value = true;
+    isSubmitted.value = false;
+    searchQuery.value = "";
+    searchResults.value = [];
+    suggestedProducts.value = [];
+    showToastMessage("formReset", "success");
+};
+
 const openModal = () => {
     isSubmitted.value = true;
 
-    // Validate form
-    const isFormValid =
-        saleForm.value.shop_id &&
-        saleForm.value.supplier_id &&
-        saleForm.value.sale_date &&
-        saleForm.value.items.length > 0 &&
-        saleForm.value.items.every(
-            (item) =>
-                item.product_id &&
-                item.variant &&
-                safeNumber(item.cases_to_sell) > 0 &&
-                safeNumber(item.selling_price_per_case) > 0
-        );
+    if (!shopId.value || !saleDate.value || cartItems.value.length === 0) {
+        showToastMessage("saleError", "error");
+        return;
+    }
 
-    if (!isFormValid) {
-        showToast.value = true;
-        toastMessage.value = "saleError";
-        toastType.value = "error";
-        setTimeout(() => {
-            showToast.value = false;
-        }, 3000);
+    const allItemsValid = cartItems.value.every(
+        item =>
+            item.selected_variant &&
+            safeNumber(item.cases) > 0 &&
+            safeNumber(item.price_per_case) > 0
+    );
+
+    if (!allItemsValid || cartItems.value.length === 0) {
+        showToastMessage("saleError", "error");
         return;
     }
 
     showModal.value = true;
 };
 
-// Close confirmation modal
-const closeModal = () => {
-    showModal.value = false;
-};
-
-// Close toast notification
-const closeToast = () => {
-    showToast.value = false;
-};
-
-// Confirm sale handler
 const confirmSale = () => {
     isLoading.value = true;
 
-    // Prepare sale data
-    const saleData = {
-        ...saleForm.value,
-        items: saleForm.value.items.map((item) => {
-            const cases = safeNumber(item.cases_to_sell);
-            const pricePerCase = safeNumber(item.selling_price_per_case);
-            const bottlesPerCase = safeNumber(item.bottles_per_case);
-            const freeBottlesPerCase = safeNumber(
-                item.purchase_metadata?.free_bottles_per_case
-            );
+    const items = cartItems.value.map(item => {
+        const cases = safeNumber(item.cases);
+        const pricePerCase = safeNumber(item.price_per_case);
+        const bpc = safeNumber(item.bottles_per_case);
+        const freePerCase = safeNumber(item.free_bottles_per_case);
+        const effectiveBPC = bpc + freePerCase;
+        const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+        const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bpc;
 
-            // ALWAYS calculate actual selling price per bottle from the "with free bottles" scenario
-            const effectiveBottlesPerCaseWithFree =
-                bottlesPerCase + freeBottlesPerCase;
-            const actualSellingPricePerBottle =
-                pricePerCase / effectiveBottlesPerCaseWithFree;
+        return {
+            product_id: item.product_id,
+            variant: item.selected_variant,
+            total_bottles_to_sell: targetBottles,
+            selling_price_per_bottle: pricePerBottle,
+            free_bottles_per_case: freePerCase,
+        };
+    });
 
-            let targetBottles: number;
-
-            if (includeFreeBottles.value) {
-                // WITH free bottles: cases × (bottles + free bottles)
-                targetBottles = cases * effectiveBottlesPerCaseWithFree;
-            } else {
-                // WITHOUT free bottles: cases × bottles only
-                targetBottles = cases * bottlesPerCase;
-            }
-
-            return {
-                product_id: item.product_id,
-                variant: item.variant,
-                total_bottles_to_sell: targetBottles,
-                selling_price_per_bottle: actualSellingPricePerBottle, // ALWAYS use the consistent price
-                free_bottles_per_case: freeBottlesPerCase,
-            };
-        }),
+    const payload = {
+        shop_id: shopId.value,
+        supplier_id: primarySupplierId.value,
+        sale_date: saleDate.value,
+        include_free_bottles: includeFreeBottles.value,
+        items,
     };
 
-    router.post("/sales/store", saleData, {
+    router.post("/sales/store", payload, {
         onSuccess: () => {
             showModal.value = false;
             isLoading.value = false;
             resetForm();
-            showToast.value = true;
-            toastMessage.value = "saleSuccess";
-            toastType.value = "success";
-            setTimeout(() => {
-                showToast.value = false;
-            }, 3000);
         },
-        onError: (errors: any) => {
+        onError: (errors: Record<string, string>) => {
             showModal.value = false;
             isLoading.value = false;
-            showToast.value = true;
-            toastMessage.value = `saleError: ${Object.values(errors).join(
-                ", "
-            )}`;
-            toastType.value = "error";
-            setTimeout(() => {
-                showToast.value = false;
-            }, 3000);
+            const messages = Object.values(errors);
+            // Show first backend validation error directly in toast.
+            // t() returns the raw string as-is when the key is not in translations,
+            // so Laravel validation messages display correctly.
+            showToastMessage(messages.length > 0 ? messages[0] : "saleError", "error");
         },
     });
 };
-
-// Initialize form
-onMounted(() => {
-    // Set document language for proper font rendering
-    document.documentElement.lang = currentLanguage.value;
-
-    addSaleItem(); // Add initial item
-});
 </script>
 
 <style scoped>
 @import url("https://fonts.maateen.me/kalpurush/font.css");
 
-.bangla-font {
-    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
-}
-
-.bangla-font h1,
-.bangla-font h2,
-.bangla-font h3,
-.bangla-font h4,
-.bangla-font p,
-.bangla-font span,
-.bangla-font button,
-.bangla-font input,
-.bangla-font select,
-.bangla-font textarea,
-.bangla-font label,
-.bangla-font div,
-.bangla-font input::placeholder {
+.bangla-font,
+.bangla-font * {
     font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 
 input:focus,
 select:focus {
     outline: none;
-    transform: translateY(-1px);
 }
 
 select {
@@ -870,45 +898,5 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type="number"] {
     -moz-appearance: textfield;
-}
-
-.dot {
-    transition: transform 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeIn 1s ease-out;
-}
-
-.bg-gradient-to-br {
-    background-image: linear-gradient(
-        to bottom right,
-        var(--tw-gradient-stops)
-    );
-}
-
-.from-gray-50 {
-    --tw-gradient-from: #f9fafb;
-    --tw-gradient-stops: var(--tw-gradient-from),
-        var(--tw-gradient-to, rgba(249, 250, 251, 0));
-}
-
-.via-white {
-    --tw-gradient-to: #ffffff;
-}
-
-.to-gray-50 {
-    --tw-gradient-to: #f9fafb;
 }
 </style>

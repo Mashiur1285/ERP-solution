@@ -243,37 +243,8 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                <div>
-                    <label
-                        for="start_date"
-                        class="block text-xs font-medium text-gray-600 mb-1"
-                    >
-                        {{ getTranslation("startDate") }}
-                    </label>
-                    <input
-                        v-model="filters.start_date"
-                        id="start_date"
-                        type="date"
-                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-                    />
-                </div>
-
-                <div>
-                    <label
-                        for="end_date"
-                        class="block text-xs font-medium text-gray-600 mb-1"
-                    >
-                        {{ getTranslation("endDate") }}
-                    </label>
-                    <input
-                        v-model="filters.end_date"
-                        id="end_date"
-                        type="date"
-                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-                    />
-                </div>
-
+            <!-- Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                     <label
                         for="shop_id"
@@ -351,24 +322,19 @@
             </div>
         </div>
 
-        <!-- Search Field -->
-        <div class="flex justify-end">
+        <!-- Search & Filter Fields -->
+        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
+            <DateRangePicker
+                v-model:startDate="filters.start_date"
+                v-model:endDate="filters.end_date"
+                :language="currentLanguage"
+                @change="applyFilters"
+                class="w-full sm:w-auto"
+            />
             <div class="relative w-full sm:w-80">
-                <div
-                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                >
-                    <svg
-                        class="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <input
@@ -1170,6 +1136,7 @@
 import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
+import DateRangePicker from "../../Components/DateRangePicker.vue";
 import InventoryStock from "../Dashboard/Partials/InventoryStock.vue";
 
 defineOptions({
@@ -1299,10 +1266,16 @@ const filteredSales = computed(() => {
     );
 });
 
+// Today's date string helper
+const todayDateStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+})();
+
 // Filters
 const filters = ref<Filters>({
-    start_date: props.filters?.start_date || "",
-    end_date: props.filters?.end_date || "",
+    start_date: props.filters?.start_date || todayDateStr,
+    end_date: props.filters?.end_date || todayDateStr,
     shop_id: props.filters?.shop_id || "",
     product_id: props.filters?.product_id || "",
     supplier_id: props.filters?.supplier_id || "",

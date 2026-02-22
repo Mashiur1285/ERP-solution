@@ -53,6 +53,20 @@ class SalesController extends Controller
         ]);
     }
 
+    public function searchInventoryProducts(Request $request)
+    {
+        $query = $request->get('q', '');
+        $products = $this->productPurchaseRepository->getInventoryStock();
+
+        if ($query) {
+            $products = $products->filter(function ($product) use ($query) {
+                return stripos($product['product_name'], $query) !== false;
+            });
+        }
+
+        return response()->json($products->take(15)->values());
+    }
+
     public function getProductsBySupplier(Request $request)
     {
         $supplierId = $request->get('supplier_id');

@@ -22,7 +22,7 @@
 
                 <!-- Purchase Management -->
                 <SidebarMultiLevelMenu
-                    label="Purchase"
+                    label="Lift"
                     icon="fa-solid fa-credit-card"
                     :submenu="purchaseMenu"
                 />
@@ -89,13 +89,13 @@ const purchaseMenu = ref([
         icon: "fa-solid fa-tag",
     },
     {
-        label: "Manage Purchase",
-        href: "/purchases",
+        label: "Manage Lift",
+        href: "/lifts",
         icon: "fa-solid fa-shopping-cart",
     },
     {
         label: "Lifting Report",
-        href: "/purchases/report",
+        href: "/lifts/report",
         icon: "fa-solid fa-file-alt",
     },
 ]);

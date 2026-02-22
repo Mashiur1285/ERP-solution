@@ -177,24 +177,18 @@
             </div>
         </div>
 
-        <!-- Search Field -->
-        <div class="flex justify-end mb-4">
+        <!-- Search & Filter Fields -->
+        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
+            <DateRangePicker
+                v-model:startDate="dateStart"
+                v-model:endDate="dateEnd"
+                :language="currentLanguage"
+                class="w-full sm:w-auto"
+            />
             <div class="relative w-full sm:w-80">
-                <div
-                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                >
-                    <svg
-                        class="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <input
@@ -959,6 +953,7 @@
 import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
+import DateRangePicker from "../../Components/DateRangePicker.vue";
 
 interface Purchase {
     supplier_name: string;
@@ -1038,6 +1033,12 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedRows = ref({});
 
+// Date range state (default: today)
+const today = new Date();
+const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+const dateStart = ref(todayStr);
+const dateEnd = ref(todayStr);
+
 const totalPurchases = computed(() => props.purchaseHistory.length);
 const totalAmount = computed(() =>
     props.purchaseHistory.reduce(
@@ -1061,14 +1062,31 @@ const totalCases = computed(() =>
 
 const filteredPurchases = computed(() => {
     const query = searchQuery.value.toLowerCase();
+
     return props.purchaseHistory
-        .filter(
-            (purchase) =>
-                (purchase.total_bottles > 0 || purchase.total_value > 0) &&
-                (purchase.supplier_name?.toLowerCase().includes(query) ||
+        .filter((purchase) => {
+            if (purchase.total_bottles === 0 && purchase.total_value === 0) return false;
+
+            // Date range filter
+            if (dateStart.value || dateEnd.value) {
+                // Ensure pDate is string format like "YYYY-MM-DD"
+                const pDateStr = purchase.purchase_date ? String(purchase.purchase_date).split('T')[0] : null;
+                if (!pDateStr) return false;
+                
+                if (dateStart.value && pDateStr < dateStart.value) return false;
+                if (dateEnd.value && pDateStr > dateEnd.value) return false;
+            }
+
+            // Search filter
+            if (query) {
+                return (
+                    purchase.supplier_name?.toLowerCase().includes(query) ||
                     purchase.product_name?.toLowerCase().includes(query) ||
-                    purchase.variant?.toLowerCase().includes(query))
-        )
+                    purchase.variant?.toLowerCase().includes(query)
+                );
+            }
+            return true;
+        })
         .map((purchase) => ({
             ...purchase,
             total_cases: purchase.purchased_cases + purchase.cases_from_free,

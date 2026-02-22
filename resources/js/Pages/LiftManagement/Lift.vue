@@ -1,0 +1,872 @@
+<template>
+    <div class="p-4 bg-gray-100 min-h-screen" :class="{ 'bangla-font': lang === 'bn' }">
+        <!-- Toast -->
+        <div v-if="toast.show" class="fixed top-20 right-4 z-[200] animate-slide-in print:hidden">
+            <div class="px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium flex items-center space-x-2"
+                :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'">
+                <span>{{ toast.message }}</span>
+                <button @click="toast.show = false" class="ml-2 opacity-70 hover:opacity-100">&times;</button>
+            </div>
+        </div>
+
+        <!-- Create Product Modal -->
+        <div v-if="showCreateProductModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 p-4 print:hidden">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">{{ t('createNewProduct') }}</h3>
+                    <button class="p-2 rounded-full hover:bg-gray-100" @click="showCreateProductModal = false">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('productName') }}*</label>
+                        <input v-model="newProduct.name" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('category') }}</label>
+                            <select v-model="newProduct.category_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                                <option value="">{{ t('selectCategory') }}</option>
+                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('brand') }}</label>
+                            <select v-model="newProduct.brand_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                                <option value="">{{ t('selectBrand') }}</option>
+                                <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.brand_name }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6 space-x-3">
+                    <button class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" @click="showCreateProductModal = false">{{ t('cancel') }}</button>
+                    <button class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow" @click="createProduct" :disabled="!newProduct.name">{{ t('save') }}</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div v-if="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
+            <div class="bg-white rounded-xl p-5 max-w-md w-full mx-4 shadow-xl">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ t('confirmLift') }}</h3>
+                <p class="text-gray-600 text-sm mb-4">{{ t('confirmLiftPrompt') }}</p>
+                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200 mb-4 space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-gray-600">{{ t('totalProducts') }}</span><span class="font-bold">{{ liftItems.filter(i => i.variants.some(v => v.number_of_cases > 0)).length }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">{{ t('totalCost') }}</span><span class="font-bold text-indigo-600">৳{{ grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">{{ t('remainingDeposit') }}</span>
+                        <span class="font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">৳{{ remainingDeposit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button @click="showConfirmModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">{{ t('cancel') }}</button>
+                    <button @click="submitLift" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" :disabled="isLoading || remainingDeposit < 0">
+                        {{ isLoading ? t('processing') : t('confirm') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4 print:hidden">
+            <h1 class="text-2xl font-semibold text-gray-800 flex items-center">
+                <div class="p-2 mr-3 bg-indigo-100 rounded-full">
+                    <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                </div>
+                {{ t('liftManagement') }}
+            </h1>
+            <div class="flex space-x-2">
+                <button @click="lang = 'en'; saveLang()" :class="['px-3 py-1.5 rounded-md font-medium text-sm transition-colors', lang === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300']">English</button>
+                <button @click="lang = 'bn'; saveLang()" :class="['px-3 py-1.5 rounded-md font-medium text-sm transition-colors', lang === 'bn' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300']">বাংলা</button>
+            </div>
+        </div>
+
+        <!-- POS Two-Column Layout -->
+        <div class="flex gap-4 items-start">
+            <!-- LEFT SIDE -->
+            <div class="flex-1 min-w-0 space-y-4 print:hidden">
+                <!-- Step 1: Supplier Selection -->
+                <div class="bg-white rounded-xl shadow-sm p-5">
+                    <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
+                        <span class="w-6 h-6 bg-indigo-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</span>
+                        {{ t('selectSupplier') }}
+                    </h2>
+                    <div class="relative" ref="supplierDDRef">
+                        <input v-model="supplierSearch" @focus="showSupplierDD = true" @input="showSupplierDD = true"
+                            :placeholder="t('searchSupplier')"
+                            class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base"
+                            :class="{ 'border-indigo-400 bg-indigo-50': selectedSupplier }" autocomplete="off" />
+                        <div v-if="showSupplierDD && filteredSuppliers.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
+                            <button v-for="s in filteredSuppliers" :key="s.id" type="button"
+                                class="w-full text-left px-4 py-3 hover:bg-indigo-50 text-sm border-b border-gray-50 last:border-0"
+                                @mousedown.prevent="selectSupplier(s)">
+                                <span class="font-medium text-gray-800">{{ s.company_name }}</span>
+                                <span class="float-right text-indigo-600 font-semibold">৳{{ s.remaining_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                            </button>
+                        </div>
+                        <div v-if="showSupplierDD && !filteredSuppliers.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
+                            <div class="px-4 py-3 text-sm text-gray-400">{{ t('noResults') }}</div>
+                        </div>
+                    </div>
+                    <div v-if="selectedSupplier" class="mt-3 flex items-center justify-between bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200">
+                        <span class="text-sm text-gray-700">{{ t('availableBalance') }}</span>
+                        <span class="text-lg font-bold text-indigo-600">৳{{ selectedSupplier.remaining_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                    </div>
+                </div>
+
+                <!-- Step 2: Product Search & Add -->
+                <div v-if="selectedSupplier" class="bg-white rounded-xl shadow-sm p-5">
+                    <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
+                        <span class="w-6 h-6 bg-indigo-600 text-white rounded-full text-xs flex items-center justify-center mr-2">2</span>
+                        {{ t('addProducts') }}
+                    </h2>
+                    <div class="relative">
+                        <div class="flex gap-2">
+                            <div class="flex-1 relative" ref="productDDRef">
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input v-model="productSearch" @focus="onProductFocus" @input="searchProducts"
+                                    :placeholder="t('searchProduct')"
+                                    class="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base" autocomplete="off" />
+                                <div v-if="showProductDD && productSearchResults.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
+                                    <button v-for="p in productSearchResults" :key="p.id" type="button"
+                                        class="w-full text-left px-4 py-3 hover:bg-indigo-50 border-b border-gray-50 last:border-0"
+                                        @mousedown.prevent="addProductToCart(p)">
+                                        <span class="font-medium text-gray-800">{{ p.name }}</span>
+                                        <span v-if="p.category_name || p.brand_name" class="block text-xs text-gray-400 mt-0.5">
+                                            {{ [p.category_name, p.brand_name].filter(Boolean).join(' / ') }}
+                                        </span>
+                                    </button>
+                                </div>
+                                <div v-if="showProductDD && productSearch && !productSearchResults.length && !isSearching" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-4 text-center">
+                                    <p class="text-sm text-gray-400 mb-2">{{ t('noResults') }}</p>
+                                    <button @mousedown.prevent="openCreateProductModal" class="text-sm text-indigo-600 font-medium hover:underline">+ {{ t('createNewProduct') }}</button>
+                                </div>
+                            </div>
+                            <button @click="openCreateProductModal"
+                                class="px-4 py-3 rounded-lg border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center"
+                                :title="t('createNewProduct')">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Cart Items -->
+                <div v-if="liftItems.length" class="space-y-3">
+                    <div v-for="(item, itemIdx) in liftItems" :key="itemIdx" class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-indigo-400">
+                        <!-- Product Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-800">{{ item.product_name }}</h3>
+                                <p class="text-xs text-gray-400">{{ [item.category_name, item.brand_name].filter(Boolean).join(' / ') }}</p>
+                            </div>
+                            <button @click="removeItem(itemIdx)" class="p-2 rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Variants -->
+                        <div class="space-y-3">
+                            <div v-for="(v, vIdx) in item.variants" :key="vIdx"
+                                class="grid grid-cols-5 gap-3 items-end bg-gray-50 p-3 rounded-lg">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('variantName') }}*</label>
+                                    <select v-model="v.variant" class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                                        @change="onVariantSelect(itemIdx, vIdx)">
+                                        <option value="">{{ t('selectVariant') }}</option>
+                                        <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('numberOfCases') }}*</label>
+                                    <input v-model.number="v.number_of_cases" type="number" min="0"
+                                        class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('caseBuyingPrice') }} (৳)*</label>
+                                    <input v-model.number="v.case_buying_price" type="number" step="0.01" min="0"
+                                        class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('bottlesPerCase') }}</label>
+                                    <input v-model.number="v.bottles_per_case" type="number" min="1"
+                                        class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                </div>
+                                <div class="flex items-end gap-2">
+                                    <div class="flex-1">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('freeBottlesPerCase') }}</label>
+                                        <input v-model.number="v.free_bottles_per_case" type="number" min="0"
+                                            class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                    </div>
+                                    <button v-if="item.variants.length > 1" @click="removeVariant(itemIdx, vIdx)"
+                                        class="p-2 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 mb-0.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Variant Button -->
+                        <button @click="addVariant(itemIdx)" class="mt-3 text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            {{ t('addVariant') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE: Invoice Panel -->
+            <div class="w-[380px] flex-shrink-0 sticky top-24 print:w-full print:static">
+                <div id="printable-invoice" class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                    <!-- Invoice Header -->
+                    <div class="bg-indigo-600 text-white px-5 py-4 print:bg-white print:text-gray-800 print:border-b-2 print:border-gray-800">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-2 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <h3 class="text-base font-bold">{{ t('liftInvoice') }}</h3>
+                            </div>
+                            <span class="text-xs bg-indigo-500 px-2 py-1 rounded-full print:bg-transparent print:text-gray-600 print:px-0">{{ currentDate }}</span>
+                        </div>
+                        <p v-if="selectedSupplier" class="text-indigo-200 text-xs mt-1 print:text-gray-600">{{ selectedSupplier.company_name }}</p>
+                    </div>
+
+                    <!-- Invoice Body -->
+                    <div class="px-5 py-4 max-h-[calc(100vh-320px)] overflow-y-auto">
+                        <!-- Empty State -->
+                        <div v-if="!validItems.length" class="text-center py-8 text-gray-400">
+                            <svg class="w-14 h-14 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            <p class="text-sm">{{ t('emptyInvoice') }}</p>
+                        </div>
+
+                        <!-- Line Items -->
+                        <div v-else>
+                            <div v-for="(item, idx) in validItems" :key="idx" class="mb-3">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ item.product_name }}</p>
+                                <div v-for="(v, vi) in item.validVariants" :key="vi" class="flex justify-between py-1.5 border-b border-dashed border-gray-100 last:border-0 text-sm">
+                                    <div>
+                                        <span class="text-gray-800">{{ v.variant || 'Variant' }}</span>
+                                        <span class="text-gray-400 text-xs ml-1">x{{ v.number_of_cases }} {{ t('case') }}</span>
+                                        <span v-if="calcFreeBottles(v) > 0" class="text-green-500 text-xs block">+{{ calcFreeBottles(v) }} {{ t('free') }}</span>
+                                    </div>
+                                    <span class="font-semibold text-gray-800">৳{{ calcVariantCost(v).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Separator -->
+                            <div class="border-t-2 border-dotted border-gray-300 my-3"></div>
+
+                            <!-- Summary -->
+                            <div class="space-y-1.5 text-sm">
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t('totalProducts') }}</span>
+                                    <span class="font-medium">{{ validItems.length }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t('totalCases') }}</span>
+                                    <span class="font-medium">{{ totalCases.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t('totalBottles') }}</span>
+                                    <span class="font-bold text-gray-800">{{ totalBottles.toLocaleString() }}</span>
+                                </div>
+                                <div v-if="totalFreeBottles > 0" class="flex justify-between text-gray-600">
+                                    <span>{{ t('freeBottles') }}</span>
+                                    <span class="font-medium text-green-600">+{{ totalFreeBottles.toLocaleString() }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Grand Total -->
+                            <div class="border-t-2 border-dotted border-gray-300 mt-3 pt-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-base font-bold text-gray-800">{{ t('totalCost') }}</span>
+                                    <span class="text-xl font-bold text-indigo-600">৳{{ grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Remaining Deposit -->
+                            <div v-if="selectedSupplier" class="mt-3 p-3 rounded-lg"
+                                :class="remainingDeposit >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-xs text-gray-500">{{ t('remainingDeposit') }}</p>
+                                        <p class="text-xs text-gray-400">{{ t('afterLift') }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">
+                                            ৳{{ remainingDeposit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                                        </p>
+                                        <p class="text-xs" :class="remainingDeposit >= 0 ? 'text-green-500' : 'text-red-500'">
+                                            {{ remainingDeposit >= 0 ? t('sufficient') : t('insufficient') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Footer -->
+                    <div class="px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-2 print:hidden">
+                        <button @click="openConfirmModal"
+                            class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all flex items-center justify-center space-x-2 shadow-md"
+                            :disabled="isLoading || !validItems.length || !selectedSupplier">
+                            <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>{{ isLoading ? t('processing') : t('confirmLift') }}</span>
+                        </button>
+                        <div class="flex gap-2">
+                            <button @click="printInvoice"
+                                class="flex-1 py-2.5 border-2 border-indigo-200 rounded-lg text-indigo-600 font-medium hover:bg-indigo-50 transition-all flex items-center justify-center space-x-2 text-sm"
+                                :disabled="!validItems.length">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                <span>{{ t('printInvoice') }}</span>
+                            </button>
+                            <button @click="resetAll"
+                                class="flex-1 py-2.5 border-2 border-gray-300 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-all flex items-center justify-center space-x-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <span>{{ t('resetForm') }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { router } from "@inertiajs/vue3";
+import Layout from "../../Layout.vue";
+
+interface Supplier {
+    id: number;
+    company_name: string;
+    remaining_deposit: number;
+}
+
+interface CatalogProduct {
+    id: number;
+    name: string;
+    category_id: number | null;
+    category_name: string;
+    brand_id: number | null;
+    brand_name: string;
+    default_variants: DefaultVariant[];
+}
+
+interface DefaultVariant {
+    variant: string;
+    bottles_per_case: number;
+    free_bottles_per_case: number;
+}
+
+interface LiftVariant {
+    variant: string;
+    number_of_cases: number;
+    case_buying_price: number;
+    bottles_per_case: number;
+    free_bottles_per_case: number;
+}
+
+interface LiftItem {
+    product_catalog_id: number;
+    product_name: string;
+    category_name: string;
+    brand_name: string;
+    category_id: number | null;
+    brand_id: number | null;
+    variants: LiftVariant[];
+}
+
+const props = defineProps<{
+    suppliers: Supplier[];
+    categories: Array<{ id: number; name: string }>;
+    brands: Array<{ id: number; brand_name: string }>;
+}>();
+
+defineOptions({ layout: Layout });
+
+// Variant options
+const variantOptions = [
+    { value: "250ml", label: "250 ml", bottles_per_case: 24 },
+    { value: "500ml", label: "500 ml", bottles_per_case: 24 },
+    { value: "1000ml", label: "1000 ml", bottles_per_case: 12 },
+    { value: "2000ml", label: "2000 ml", bottles_per_case: 6 },
+];
+
+// Template refs for click-outside detection
+const supplierDDRef = ref<HTMLElement | null>(null);
+const productDDRef = ref<HTMLElement | null>(null);
+
+// State
+const lang = ref(localStorage.getItem("language") || "en");
+const currentDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || "";
+const isLoading = ref(false);
+const showConfirmModal = ref(false);
+const showCreateProductModal = ref(false);
+
+// Toast
+const toast = ref({ show: false, message: "", type: "success" });
+const showToast = (message: string, type: "success" | "error" = "success") => {
+    toast.value = { show: true, message, type };
+    setTimeout(() => (toast.value.show = false), 3000);
+};
+
+// Supplier
+const supplierSearch = ref("");
+const showSupplierDD = ref(false);
+const selectedSupplier = ref<Supplier | null>(null);
+
+const filteredSuppliers = computed(() =>
+    props.suppliers.filter((s) =>
+        s.company_name.toLowerCase().includes(supplierSearch.value.toLowerCase())
+    )
+);
+
+const selectSupplier = (s: Supplier) => {
+    selectedSupplier.value = s;
+    supplierSearch.value = s.company_name;
+    showSupplierDD.value = false;
+    liftItems.value = [];
+    productSearch.value = "";
+};
+
+// Product Search
+const productSearch = ref("");
+const productSearchResults = ref<CatalogProduct[]>([]);
+const showProductDD = ref(false);
+const isSearching = ref(false);
+let searchTimeout: ReturnType<typeof setTimeout>;
+
+const onProductFocus = () => {
+    showProductDD.value = true;
+    // Load all products for this supplier on focus if search is empty
+    if (selectedSupplier.value && !productSearch.value) {
+        fetchProducts("");
+    }
+};
+
+const fetchProducts = async (query: string) => {
+    if (!selectedSupplier.value) return;
+    isSearching.value = true;
+    try {
+        const res = await fetch(
+            `/api/product-catalog/search?supplier_id=${selectedSupplier.value.id}&q=${encodeURIComponent(query)}`,
+            { headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" } }
+        );
+        productSearchResults.value = await res.json();
+    } catch {
+        productSearchResults.value = [];
+    }
+    isSearching.value = false;
+};
+
+const searchProducts = () => {
+    showProductDD.value = true;
+    clearTimeout(searchTimeout);
+    if (!selectedSupplier.value) {
+        productSearchResults.value = [];
+        return;
+    }
+    isSearching.value = true;
+    searchTimeout = setTimeout(() => fetchProducts(productSearch.value), 300);
+};
+
+// Cart
+const liftItems = ref<LiftItem[]>([]);
+
+const addProductToCart = (p: CatalogProduct) => {
+    // Check if product already in cart
+    if (liftItems.value.some((i) => i.product_catalog_id === p.id)) {
+        showToast(t("productAlreadyAdded"), "error");
+        showProductDD.value = false;
+        productSearch.value = "";
+        return;
+    }
+
+    const defaultVariants: LiftVariant[] =
+        p.default_variants && p.default_variants.length
+            ? p.default_variants.map((dv) => ({
+                  variant: dv.variant,
+                  number_of_cases: 0,
+                  case_buying_price: 0,
+                  bottles_per_case: dv.bottles_per_case,
+                  free_bottles_per_case: dv.free_bottles_per_case || 0,
+              }))
+            : [{ variant: "", number_of_cases: 0, case_buying_price: 0, bottles_per_case: 0, free_bottles_per_case: 0 }];
+
+    liftItems.value.push({
+        product_catalog_id: p.id,
+        product_name: p.name,
+        category_name: p.category_name,
+        brand_name: p.brand_name,
+        category_id: p.category_id,
+        brand_id: p.brand_id,
+        variants: defaultVariants,
+    });
+
+    productSearch.value = "";
+    showProductDD.value = false;
+};
+
+const removeItem = (idx: number) => liftItems.value.splice(idx, 1);
+
+const addVariant = (itemIdx: number) => {
+    liftItems.value[itemIdx].variants.push({
+        variant: "",
+        number_of_cases: 0,
+        case_buying_price: 0,
+        bottles_per_case: 0,
+        free_bottles_per_case: 0,
+    });
+};
+
+const removeVariant = (itemIdx: number, vIdx: number) => {
+    if (liftItems.value[itemIdx].variants.length > 1) {
+        liftItems.value[itemIdx].variants.splice(vIdx, 1);
+    }
+};
+
+const onVariantSelect = (itemIdx: number, vIdx: number) => {
+    const v = liftItems.value[itemIdx].variants[vIdx];
+    const opt = variantOptions.find((o) => o.value === v.variant);
+    if (opt) v.bottles_per_case = opt.bottles_per_case;
+};
+
+// Create Product
+const newProduct = ref({ name: "", category_id: "" as any, brand_id: "" as any });
+
+const openCreateProductModal = () => {
+    newProduct.value = { name: productSearch.value, category_id: "", brand_id: "" };
+    showCreateProductModal.value = true;
+    showProductDD.value = false;
+};
+
+const createProduct = async () => {
+    if (!newProduct.value.name || !selectedSupplier.value) return;
+    try {
+        const res = await fetch("/api/product-catalog/quick-store", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-TOKEN": csrfToken, "X-Requested-With": "XMLHttpRequest" },
+            body: JSON.stringify({
+                name: newProduct.value.name,
+                supplier_id: selectedSupplier.value.id,
+                category_id: newProduct.value.category_id || null,
+                brand_id: newProduct.value.brand_id || null,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed");
+        showCreateProductModal.value = false;
+        addProductToCart(data.product);
+        showToast(t("productCreated"), "success");
+    } catch (err: any) {
+        showToast(err.message || t("error"), "error");
+    }
+};
+
+// Calculations
+const calcVariantCost = (v: LiftVariant) => (v.number_of_cases || 0) * (v.case_buying_price || 0);
+const calcFreeBottles = (v: LiftVariant) => (v.number_of_cases || 0) * (v.free_bottles_per_case || 0);
+const calcTotalBottles = (v: LiftVariant) => {
+    const purchased = (v.number_of_cases || 0) * (v.bottles_per_case || 0);
+    return purchased + calcFreeBottles(v);
+};
+
+const validItems = computed(() =>
+    liftItems.value
+        .map((item) => ({
+            ...item,
+            validVariants: item.variants.filter((v) => v.number_of_cases > 0 && v.case_buying_price > 0),
+        }))
+        .filter((item) => item.validVariants.length > 0)
+);
+
+const grandTotal = computed(() =>
+    validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + calcVariantCost(v), 0), 0)
+);
+
+const totalCases = computed(() =>
+    validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + (v.number_of_cases || 0), 0), 0)
+);
+
+const totalBottles = computed(() =>
+    validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + calcTotalBottles(v), 0), 0)
+);
+
+const totalFreeBottles = computed(() =>
+    validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + calcFreeBottles(v), 0), 0)
+);
+
+const remainingDeposit = computed(() => {
+    if (!selectedSupplier.value) return 0;
+    return selectedSupplier.value.remaining_deposit - grandTotal.value;
+});
+
+// Submit
+const openConfirmModal = () => {
+    if (!validItems.value.length || !selectedSupplier.value) return;
+    if (remainingDeposit.value < 0) {
+        showToast(t("insufficientDeposit"), "error");
+        return;
+    }
+    showConfirmModal.value = true;
+};
+
+const submitLift = () => {
+    isLoading.value = true;
+
+    const items = validItems.value.map((item) => ({
+        product_catalog_id: item.product_catalog_id,
+        product_name: item.product_name,
+        category_id: item.category_id,
+        brand_id: item.brand_id,
+        variants: item.validVariants.map((v) => ({
+            variant: v.variant,
+            number_of_cases: v.number_of_cases,
+            case_buying_price: v.case_buying_price,
+            bottles_per_case: v.bottles_per_case,
+            free_bottles_per_case: v.free_bottles_per_case,
+        })),
+    }));
+
+    router.post(
+        "/lifts/store",
+        {
+            supplier_id: selectedSupplier.value!.id,
+            lift_date: new Date().toISOString(),
+            items,
+        },
+        {
+            onSuccess: () => {
+                showConfirmModal.value = false;
+                isLoading.value = false;
+                resetAll();
+                showToast(t("liftSuccess"), "success");
+            },
+            onError: (errors: any) => {
+                showConfirmModal.value = false;
+                isLoading.value = false;
+                showToast(Object.values(errors).flat().join(", "), "error");
+            },
+        }
+    );
+};
+
+const resetAll = () => {
+    liftItems.value = [];
+    productSearch.value = "";
+    productSearchResults.value = [];
+};
+
+const printInvoice = () => {
+    window.print();
+};
+
+// Close dropdowns on outside click
+const handleClickOutside = (e: MouseEvent) => {
+    const target = e.target as Node;
+    if (supplierDDRef.value && !supplierDDRef.value.contains(target)) {
+        showSupplierDD.value = false;
+    }
+    if (productDDRef.value && !productDDRef.value.contains(target)) {
+        showProductDD.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("mousedown", handleClickOutside);
+});
+
+const saveLang = () => localStorage.setItem("language", lang.value);
+
+// Translations
+const translations: Record<string, Record<string, string>> = {
+    en: {
+        liftManagement: "Lift Management",
+        selectSupplier: "Select Supplier",
+        searchSupplier: "Search supplier...",
+        availableBalance: "Available Balance",
+        addProducts: "Add Products",
+        searchProduct: "Search product by name...",
+        createNewProduct: "Create New Product",
+        productName: "Product Name",
+        category: "Category",
+        selectCategory: "Select category",
+        brand: "Brand",
+        selectBrand: "Select brand",
+        variantName: "Variant Size",
+        selectVariant: "Select size",
+        numberOfCases: "Cases",
+        caseBuyingPrice: "Price/Case",
+        bottlesPerCase: "Bottles/Case",
+        freeBottlesPerCase: "Free/Case",
+        addVariant: "Add Variant",
+        liftInvoice: "Lift Invoice",
+        emptyInvoice: "Add products to see invoice",
+        totalProducts: "Total Products",
+        totalCases: "Total Cases",
+        totalBottles: "Total Bottles",
+        freeBottles: "Free Bottles",
+        totalCost: "Total Cost",
+        remainingDeposit: "Remaining Deposit",
+        afterLift: "After this lift",
+        sufficient: "Sufficient",
+        insufficient: "Insufficient",
+        confirmLift: "Confirm Lift",
+        confirmLiftPrompt: "Are you sure you want to record this lift?",
+        cancel: "Cancel",
+        confirm: "Confirm",
+        save: "Save",
+        processing: "Processing...",
+        resetForm: "Reset",
+        liftSuccess: "Lift recorded successfully!",
+        insufficientDeposit: "Lift amount exceeds supplier's deposit",
+        productAlreadyAdded: "Product already added to cart",
+        productCreated: "Product created successfully",
+        error: "Something went wrong",
+        noResults: "No results found",
+        case: "cases",
+        free: "free",
+        printInvoice: "Print",
+    },
+    bn: {
+        liftManagement: "লিফট ব্যবস্থাপনা",
+        selectSupplier: "সরবরাহকারী নির্বাচন",
+        searchSupplier: "সরবরাহকারী খুঁজুন...",
+        availableBalance: "উপলব্ধ ব্যালেন্স",
+        addProducts: "পণ্য যোগ করুন",
+        searchProduct: "পণ্যের নাম দিয়ে খুঁজুন...",
+        createNewProduct: "নতুন পণ্য তৈরি করুন",
+        productName: "পণ্যের নাম",
+        category: "বিভাগ",
+        selectCategory: "বিভাগ নির্বাচন",
+        brand: "ব্র্যান্ড",
+        selectBrand: "ব্র্যান্ড নির্বাচন",
+        variantName: "ভেরিয়েন্টের আকার",
+        selectVariant: "আকার নির্বাচন",
+        numberOfCases: "কেস",
+        caseBuyingPrice: "মূল্য/কেস",
+        bottlesPerCase: "বোতল/কেস",
+        freeBottlesPerCase: "ফ্রি/কেস",
+        addVariant: "ভেরিয়েন্ট যোগ",
+        liftInvoice: "লিফট ইনভয়েস",
+        emptyInvoice: "ইনভয়েস দেখতে পণ্য যোগ করুন",
+        totalProducts: "মোট পণ্য",
+        totalCases: "মোট কেস",
+        totalBottles: "মোট বোতল",
+        freeBottles: "বিনামূল্যে বোতল",
+        totalCost: "মোট খরচ",
+        remainingDeposit: "বাকি আমানত",
+        afterLift: "এই লিফটের পর",
+        sufficient: "যথেষ্ট",
+        insufficient: "অপর্যাপ্ত",
+        confirmLift: "লিফট নিশ্চিত করুন",
+        confirmLiftPrompt: "আপনি কি নিশ্চিতভাবে এই লিফট রেকর্ড করতে চান?",
+        cancel: "বাতিল",
+        confirm: "নিশ্চিত",
+        save: "সংরক্ষণ",
+        processing: "প্রক্রিয়াকরণ...",
+        resetForm: "রিসেট",
+        liftSuccess: "লিফট সফলভাবে রেকর্ড হয়েছে!",
+        insufficientDeposit: "লিফটের পরিমাণ সরবরাহকারীর আমানত অতিক্রম করেছে",
+        productAlreadyAdded: "পণ্য ইতিমধ্যে যোগ করা হয়েছে",
+        productCreated: "পণ্য সফলভাবে তৈরি হয়েছে",
+        error: "কিছু ভুল হয়েছে",
+        noResults: "কোন ফলাফল পাওয়া যায়নি",
+        case: "কেস",
+        free: "ফ্রি",
+        printInvoice: "প্রিন্ট",
+    },
+};
+
+const t = (key: string) => translations[lang.value]?.[key] || translations.en[key] || key;
+</script>
+
+<style scoped>
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@media print {
+    /* Hide everything outside the invoice */
+    :deep(.print\:hidden),
+    :deep(nav),
+    :deep(aside) {
+        display: none !important;
+    }
+
+    #printable-invoice {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    #printable-invoice .max-h-\[calc\(100vh-320px\)\] {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+}
+</style>
