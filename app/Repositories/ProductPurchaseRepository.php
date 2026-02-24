@@ -110,7 +110,9 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'variant_metadata' => $variant,
             ];
         })->filter(function ($item) {
-            return $item['total_bottles_available'] > 0; // Only show items with available stock
+            // Exclude variants with no name (N/A fallback from missing variant field)
+            if (($item['variant'] ?? 'N/A') === 'N/A') return false;
+            return $item['total_bottles_available'] >= 0; // Include 0-stock items so they remain visible
         });
 
         // Group by product_name and then aggregate by variant

@@ -235,10 +235,14 @@ const props = defineProps({
     inventoryStock: Array,
 });
 
+// Returns date as YYYY-MM-DD in LOCAL timezone (avoids UTC offset bug)
+const localDate = (d = new Date()) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 // Get initial dates from URL or use today's date
 const getInitialDate = (paramName) => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(paramName) || new Date().toISOString().substr(0, 10);
+    return urlParams.get(paramName) || localDate();
 };
 
 const dailySalesDate = ref(getInitialDate("daily_sales_date"));
@@ -263,7 +267,7 @@ const goToSalesReport = (startDate, endDate) => {
 };
 
 const goToDailySalesReport = () => {
-    const date = dailySalesDate.value || new Date().toISOString().slice(0, 10);
+    const date = dailySalesDate.value || localDate();
     goToSalesReport(date, date);
 };
 
@@ -273,12 +277,8 @@ const goToMonthlySalesReport = () => {
     const monthIndex =
         typeof props.month === "number" ? props.month - 1 : today.getMonth();
 
-    const start = new Date(year, monthIndex, 1)
-        .toISOString()
-        .slice(0, 10);
-    const end = new Date(year, monthIndex + 1, 0)
-        .toISOString()
-        .slice(0, 10);
+    const start = localDate(new Date(year, monthIndex, 1));
+    const end = localDate(new Date(year, monthIndex + 1, 0));
 
     goToSalesReport(start, end);
 };

@@ -99,7 +99,7 @@
                                     handleVariantChange(index, variant.variant)
                                 "
                                 :id="'variant_' + index"
-                                class="w-full pl-10 pr-8 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 appearance-none"
+                                class="w-full min-w-[120px] pl-10 pr-10 py-2 rounded-md border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 appearance-none"
                                 :class="{
                                     'border-red-400 focus:border-red-500 focus:ring-red-200':
                                         isSubmitted && !variant.variant,

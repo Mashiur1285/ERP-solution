@@ -251,12 +251,12 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <template
-                            v-for="(expense, index) in filteredExpenses"
-                            :key="expense.id"
+                            v-for="group in groupedExpenses"
+                            :key="group.reason"
                         >
                             <tr
                                 class="hover:bg-gray-50 transition-colors cursor-pointer"
-                                @click="toggleExpenseDetails(index)"
+                                @click="toggleGroup(group.reason)"
                             >
                                 <td
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900 w-1/4"
@@ -265,7 +265,7 @@
                                         <svg
                                             :class="[
                                                 'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
-                                                expandedExpenses[index]
+                                                expandedGroups[group.reason]
                                                     ? 'rotate-90'
                                                     : '',
                                             ]"
@@ -303,9 +303,12 @@
                                             <div class="min-w-0">
                                                 <p
                                                     class="font-semibold text-gray-900 truncate"
-                                                    :title="expense.reason"
+                                                    :title="group.reason"
                                                 >
-                                                    {{ expense.reason }}
+                                                    {{ group.reason }}
+                                                    <span class="ml-2 px-2 py-0.5 bg-gray-100 text-gray-500 font-normal rounded-full text-[10px]">
+                                                        {{ toBengaliNumber(group.items.length) }} {{ getTranslation('entries') }}
+                                                    </span>
                                                 </p>
                                             </div>
                                         </div>
@@ -315,301 +318,64 @@
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-2/4 hidden sm:table-cell"
                                 >
                                     <div
-                                        class="truncate"
-                                        :title="expense.description || '-'"
+                                        class="truncate italic text-gray-400"
+                                        :title="group.items.length > 1 ? group.items.map(i => i.description).filter(Boolean).join(', ') : group.items[0].description || '-'"
                                     >
-                                        {{ expense.description || "-" }}
+                                        {{ group.items.length > 1 ? group.items.map(i => i.description).filter(Boolean).join(', ') : group.items[0].description || "-" }}
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/4 hidden md:table-cell"
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/4 hidden md:table-cell font-bold text-indigo-600"
                                 >
                                     <div class="text-left">
-                                        {{ toBengaliNumber(expense.amount) }}
+                                        {{ toBengaliNumber(group.totalAmount, 2) }}
                                         {{ getTranslation("currency") }}
                                     </div>
                                 </td>
-                                <td class="px-2 lg:px-3 py-3 w-1/4">
-                                    <div class="flex justify-center space-x-2">
-                                        <button
-                                            @click.stop="editExpense(expense)"
-                                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
-                                            :title="getTranslation('edit')"
-                                        >
-                                            <svg
-                                                class="w-4 h-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                                                />
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
+                                <td class="px-2 lg:px-3 py-3 w-1/4 text-center">
+                                    <span class="text-[10px] lg:text-xs font-medium text-indigo-500 uppercase tracking-wider">
+                                        {{ expandedGroups[group.reason] ? getTranslation('collapse') : getTranslation('expand') }}
+                                    </span>
                                 </td>
                             </tr>
 
-                            <!-- Expanded expense details -->
+                            <!-- Expanded group details -->
                             <tr
-                                v-if="expandedExpenses[index]"
-                                class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
+                                v-if="expandedGroups[group.reason]"
+                                class="bg-gray-50 border-t border-b border-gray-100"
                             >
-                                <td :colspan="4" class="px-2 lg:px-6 py-6">
-                                    <div class="ml-2 lg:ml-6">
-                                        <!-- Mobile view for hidden columns -->
-                                        <div
-                                            class="sm:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border-l-4 border-indigo-500"
-                                        >
-                                            <h4
-                                                class="font-semibold text-gray-800 mb-3 flex items-center"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                                {{
-                                                    getTranslation(
-                                                        "expenseDetails"
-                                                    )
-                                                }}
-                                            </h4>
-                                            <div class="space-y-3 text-sm">
-                                                <div class="flex flex-col">
-                                                    <span
-                                                        class="text-xs text-gray-500 font-medium"
-                                                    >
-                                                        {{
-                                                            getTranslation(
-                                                                "description"
-                                                            )
-                                                        }}
-                                                    </span>
-                                                    <span
-                                                        class="text-gray-800 font-medium"
-                                                    >
-                                                        {{
-                                                            expense.description ||
-                                                            "-"
-                                                        }}
-                                                    </span>
-                                                </div>
-                                                <div
-                                                    class="md:hidden flex flex-col"
-                                                >
-                                                    <span
-                                                        class="text-xs text-gray-500 font-medium"
-                                                    >
-                                                        {{
-                                                            getTranslation(
-                                                                "amount"
-                                                            )
-                                                        }}
-                                                    </span>
-                                                    <span
-                                                        class="text-gray-800 font-medium"
-                                                    >
-                                                        {{
-                                                            toBengaliNumber(
-                                                                expense.amount
-                                                            )
-                                                        }}
-                                                        {{
-                                                            getTranslation(
-                                                                "currency"
-                                                            )
-                                                        }}
-                                                    </span>
-                                                </div>
-                                                <div class="flex flex-col">
-                                                    <span
-                                                        class="text-xs text-gray-500 font-medium"
-                                                    >
-                                                        {{
-                                                            getTranslation(
-                                                                "createdAt"
-                                                            )
-                                                        }}
-                                                    </span>
-                                                    <span
-                                                        class="text-gray-800 font-medium"
-                                                    >
-                                                        {{
-                                                            new Date(
-                                                                expense.created_at
-                                                            ).toLocaleDateString()
-                                                        }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Expense Details -->
-                                        <div class="hidden sm:block">
-                                            <div
-                                                class="mb-4 flex items-center justify-between"
-                                            >
-                                                <h4
-                                                    class="text-lg font-semibold text-gray-800 flex items-center"
-                                                >
-                                                    <svg
-                                                        class="w-5 h-5 mr-2 text-indigo-600"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                                                        />
-                                                    </svg>
-                                                    {{
-                                                        getTranslation(
-                                                            "expenseDetails"
-                                                        )
-                                                    }}
-                                                    - {{ expense.reason }}
-                                                </h4>
-                                            </div>
-
-                                            <div
-                                                class="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-                                            >
-                                                <div
-                                                    class="grid grid-cols-1 md:grid-cols-2 gap-6"
-                                                >
-                                                    <div>
-                                                        <h5
-                                                            class="text-sm font-semibold text-gray-700 mb-2"
+                                <td :colspan="4" class="px-2 sm:px-6 py-4">
+                                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                                        <table class="w-full text-xs lg:text-sm">
+                                            <thead class="bg-gray-50 text-gray-500">
+                                                <tr>
+                                                    <th class="px-4 py-2 font-semibold text-left w-32 lg:w-40">{{ getTranslation('createdAt') }}</th>
+                                                    <th class="px-4 py-2 font-semibold text-left">{{ getTranslation('description') }}</th>
+                                                    <th class="px-4 py-2 font-semibold text-right w-32 lg:w-40">{{ getTranslation('amount') }}</th>
+                                                    <th class="px-4 py-2 font-semibold text-center w-20 lg:w-24">{{ getTranslation('actions') }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-50 text-gray-700">
+                                                <tr v-for="item in group.items" :key="item.id" class="hover:bg-indigo-50/30 transition-colors">
+                                                    <td class="px-4 py-2 whitespace-nowrap text-left">{{ new Date(item.created_at).toLocaleDateString() }}</td>
+                                                    <td class="px-4 py-2 min-w-[150px] text-left">{{ item.description || '-' }}</td>
+                                                    <td class="px-4 py-2 font-medium text-right whitespace-nowrap">{{ toBengaliNumber(item.amount, 2) }} {{ getTranslation('currency') }}</td>
+                                                    <td class="px-4 py-2 text-center">
+                                                        <button
+                                                            @click.stop="editExpense(item)"
+                                                            class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+                                                            :title="getTranslation('edit')"
                                                         >
-                                                            {{
-                                                                getTranslation(
-                                                                    "description"
-                                                                )
-                                                            }}
-                                                        </h5>
-                                                        <p
-                                                            class="text-gray-900 bg-gray-50 p-3 rounded-lg"
-                                                        >
-                                                            {{
-                                                                expense.description ||
-                                                                getTranslation(
-                                                                    "noDescription"
-                                                                )
-                                                            }}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <h5
-                                                            class="text-sm font-semibold text-gray-700 mb-2"
-                                                        >
-                                                            {{
-                                                                getTranslation(
-                                                                    "metadata"
-                                                                )
-                                                            }}
-                                                        </h5>
-                                                        <div
-                                                            class="space-y-2 text-sm"
-                                                        >
-                                                            <div
-                                                                class="flex justify-between"
-                                                            >
-                                                                <span
-                                                                    class="text-gray-600"
-                                                                >
-                                                                    {{
-                                                                        getTranslation(
-                                                                            "amount"
-                                                                        )
-                                                                    }}:
-                                                                </span>
-                                                                <span
-                                                                    class="font-medium"
-                                                                >
-                                                                    {{
-                                                                        toBengaliNumber(
-                                                                            expense.amount
-                                                                        )
-                                                                    }}
-                                                                    {{
-                                                                        getTranslation(
-                                                                            "currency"
-                                                                        )
-                                                                    }}
-                                                                </span>
-                                                            </div>
-                                                            <div
-                                                                class="flex justify-between"
-                                                            >
-                                                                <span
-                                                                    class="text-gray-600"
-                                                                >
-                                                                    {{
-                                                                        getTranslation(
-                                                                            "createdAt"
-                                                                        )
-                                                                    }}:
-                                                                </span>
-                                                                <span
-                                                                    class="font-medium"
-                                                                >
-                                                                    {{
-                                                                        new Date(
-                                                                            expense.created_at
-                                                                        ).toLocaleString()
-                                                                    }}
-                                                                </span>
-                                                            </div>
-                                                            <div
-                                                                class="flex justify-between"
-                                                            >
-                                                                <span
-                                                                    class="text-gray-600"
-                                                                >
-                                                                    {{
-                                                                        getTranslation(
-                                                                            "expenseId"
-                                                                        )
-                                                                    }}:
-                                                                </span>
-                                                                <span
-                                                                    class="font-medium"
-                                                                >
-                                                                    #{{
-                                                                        toBengaliNumber(
-                                                                            expense.id
-                                                                        )
-                                                                    }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                     </div>
                                 </td>
                             </tr>
                         </template>
@@ -664,6 +430,9 @@ const translations = {
         noDescription: "No description provided",
         metadata: "Metadata",
         expenseId: "Expense ID",
+        entries: "entries",
+        expand: "Expand",
+        collapse: "Collapse",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -684,6 +453,9 @@ const translations = {
         noDescription: "কোনো বিবরণ প্রদান করা হয়নি",
         metadata: "মেটাডেটা",
         expenseId: "ব্যয় আইডি",
+        entries: "টি এন্ট্রি",
+        expand: "বিস্তারিত",
+        collapse: "সংক্ষিপ্ত করুন",
     },
 };
 
@@ -692,7 +464,7 @@ const searchQuery = ref("");
 const showExpenseModal = ref(false);
 const editMode = ref(false);
 const currentExpense = ref<Expense | null>(null);
-const expandedExpenses = ref({});
+const expandedGroups = ref<Record<string, boolean>>({});
 
 // Date range state (default: today)
 const _todayExp = new Date();
@@ -711,10 +483,11 @@ const filteredExpenses = computed(() => {
     const query = searchQuery.value.toLowerCase();
 
     return props.expenses.filter((expense) => {
-        // Date range filter by created_at
+        // Date range filter by created_at (parse in local timezone to avoid UTC offset mismatch)
         if (dateStart.value || dateEnd.value) {
-            const eDateStr = expense.created_at ? String(expense.created_at).split('T')[0] : null;
-            if (!eDateStr) return false;
+            if (!expense.created_at) return false;
+            const d = new Date(String(expense.created_at).replace(' ', 'T'));
+            const eDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             if (dateStart.value && eDateStr < dateStart.value) return false;
             if (dateEnd.value && eDateStr > dateEnd.value) return false;
         }
@@ -732,21 +505,45 @@ const filteredExpenses = computed(() => {
 });
 
 // Summary statistics
-const totalExpenses = computed(() => props.expenses.length);
+const totalExpenses = computed(() => filteredExpenses.value.length);
 const totalAmount = computed(() =>
-    props.expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0)
+    filteredExpenses.value.reduce((sum, expense) => sum + parseFloat(expense.amount as any), 0)
 );
 const recentExpenses = computed(() => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return props.expenses.filter(
+    return filteredExpenses.value.filter(
         (expense) => new Date(expense.created_at) > sevenDaysAgo
     ).length;
 });
 
-const toggleExpenseDetails = (index: number) => {
-    expandedExpenses.value[index] = !expandedExpenses.value[index];
+const toggleGroup = (reason: string) => {
+    expandedGroups.value[reason] = !expandedGroups.value[reason];
 };
+
+// Group expenses by reason
+const groupedExpenses = computed(() => {
+    const groups: Record<string, {
+        reason: string;
+        totalAmount: number;
+        items: Expense[];
+    }> = {};
+
+    filteredExpenses.value.forEach(expense => {
+        if (!groups[expense.reason]) {
+            groups[expense.reason] = {
+                reason: expense.reason,
+                totalAmount: 0,
+                items: []
+            };
+        }
+        groups[expense.reason].totalAmount += Number(expense.amount);
+        groups[expense.reason].items.push(expense);
+    });
+
+    // Sort by reason name for consistency
+    return Object.values(groups).sort((a, b) => a.reason.localeCompare(b.reason));
+});
 
 const getTranslation = (key: string) => {
     return translations[currentLanguage.value]?.[key] || key;
@@ -756,15 +553,23 @@ const getTranslationLabel = (key: string, lang: string) => {
     return translations[lang]?.[key] || key;
 };
 
-const toBengaliNumber = (num: number | string) => {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num.toString();
+const toBengaliNumber = (numValue: number | string, decimals: number | null = null): string => {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output: string;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
+    if (currentLanguage.value !== 'bn') return output;
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 const changeLanguage = (lang: string) => {

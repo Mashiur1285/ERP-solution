@@ -566,10 +566,11 @@ const filteredLifts = computed(() => {
     const query = searchQuery.value.toLowerCase();
     
     return props.liftHistory.filter((lift) => {
-        // Date range filter
+        // Date range filter (parse in local timezone to avoid UTC offset mismatch)
         if (dateStart.value || dateEnd.value) {
-            const lDateStr = lift.lift_date ? String(lift.lift_date).split('T')[0] : null;
-            if (!lDateStr) return false;
+            if (!lift.lift_date) return false;
+            const d = new Date(String(lift.lift_date).replace(' ', 'T'));
+            const lDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             if (dateStart.value && lDateStr < dateStart.value) return false;
             if (dateEnd.value && lDateStr > dateEnd.value) return false;
         }

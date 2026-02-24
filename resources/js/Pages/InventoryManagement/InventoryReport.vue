@@ -984,8 +984,9 @@ const filteredInventory = computed(() => {
     // Apply date range filter
     if (dateStart.value || dateEnd.value) {
         result = result.filter((item) => {
-            const pDateStr = item.purchase_date ? String(item.purchase_date).split('T')[0] : null;
-            if (!pDateStr) return false;
+            if (!item.purchase_date) return false;
+            const d = new Date(String(item.purchase_date).replace(' ', 'T'));
+            const pDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             
             if (dateStart.value && pDateStr < dateStart.value) return false;
             if (dateEnd.value && pDateStr > dateEnd.value) return false;
@@ -1012,20 +1013,25 @@ function getTranslationLabel(key, lang) {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num, decimals = 0) {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
+function toBengaliNumber(numValue, decimals = null) {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
     if (currentLanguage.value !== "bn") {
-        return decimals > 0 ? Number(num).toFixed(decimals) : num;
+        return output;
     }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    let formattedNum =
-        decimals > 0 ? Number(num).toFixed(decimals) : num.toString();
-    return formattedNum.replace(
-        /\d/g,
-        (digit) => bengaliDigits[parseInt(digit)]
-    );
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 }
 
 function changeLanguage(lang) {

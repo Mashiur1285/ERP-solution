@@ -21,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         HandleInertiaRequests::class,
     ]);$middleware->validateCsrfTokens(except: [
             'suppliers/store',
-            // Add other routes if needed
+            'sales/store',
+            'sales/payment/store/*',
+            'lifts/store',
+            'api/product-catalog/quick-store',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

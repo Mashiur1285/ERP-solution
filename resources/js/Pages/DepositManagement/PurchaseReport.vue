@@ -1101,15 +1101,21 @@ function getTranslationLabel(key: string, lang: string) {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num: number | string) {
+function toBengaliNumber(num: number | string): string {
     if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
+    }
+
+    if (currentLanguage.value !== 'bn') return String(num);
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 }
 
 function changeLanguage(lang: string) {

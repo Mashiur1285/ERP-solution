@@ -56,11 +56,10 @@
                 <p class="text-gray-600 text-sm mb-4">{{ t('confirmLiftPrompt') }}</p>
                 <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200 mb-4 space-y-2 text-sm">
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('totalProducts') }}</span><span class="font-bold">{{ liftItems.filter(i => i.variants.some(v => v.number_of_cases > 0)).length }}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-600">{{ t('totalCost') }}</span><span class="font-bold text-indigo-600">৳{{ grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">{{ t('totalCost') }}</span><span class="font-bold text-indigo-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('remainingDeposit') }}</span>
-                        <span class="font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">৳{{ remainingDeposit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                        <span class="font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">৳{{ toBengaliNumber(remainingDeposit, 2) }}</span></div>
                     </div>
-                </div>
                 <div class="flex justify-end space-x-3">
                     <button @click="showConfirmModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">{{ t('cancel') }}</button>
                     <button @click="submitLift" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" :disabled="isLoading || remainingDeposit < 0">
@@ -106,55 +105,132 @@
                                 class="w-full text-left px-4 py-3 hover:bg-indigo-50 text-sm border-b border-gray-50 last:border-0"
                                 @mousedown.prevent="selectSupplier(s)">
                                 <span class="font-medium text-gray-800">{{ s.company_name }}</span>
-                                <span class="float-right text-indigo-600 font-semibold">৳{{ s.remaining_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                                <span class="float-right text-indigo-600 font-semibold">৳{{ toBengaliNumber(s.remaining_deposit, 2) }}</span>
                             </button>
                         </div>
                         <div v-if="showSupplierDD && !filteredSuppliers.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
                             <div class="px-4 py-3 text-sm text-gray-400">{{ t('noResults') }}</div>
                         </div>
                     </div>
+                    <!-- Supplier Tiles -->
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button
+                            v-for="s in props.suppliers"
+                            :key="s.id"
+                            type="button"
+                            @click="selectSupplier(s); showSupplierDD = false"
+                            :class="[
+                                'px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                                selectedSupplier?.id === s.id
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400 hover:text-indigo-600'
+                            ]"
+                        >
+                            {{ s.company_name }}
+                        </button>
+                    </div>
                     <div v-if="selectedSupplier" class="mt-3 flex items-center justify-between bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200">
                         <span class="text-sm text-gray-700">{{ t('availableBalance') }}</span>
-                        <span class="text-lg font-bold text-indigo-600">৳{{ selectedSupplier.remaining_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                        <span class="text-lg font-bold text-indigo-600">৳{{ toBengaliNumber(selectedSupplier.remaining_deposit, 2) }}</span>
                     </div>
                 </div>
 
-                <!-- Step 2: Product Search & Add -->
+                <!-- Step 2: Product Selection & Variant Picker -->
                 <div v-if="selectedSupplier" class="bg-white rounded-xl shadow-sm p-5">
                     <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
                         <span class="w-6 h-6 bg-indigo-600 text-white rounded-full text-xs flex items-center justify-center mr-2">2</span>
                         {{ t('addProducts') }}
                     </h2>
-                    <div class="relative">
-                        <div class="flex gap-2">
-                            <div class="flex-1 relative" ref="productDDRef">
-                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+
+                    <!-- Search filter + Create button -->
+                    <div class="flex gap-2 mb-3">
+                        <div class="flex-1 relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input v-model="productSearch" @input="searchProducts"
+                                :placeholder="t('searchProduct')"
+                                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all" />
+                        </div>
+                        <button @click="openCreateProductModal"
+                            class="px-3 py-2 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50 flex items-center gap-1.5 text-sm font-medium flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            {{ t('createNewProduct') }}
+                        </button>
+                    </div>
+
+                    <!-- Product chips -->
+                    <div v-if="isSearching" class="flex items-center gap-2 text-sm text-gray-400 py-3">
+                        <svg class="w-4 h-4 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        {{ t('loading') }}
+                    </div>
+                    <div v-else-if="productSearchResults.length" class="flex flex-wrap gap-2">
+                        <button v-for="p in productSearchResults" :key="p.id"
+                            @click="selectProductForVariants(p)"
+                            :class="['px-3 py-1.5 rounded-lg border text-sm font-medium transition-all',
+                                activeProduct?.id === p.id
+                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                    : liftItems.some(i => i.product_catalog_id === p.id)
+                                        ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
+                                        : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-600'
+                            ]">
+                            {{ p.name }}
+                            <span v-if="liftItems.some(i => i.product_catalog_id === p.id)" class="ml-1 text-xs">✓</span>
+                        </button>
+                    </div>
+                    <div v-else class="text-sm text-gray-400 py-2 text-center">
+                        {{ t('noResults') }}
+                    </div>
+
+                    <!-- Variant Picker -->
+                    <div v-if="activeProduct" class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm font-semibold text-gray-800">
+                                {{ activeProduct.name }}
+                                <span class="ml-1.5 text-xs font-normal text-gray-400">— {{ t('selectVariantsToAdd') }}</span>
+                            </p>
+                            <button @click="closeVariantPicker" class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                                <input v-model="productSearch" @focus="onProductFocus" @input="searchProducts"
-                                    :placeholder="t('searchProduct')"
-                                    class="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base" autocomplete="off" />
-                                <div v-if="showProductDD && productSearchResults.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
-                                    <button v-for="p in productSearchResults" :key="p.id" type="button"
-                                        class="w-full text-left px-4 py-3 hover:bg-indigo-50 border-b border-gray-50 last:border-0"
-                                        @mousedown.prevent="addProductToCart(p)">
-                                        <span class="font-medium text-gray-800">{{ p.name }}</span>
-                                        <span v-if="p.category_name || p.brand_name" class="block text-xs text-gray-400 mt-0.5">
-                                            {{ [p.category_name, p.brand_name].filter(Boolean).join(' / ') }}
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <label v-for="opt in variantOptions" :key="opt.value"
+                                :class="['flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none',
+                                    variantSelections[opt.value]?.checked
+                                        ? 'border-indigo-400 bg-indigo-50'
+                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                ]">
+                                <input type="checkbox"
+                                    v-model="variantSelections[opt.value].checked"
+                                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0" />
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800">{{ opt.label }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">
+                                        {{ variantSelections[opt.value]?.bottles_per_case ?? opt.bottles_per_case }} {{ t('bottlesPerCase') }}
+                                        <span v-if="(variantSelections[opt.value]?.free_bottles_per_case ?? 0) > 0" class="text-green-500 ml-1">
+                                            +{{ variantSelections[opt.value].free_bottles_per_case }} {{ t('free') }}
                                         </span>
-                                    </button>
+                                    </p>
                                 </div>
-                                <div v-if="showProductDD && productSearch && !productSearchResults.length && !isSearching" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-4 text-center">
-                                    <p class="text-sm text-gray-400 mb-2">{{ t('noResults') }}</p>
-                                    <button @mousedown.prevent="openCreateProductModal" class="text-sm text-indigo-600 font-medium hover:underline">+ {{ t('createNewProduct') }}</button>
-                                </div>
-                            </div>
-                            <button @click="openCreateProductModal"
-                                class="px-4 py-3 rounded-lg border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center"
-                                :title="t('createNewProduct')">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            </label>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button @click="addProductWithVariants"
+                                :disabled="!hasCheckedVariants"
+                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
+                                {{ t('addToCart') }}
                             </button>
                         </div>
                     </div>
@@ -176,52 +252,72 @@
                             </button>
                         </div>
 
-                        <!-- Variants -->
-                        <div class="space-y-3">
-                            <div v-for="(v, vIdx) in item.variants" :key="vIdx"
-                                class="grid grid-cols-5 gap-3 items-end bg-gray-50 p-3 rounded-lg">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('variantName') }}*</label>
-                                    <select v-model="v.variant" class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                                        @change="onVariantSelect(itemIdx, vIdx)">
-                                        <option value="">{{ t('selectVariant') }}</option>
-                                        <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('numberOfCases') }}*</label>
-                                    <input v-model.number="v.number_of_cases" type="number" min="0"
-                                        class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('caseBuyingPrice') }} (৳)*</label>
-                                    <input v-model.number="v.case_buying_price" type="number" step="0.01" min="0"
-                                        class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('bottlesPerCase') }}</label>
-                                    <input v-model.number="v.bottles_per_case" type="number" min="1"
-                                        class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
-                                </div>
-                                <div class="flex items-end gap-2">
-                                    <div class="flex-1">
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ t('freeBottlesPerCase') }}</label>
-                                        <input v-model.number="v.free_bottles_per_case" type="number" min="0"
-                                            class="w-full px-2 py-2 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
-                                    </div>
-                                    <button v-if="item.variants.length > 1" @click="removeVariant(itemIdx, vIdx)"
-                                        class="p-2 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 mb-0.5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
+                        <!-- Variants Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-200">
+                                        <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('variantName') }}</th>
+                                        <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('numberOfCases') }}</th>
+                                        <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('caseBuyingPrice') }} (৳)</th>
+                                        <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('bottlesPerCase') }}</th>
+                                        <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('freeBottlesPerCase') }}</th>
+                                        <th class="text-right px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('totalCost') }}</th>
+                                        <th class="w-8 px-2 py-2"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(v, vIdx) in item.variants" :key="vIdx"
+                                        class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                        <td class="px-2 py-2">
+                                            <select v-model="v.variant"
+                                                class="w-full min-w-[120px] pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 bg-white"
+                                                @change="onVariantSelect(itemIdx, vIdx)">
+                                                <option value="">{{ t('selectVariant') }}</option>
+                                                <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-2 py-2">
+                                            <input v-model.number="v.number_of_cases" type="number" min="0"
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                        </td>
+                                        <td class="px-2 py-2">
+                                            <input v-model.number="v.case_buying_price" type="number" step="0.01" min="0"
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                        </td>
+                                        <td class="px-2 py-2">
+                                            <input v-model.number="v.bottles_per_case" type="number" min="1"
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                        </td>
+                                        <td class="px-2 py-2">
+                                            <input v-model.number="v.free_bottles_per_case" type="number" min="0"
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                        </td>
+                                        <td class="px-3 py-2 text-right">
+                                            <span class="text-sm font-semibold text-indigo-600">
+                                                ৳{{ toBengaliNumber(calcVariantCost(v), 2) }}
+                                            </span>
+                                            <div v-if="calcFreeBottles(v) > 0" class="text-xs text-green-500 mt-0.5">
+                                                +{{ calcFreeBottles(v) }} {{ t('free') }}
+                                            </div>
+                                        </td>
+                                        <td class="px-2 py-2 text-center">
+                                            <button v-if="item.variants.length > 1"
+                                                @click="removeVariant(itemIdx, vIdx)"
+                                                class="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
 
                         <!-- Add Variant Button -->
-                        <button @click="addVariant(itemIdx)" class="mt-3 text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button @click="addVariant(itemIdx)" class="mt-2 text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1 px-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                             {{ t('addVariant') }}
@@ -267,7 +363,7 @@
                                         <span class="text-gray-400 text-xs ml-1">x{{ v.number_of_cases }} {{ t('case') }}</span>
                                         <span v-if="calcFreeBottles(v) > 0" class="text-green-500 text-xs block">+{{ calcFreeBottles(v) }} {{ t('free') }}</span>
                                     </div>
-                                    <span class="font-semibold text-gray-800">৳{{ calcVariantCost(v).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                                    <span class="font-semibold text-gray-800">৳{{ toBengaliNumber(calcVariantCost(v), 2) }}</span>
                                 </div>
                             </div>
 
@@ -282,15 +378,15 @@
                                 </div>
                                 <div class="flex justify-between text-gray-600">
                                     <span>{{ t('totalCases') }}</span>
-                                    <span class="font-medium">{{ totalCases.toLocaleString() }}</span>
+                                    <span class="font-medium">{{ toBengaliNumber(totalCases) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600">
-                                    <span>{{ t('totalBottles') }}</span>
-                                    <span class="font-bold text-gray-800">{{ totalBottles.toLocaleString() }}</span>
+                                <div class="flex justify-between items-center bg-gray-50/50 p-2 rounded-lg">
+                                    <span class="text-xs text-gray-400 uppercase tracking-wider">{{ t('totalBottles') }}</span>
+                                    <span class="font-bold text-gray-800">{{ toBengaliNumber(totalBottles) }}</span>
                                 </div>
-                                <div v-if="totalFreeBottles > 0" class="flex justify-between text-gray-600">
-                                    <span>{{ t('freeBottles') }}</span>
-                                    <span class="font-medium text-green-600">+{{ totalFreeBottles.toLocaleString() }}</span>
+                                <div v-if="totalFreeBottles > 0" class="flex justify-between items-center bg-green-50/50 p-2 rounded-lg">
+                                    <span class="text-xs text-green-600 uppercase tracking-wider">{{ t('totalFreeBottles') }}</span>
+                                    <span class="font-medium text-green-600">+{{ toBengaliNumber(totalFreeBottles) }}</span>
                                 </div>
                             </div>
 
@@ -298,7 +394,7 @@
                             <div class="border-t-2 border-dotted border-gray-300 mt-3 pt-3">
                                 <div class="flex justify-between items-center">
                                     <span class="text-base font-bold text-gray-800">{{ t('totalCost') }}</span>
-                                    <span class="text-xl font-bold text-indigo-600">৳{{ grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                                    <span class="text-xl font-bold text-indigo-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span>
                                 </div>
                             </div>
 
@@ -312,7 +408,7 @@
                                     </div>
                                     <div class="text-right">
                                         <p class="text-lg font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">
-                                            ৳{{ remainingDeposit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                                            ৳{{ toBengaliNumber(remainingDeposit, 2) }}
                                         </p>
                                         <p class="text-xs" :class="remainingDeposit >= 0 ? 'text-green-500' : 'text-red-500'">
                                             {{ remainingDeposit >= 0 ? t('sufficient') : t('insufficient') }}
@@ -361,7 +457,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 
@@ -423,7 +519,6 @@ const variantOptions = [
 
 // Template refs for click-outside detection
 const supplierDDRef = ref<HTMLElement | null>(null);
-const productDDRef = ref<HTMLElement | null>(null);
 
 // State
 const lang = ref(localStorage.getItem("language") || "en");
@@ -457,22 +552,16 @@ const selectSupplier = (s: Supplier) => {
     showSupplierDD.value = false;
     liftItems.value = [];
     productSearch.value = "";
+    activeProduct.value = null;
+    variantSelections.value = {};
+    fetchProducts(""); // auto-load on supplier select
 };
 
 // Product Search
 const productSearch = ref("");
 const productSearchResults = ref<CatalogProduct[]>([]);
-const showProductDD = ref(false);
 const isSearching = ref(false);
 let searchTimeout: ReturnType<typeof setTimeout>;
-
-const onProductFocus = () => {
-    showProductDD.value = true;
-    // Load all products for this supplier on focus if search is empty
-    if (selectedSupplier.value && !productSearch.value) {
-        fetchProducts("");
-    }
-};
 
 const fetchProducts = async (query: string) => {
     if (!selectedSupplier.value) return;
@@ -490,7 +579,6 @@ const fetchProducts = async (query: string) => {
 };
 
 const searchProducts = () => {
-    showProductDD.value = true;
     clearTimeout(searchTimeout);
     if (!selectedSupplier.value) {
         productSearchResults.value = [];
@@ -500,42 +588,74 @@ const searchProducts = () => {
     searchTimeout = setTimeout(() => fetchProducts(productSearch.value), 300);
 };
 
+// Variant Picker state
+interface VariantCheckState {
+    checked: boolean;
+    bottles_per_case: number;
+    free_bottles_per_case: number;
+}
+const activeProduct = ref<CatalogProduct | null>(null);
+const variantSelections = ref<Record<string, VariantCheckState>>({});
+const hasCheckedVariants = computed(() =>
+    Object.values(variantSelections.value).some((v) => v.checked)
+);
+
+const selectProductForVariants = (p: CatalogProduct) => {
+    activeProduct.value = p;
+    const selections: Record<string, VariantCheckState> = {};
+    for (const opt of variantOptions) {
+        const defaultData = p.default_variants?.find((dv) => dv.variant === opt.value);
+        selections[opt.value] = {
+            checked: !!defaultData,
+            bottles_per_case: defaultData?.bottles_per_case ?? opt.bottles_per_case,
+            free_bottles_per_case: defaultData?.free_bottles_per_case ?? 0,
+        };
+    }
+    variantSelections.value = selections;
+};
+
+const closeVariantPicker = () => {
+    activeProduct.value = null;
+    variantSelections.value = {};
+};
+
+const addProductWithVariants = () => {
+    if (!activeProduct.value) return;
+    const p = activeProduct.value;
+    const selectedVariants: LiftVariant[] = variantOptions
+        .filter((opt) => variantSelections.value[opt.value]?.checked)
+        .map((opt) => ({
+            variant: opt.value,
+            number_of_cases: 0,
+            case_buying_price: 0,
+            bottles_per_case: variantSelections.value[opt.value].bottles_per_case,
+            free_bottles_per_case: variantSelections.value[opt.value].free_bottles_per_case,
+        }));
+    if (!selectedVariants.length) return;
+
+    const existing = liftItems.value.find((i) => i.product_catalog_id === p.id);
+    if (existing) {
+        for (const v of selectedVariants) {
+            if (!existing.variants.some((ev) => ev.variant === v.variant)) {
+                existing.variants.push(v);
+            }
+        }
+    } else {
+        liftItems.value.push({
+            product_catalog_id: p.id,
+            product_name: p.name,
+            category_name: p.category_name,
+            brand_name: p.brand_name,
+            category_id: p.category_id,
+            brand_id: p.brand_id,
+            variants: selectedVariants,
+        });
+    }
+    closeVariantPicker();
+};
+
 // Cart
 const liftItems = ref<LiftItem[]>([]);
-
-const addProductToCart = (p: CatalogProduct) => {
-    // Check if product already in cart
-    if (liftItems.value.some((i) => i.product_catalog_id === p.id)) {
-        showToast(t("productAlreadyAdded"), "error");
-        showProductDD.value = false;
-        productSearch.value = "";
-        return;
-    }
-
-    const defaultVariants: LiftVariant[] =
-        p.default_variants && p.default_variants.length
-            ? p.default_variants.map((dv) => ({
-                  variant: dv.variant,
-                  number_of_cases: 0,
-                  case_buying_price: 0,
-                  bottles_per_case: dv.bottles_per_case,
-                  free_bottles_per_case: dv.free_bottles_per_case || 0,
-              }))
-            : [{ variant: "", number_of_cases: 0, case_buying_price: 0, bottles_per_case: 0, free_bottles_per_case: 0 }];
-
-    liftItems.value.push({
-        product_catalog_id: p.id,
-        product_name: p.name,
-        category_name: p.category_name,
-        brand_name: p.brand_name,
-        category_id: p.category_id,
-        brand_id: p.brand_id,
-        variants: defaultVariants,
-    });
-
-    productSearch.value = "";
-    showProductDD.value = false;
-};
 
 const removeItem = (idx: number) => liftItems.value.splice(idx, 1);
 
@@ -567,7 +687,6 @@ const newProduct = ref({ name: "", category_id: "" as any, brand_id: "" as any }
 const openCreateProductModal = () => {
     newProduct.value = { name: productSearch.value, category_id: "", brand_id: "" };
     showCreateProductModal.value = true;
-    showProductDD.value = false;
 };
 
 const createProduct = async () => {
@@ -586,7 +705,9 @@ const createProduct = async () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed");
         showCreateProductModal.value = false;
-        addProductToCart(data.product);
+        // Refresh product list and open variant picker for the new product
+        await fetchProducts(productSearch.value);
+        selectProductForVariants(data.product);
         showToast(t("productCreated"), "success");
     } catch (err: any) {
         showToast(err.message || t("error"), "error");
@@ -662,7 +783,7 @@ const submitLift = () => {
         "/lifts/store",
         {
             supplier_id: selectedSupplier.value!.id,
-            lift_date: new Date().toISOString(),
+            lift_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
             items,
         },
         {
@@ -685,6 +806,8 @@ const resetAll = () => {
     liftItems.value = [];
     productSearch.value = "";
     productSearchResults.value = [];
+    activeProduct.value = null;
+    variantSelections.value = {};
 };
 
 const printInvoice = () => {
@@ -696,9 +819,6 @@ const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as Node;
     if (supplierDDRef.value && !supplierDDRef.value.contains(target)) {
         showSupplierDD.value = false;
-    }
-    if (productDDRef.value && !productDDRef.value.contains(target)) {
-        showProductDD.value = false;
     }
 };
 
@@ -761,6 +881,9 @@ const translations: Record<string, Record<string, string>> = {
         case: "cases",
         free: "free",
         printInvoice: "Print",
+        selectVariantsToAdd: "Select variants to add",
+        addToCart: "Add to Cart",
+        loading: "Loading...",
     },
     bn: {
         liftManagement: "লিফট ব্যবস্থাপনা",
@@ -809,10 +932,32 @@ const translations: Record<string, Record<string, string>> = {
         case: "কেস",
         free: "ফ্রি",
         printInvoice: "প্রিন্ট",
+        selectVariantsToAdd: "যোগ করতে ভেরিয়েন্ট বেছে নিন",
+        addToCart: "কার্টে যোগ করুন",
+        loading: "লোড হচ্ছে...",
     },
 };
 
 const t = (key: string) => translations[lang.value]?.[key] || translations.en[key] || key;
+
+const toBengaliNumber = (numValue: number | string, decimals: number | null = null): string => {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output: string;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
+    if (lang.value !== 'bn') return output;
+
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
+};
 </script>
 
 <style scoped>

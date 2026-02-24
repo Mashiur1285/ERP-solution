@@ -13,8 +13,10 @@ use App\Enums\PaymentStatus;
 use App\Enums\SalesItemsStatus;
 use App\Enums\SalesStatus;
 use App\Http\Requests\StoreSalesRequest;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
@@ -131,92 +133,122 @@ class SalesController extends Controller
             $totalProfit = 0;
 
             foreach ($request->items as $item) {
-                $product = $this->productPurchaseRepository->find($item['product_id']);
-                $inventory = $this->productPurchaseRepository->getVariantInventory(
-                    $item['product_id'],
-                    $item['variant']
-                );
+                // Use reference product to get name + supplier for sibling lookup
+                $referenceProduct = $this->productPurchaseRepository->find($item['product_id']);
 
-                if (!$inventory) {
-                    throw new \Exception("Variant {$item['variant']} not found");
+                // Collect ALL purchase records (batches) for this product name + supplier
+                // that contain this variant, ordered oldest-first (FIFO)
+                $batches = Product::where('name', $referenceProduct->name)
+                    ->where('supplier_id', $referenceProduct->supplier_id)
+                    ->whereNotNull('metadata')
+                    ->orderBy('date', 'asc')
+                    ->get()
+                    ->map(function ($p) use ($item) {
+                        $variantData = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $item['variant']);
+                        if (!$variantData) return null;
+                        $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
+                        $bpc = $variantData['bottles_per_case'] ?? 0;
+                        $initialPurchased = $purchasedCases * $bpc;
+                        $initialFree = $variantData['total_free_bottles'] ?? 0;
+                        return [
+                            'product'       => $p,
+                            'purchased'     => $variantData['current_purchased_quantity'] ?? $initialPurchased,
+                            'free'          => $variantData['current_free_quantity'] ?? $initialFree,
+                            'bottles_per_case' => $bpc,
+                            'purchase_rate' => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                        ];
+                    })
+                    ->filter()
+                    ->values();
+
+                if ($batches->isEmpty()) {
+                    throw ValidationException::withMessages([
+                        'inventory' => "Variant {$item['variant']} not found for this product",
+                    ]);
                 }
 
-                $bottlesPerCase = $inventory['bottles_per_case'];
-                $purchaseRatePerBottle = $inventory['purchase_rate'];
-                $targetBottlesToSell = $item['total_bottles_to_sell']; // This is the target bottles from frontend
-                $actualSellingPricePerBottle = $item['selling_price_per_bottle']; // This is consistent selling price
-                $freeBottlesPerCase = $item['free_bottles_per_case'] ?? 0;
+                $bottlesPerCase        = $batches->first()['bottles_per_case'];
+                $purchaseRatePerBottle = $batches->avg('purchase_rate');
+                $totalPurchasedAvailable = $batches->sum('purchased');
+                $totalFreeAvailable      = $batches->sum('free');
 
-                // CORRECTED BUSINESS LOGIC: Calculate based on toggle state but maintain consistent pricing
+                $targetBottlesToSell       = $item['total_bottles_to_sell'];
+                $actualSellingPricePerBottle = $item['selling_price_per_bottle'];
+                $freeBottlesPerCase        = $item['free_bottles_per_case'] ?? 0;
+
                 if ($request->include_free_bottles) {
-                    // WITH free bottles mode: Calculate cases needed based on effective bottles per case
                     $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
-                    $casesSold = ceil($targetBottlesToSell / $effectiveBottlesPerCase);
-                    $purchasedBottlesSold = $casesSold * $bottlesPerCase;
-                    $freeBottlesSold = $casesSold * $freeBottlesPerCase;
-                    $actualTotalBottlesSold = $purchasedBottlesSold + $freeBottlesSold;
-                    // Selling price per case is calculated to maintain consistent per-bottle pricing
-                    $sellingPricePerCase = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
-
-                    // Debugging line to check selling price per case
+                    $casesSold               = ceil($targetBottlesToSell / $effectiveBottlesPerCase);
+                    $purchasedBottlesSold    = $casesSold * $bottlesPerCase;
+                    $freeBottlesSold         = $casesSold * $freeBottlesPerCase;
+                    $actualTotalBottlesSold  = $purchasedBottlesSold + $freeBottlesSold;
+                    $sellingPricePerCase     = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
                 } else {
-                    // WITHOUT free bottles mode: Only purchased bottles
-                    $casesSold = ceil($targetBottlesToSell / $bottlesPerCase);
-                    $purchasedBottlesSold = $targetBottlesToSell; // Only target bottles, no extra
-                    $freeBottlesSold = 0;
-                    $actualTotalBottlesSold = $purchasedBottlesSold;
-
-                    // Selling price per case for purchased bottles only
-                    $sellingPricePerCase = $bottlesPerCase * $actualSellingPricePerBottle;
-                    // dd($sellingPricePerCase)
+                    $casesSold               = ceil($targetBottlesToSell / $bottlesPerCase);
+                    $purchasedBottlesSold    = $targetBottlesToSell;
+                    $freeBottlesSold         = 0;
+                    $actualTotalBottlesSold  = $purchasedBottlesSold;
+                    $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
                 }
 
-                // Validate inventory
-                if ($purchasedBottlesSold > $inventory['purchased_bottles_available']) {
-                    throw new \Exception("Insufficient purchased bottles for {$item['variant']}. Available: {$inventory['purchased_bottles_available']}, Required: {$purchasedBottlesSold}");
+                // Validate against total stock (purchased + free combined)
+                $totalAvailable  = $totalPurchasedAvailable + $totalFreeAvailable;
+                $totalToDeduct   = $purchasedBottlesSold + $freeBottlesSold;
+
+                if ($totalToDeduct > $totalAvailable) {
+                    throw ValidationException::withMessages([
+                        'inventory' => "Insufficient stock for {$item['variant']}. Available: {$totalAvailable}, Required: {$totalToDeduct}",
+                    ]);
                 }
 
-                if ($freeBottlesSold > $inventory['free_bottles_available']) {
-                    throw new \Exception("Insufficient free bottles for {$item['variant']}. Available: {$inventory['free_bottles_available']}, Required: {$freeBottlesSold}");
-                }
-
-                // CORRECTED: Calculate pricing and profit using target bottles and consistent pricing
                 $totalSalePrice = $targetBottlesToSell * $actualSellingPricePerBottle;
-                $purchaseCost = $actualTotalBottlesSold * $purchaseRatePerBottle;
-                $profit = $totalSalePrice - $purchaseCost;
+                $purchaseCost   = $actualTotalBottlesSold * $purchaseRatePerBottle;
+                $profit         = $totalSalePrice - $purchaseCost;
 
-                // Create sale item with corrected data
                 $itemsData = [
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['product_id'],
-                    'supplier_id' => $request->supplier_id,
-                    'variant' => $item['variant'],
-                    'cases_sold' => $casesSold,
-                    'bottles_per_case' => $bottlesPerCase,
+                    'sale_id'                => $sale->id,
+                    'product_id'             => $item['product_id'],
+                    'supplier_id'            => $request->supplier_id,
+                    'variant'                => $item['variant'],
+                    'cases_sold'             => $casesSold,
+                    'bottles_per_case'       => $bottlesPerCase,
                     'purchased_bottles_sold' => $purchasedBottlesSold,
-                    'free_bottles_sold' => $freeBottlesSold,
-                    'total_bottles_sold' => $actualTotalBottlesSold,
-                    'target_bottles_to_sell' => $targetBottlesToSell, // The consistent target
-                    'purchase_unit_price' => $purchaseRatePerBottle,
+                    'free_bottles_sold'      => $freeBottlesSold,
+                    'total_bottles_sold'     => $actualTotalBottlesSold,
+                    'target_bottles_to_sell' => $targetBottlesToSell,
+                    'purchase_unit_price'    => $purchaseRatePerBottle,
                     'selling_price_per_case' => $sellingPricePerCase,
-                    'selling_price_per_bottle' => $actualSellingPricePerBottle, // Consistent pricing
-                    'unit_price' => $actualSellingPricePerBottle, // Legacy field
-                    'total_price' => $totalSalePrice,
-                    'profit' => $profit,
-                    'delivery_date' => $request->sale_date,
-                    'invoice_number' => $data['invoice_number'],
-                    'status' => SalesItemsStatus::IN_PROGRESS->value,
+                    'selling_price_per_bottle' => $actualSellingPricePerBottle,
+                    'unit_price'             => $actualSellingPricePerBottle,
+                    'total_price'            => $totalSalePrice,
+                    'profit'                 => $profit,
+                    'delivery_date'          => $request->sale_date,
+                    'invoice_number'         => $data['invoice_number'],
+                    'status'                 => SalesItemsStatus::IN_PROGRESS->value,
                 ];
 
                 $this->salesItemRepository->create($itemsData);
 
-                // Update inventory
-                $this->productPurchaseRepository->updateInventory(
-                    $product,
-                    $item['variant'],
-                    $purchasedBottlesSold,
-                    $freeBottlesSold
-                );
+                // FIFO deduction: treat purchased+free as one pool, deplete purchased first per batch
+                $remainingToDeduct = (int) $totalToDeduct;
+                foreach ($batches as $batch) {
+                    if ($remainingToDeduct <= 0) break;
+                    $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
+                    if ($batchTotal <= 0) continue;
+
+                    $deductFromBatch = min($remainingToDeduct, $batchTotal);
+                    // Within this batch: use up purchased first, then free
+                    $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
+                    $deductFree      = $deductFromBatch - $deductPurchased;
+
+                    $this->productPurchaseRepository->updateInventory(
+                        $batch['product'],
+                        $item['variant'],
+                        $deductPurchased,
+                        $deductFree
+                    );
+                    $remainingToDeduct -= $deductFromBatch;
+                }
 
                 $totalAmount += $totalSalePrice;
                 $totalProfit += $profit;

@@ -302,15 +302,23 @@ const selectedYear = ref(props.year);
 const t = computed(() => (key) => translations[currentLanguage.value][key]);
 
 // Function to convert numbers to Bengali
-const toBengaliNumber = (num) => {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+const toBengaliNumber = (numValue, decimals = null) => {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
+    if (currentLanguage.value !== "bn") return output;
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 // Change language

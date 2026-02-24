@@ -905,14 +905,18 @@ const t = (key: string, params: Record<string, any> = {}) => {
 
 // Utility function to convert numbers to Bengali digits
 const toBengaliNumber = (num: number | string): string => {
-    if (currentLanguage.value === "en") {
-        return String(num);
+    if (num === null || num === undefined || num === "") return "";
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
     }
+
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return String(num).replace(
-        /[0-9]/g,
-        (digit) => bengaliDigits[parseInt(digit)]
-    );
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 // Language change handler

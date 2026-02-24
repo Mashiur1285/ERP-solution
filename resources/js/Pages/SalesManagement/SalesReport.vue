@@ -113,7 +113,7 @@
                             {{ getTranslation("totalAmount") }}
                         </p>
                         <p class="text-lg lg:text-lg font-bold text-green-900">
-                            ৳{{ toBengaliNumber(formatCurrency(totalAmount)) }}
+                            ৳{{ toBengaliNumber(formatCurrency(totalAmount), 2) }}
                         </p>
                     </div>
                 </div>
@@ -150,7 +150,7 @@
                                     : 'text-red-600'
                             "
                         >
-                            ৳{{ toBengaliNumber(formatCurrency(totalProfit)) }}
+                            ৳{{ toBengaliNumber(formatCurrency(totalProfit), 2) }}
                         </p>
                     </div>
                 </div>
@@ -483,7 +483,8 @@
                                             toBengaliNumber(
                                                 formatCurrency(
                                                     sale.total_amount
-                                                )
+                                                ),
+                                                2
                                             )
                                         }}
                                     </div>
@@ -501,7 +502,8 @@
                                             toBengaliNumber(
                                                 formatCurrency(
                                                     sale.total_profit
-                                                )
+                                                ),
+                                                2
                                             )
                                         }}
                                     </div>
@@ -1377,16 +1379,23 @@ function getTranslationLabel(key: string, lang: string): string {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num: number | string): string {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string")
-        return num.toString();
-    if (currentLanguage.value !== "bn") return num.toString();
+function toBengaliNumber(numValue: number | string, decimals: number | null = null): string {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output: string;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
+    if (currentLanguage.value !== 'bn') return output;
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 }
 
 function formatCurrency(amount: string | number): string {
