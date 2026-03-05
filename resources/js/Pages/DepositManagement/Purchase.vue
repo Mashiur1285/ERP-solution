@@ -94,13 +94,13 @@
 
                 <div class="flex justify-end mt-6 space-x-3">
                     <button
-                        class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        class="px-4 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap"
                         @click="showSupplierModal = false"
                     >
                         {{ t("cancel") }}
                     </button>
                     <button
-                        class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow"
+                        class="px-4 py-1.5 rounded-lg bg-indigo-600 text-sm text-white hover:bg-indigo-700 shadow whitespace-nowrap"
                         @click="handleSupplierCreate"
                     >
                         {{ t("save") }}
@@ -139,7 +139,7 @@
         />
 
         <!-- POS Style Two-Column Layout -->
-        <div class="flex gap-4 items-start">
+        <div class="flex flex-col lg:flex-row gap-4 lg:items-start">
             <!-- LEFT SIDE: Form Area -->
             <div class="flex-1 min-w-0 space-y-4">
                 <!-- Product Information Section -->
@@ -193,7 +193,7 @@
             </div>
 
             <!-- RIGHT SIDE: Invoice Panel -->
-            <div class="w-[400px] flex-shrink-0 sticky top-24">
+            <div class="w-full lg:w-[400px] lg:flex-shrink-0 lg:sticky lg:top-24">
                 <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                     <!-- Invoice Header -->
                     <div class="bg-indigo-600 text-white px-5 py-4">

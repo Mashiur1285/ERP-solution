@@ -23,19 +23,19 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('productName') }}*</label>
-                        <input v-model="newProduct.name" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                        <input v-model="newProduct.name" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200" />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('category') }}</label>
-                            <select v-model="newProduct.category_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                            <select v-model="newProduct.category_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200">
                                 <option value="">{{ t('selectCategory') }}</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('brand') }}</label>
-                            <select v-model="newProduct.brand_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                            <select v-model="newProduct.brand_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200">
                                 <option value="">{{ t('selectBrand') }}</option>
                                 <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.brand_name }}</option>
                             </select>
@@ -44,7 +44,7 @@
                 </div>
                 <div class="flex justify-end mt-6 space-x-3">
                     <button class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" @click="showCreateProductModal = false">{{ t('cancel') }}</button>
-                    <button class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow" @click="createProduct" :disabled="!newProduct.name">{{ t('save') }}</button>
+                    <button class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow" @click="createProduct" :disabled="!newProduct.name">{{ t('save') }}</button>
                 </div>
             </div>
         </div>
@@ -54,15 +54,15 @@
             <div class="bg-white rounded-xl p-5 max-w-md w-full mx-4 shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ t('confirmLift') }}</h3>
                 <p class="text-gray-600 text-sm mb-4">{{ t('confirmLiftPrompt') }}</p>
-                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200 mb-4 space-y-2 text-sm">
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-4 space-y-2 text-sm">
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('totalProducts') }}</span><span class="font-bold">{{ liftItems.filter(i => i.variants.some(v => v.number_of_cases > 0)).length }}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-600">{{ t('totalCost') }}</span><span class="font-bold text-indigo-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">{{ t('totalCost') }}</span><span class="font-bold text-green-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('remainingDeposit') }}</span>
                         <span class="font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">৳{{ toBengaliNumber(remainingDeposit, 2) }}</span></div>
                     </div>
                 <div class="flex justify-end space-x-3">
                     <button @click="showConfirmModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">{{ t('cancel') }}</button>
-                    <button @click="submitLift" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" :disabled="isLoading || remainingDeposit < 0">
+                    <button @click="submitLift" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" :disabled="isLoading || remainingDeposit < 0">
                         {{ isLoading ? t('processing') : t('confirm') }}
                     </button>
                 </div>
@@ -70,42 +70,42 @@
         </div>
 
         <!-- Page Header -->
-        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4 print:hidden">
-            <h1 class="text-2xl font-semibold text-gray-800 flex items-center">
-                <div class="p-2 mr-3 bg-indigo-100 rounded-full">
-                    <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 print:hidden bg-gradient-to-r from-green-600 to-green-500 rounded-xl px-4 py-3 shadow-sm">
+            <h1 class="text-xl sm:text-2xl font-semibold text-white flex items-center">
+                <div class="p-2 mr-3 bg-white/20 rounded-full flex-shrink-0">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                 </div>
                 {{ t('liftManagement') }}
             </h1>
-            <div class="flex space-x-2">
-                <button @click="lang = 'en'; saveLang()" :class="['px-3 py-1.5 rounded-md font-medium text-sm transition-colors', lang === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300']">English</button>
-                <button @click="lang = 'bn'; saveLang()" :class="['px-3 py-1.5 rounded-md font-medium text-sm transition-colors', lang === 'bn' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300']">বাংলা</button>
+            <div class="flex space-x-2 self-start sm:self-auto">
+                <button @click="lang = 'en'; saveLang()" :class="['px-3 py-1.5 rounded-md font-medium text-sm transition-colors', lang === 'en' ? 'bg-white text-green-600' : 'bg-white/20 text-white hover:bg-white/30']">English</button>
+                <button @click="lang = 'bn'; saveLang()" :class="['px-3 py-1.5 rounded-md font-medium text-sm transition-colors', lang === 'bn' ? 'bg-white text-green-600' : 'bg-white/20 text-white hover:bg-white/30']">বাংলা</button>
             </div>
         </div>
 
         <!-- POS Two-Column Layout -->
-        <div class="flex gap-4 items-start">
+        <div class="flex flex-col lg:flex-row gap-4 lg:items-start">
             <!-- LEFT SIDE -->
             <div class="flex-1 min-w-0 space-y-4 print:hidden">
                 <!-- Step 1: Supplier Selection -->
                 <div class="bg-white rounded-xl shadow-sm p-5">
                     <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="w-6 h-6 bg-indigo-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</span>
+                        <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</span>
                         {{ t('selectSupplier') }}
                     </h2>
                     <div class="relative" ref="supplierDDRef">
                         <input v-model="supplierSearch" @focus="showSupplierDD = true" @input="showSupplierDD = true"
                             :placeholder="t('searchSupplier')"
-                            class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base"
-                            :class="{ 'border-indigo-400 bg-indigo-50': selectedSupplier }" autocomplete="off" />
+                            class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-base"
+                            :class="{ 'border-green-400 bg-green-50': selectedSupplier }" autocomplete="off" />
                         <div v-if="showSupplierDD && filteredSuppliers.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
                             <button v-for="s in filteredSuppliers" :key="s.id" type="button"
-                                class="w-full text-left px-4 py-3 hover:bg-indigo-50 text-sm border-b border-gray-50 last:border-0"
+                                class="w-full text-left px-4 py-3 hover:bg-green-50 text-sm border-b border-gray-50 last:border-0"
                                 @mousedown.prevent="selectSupplier(s)">
                                 <span class="font-medium text-gray-800">{{ s.company_name }}</span>
-                                <span class="float-right text-indigo-600 font-semibold">৳{{ toBengaliNumber(s.remaining_deposit, 2) }}</span>
+                                <span class="float-right text-green-600 font-semibold">৳{{ toBengaliNumber(s.remaining_deposit, 2) }}</span>
                             </button>
                         </div>
                         <div v-if="showSupplierDD && !filteredSuppliers.length" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-30">
@@ -122,23 +122,23 @@
                             :class="[
                                 'px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
                                 selectedSupplier?.id === s.id
-                                    ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400 hover:text-indigo-600'
+                                    ? 'bg-green-600 text-white border-green-600'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:border-green-400 hover:text-green-600'
                             ]"
                         >
                             {{ s.company_name }}
                         </button>
                     </div>
-                    <div v-if="selectedSupplier" class="mt-3 flex items-center justify-between bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200">
+                    <div v-if="selectedSupplier" class="mt-3 flex items-center justify-between bg-green-50 px-4 py-2 rounded-lg border border-green-200">
                         <span class="text-sm text-gray-700">{{ t('availableBalance') }}</span>
-                        <span class="text-lg font-bold text-indigo-600">৳{{ toBengaliNumber(selectedSupplier.remaining_deposit, 2) }}</span>
+                        <span class="text-lg font-bold text-green-600">৳{{ toBengaliNumber(selectedSupplier.remaining_deposit, 2) }}</span>
                     </div>
                 </div>
 
                 <!-- Step 2: Product Selection & Variant Picker -->
                 <div v-if="selectedSupplier" class="bg-white rounded-xl shadow-sm p-5">
                     <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="w-6 h-6 bg-indigo-600 text-white rounded-full text-xs flex items-center justify-center mr-2">2</span>
+                        <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs flex items-center justify-center mr-2">2</span>
                         {{ t('addProducts') }}
                     </h2>
 
@@ -150,10 +150,10 @@
                             </svg>
                             <input v-model="productSearch" @input="searchProducts"
                                 :placeholder="t('searchProduct')"
-                                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all" />
+                                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all" />
                         </div>
                         <button @click="openCreateProductModal"
-                            class="px-3 py-2 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50 flex items-center gap-1.5 text-sm font-medium flex-shrink-0">
+                            class="px-3 py-2 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 flex items-center gap-1.5 text-sm font-medium flex-shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
@@ -163,7 +163,7 @@
 
                     <!-- Product chips -->
                     <div v-if="isSearching" class="flex items-center gap-2 text-sm text-gray-400 py-3">
-                        <svg class="w-4 h-4 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 animate-spin text-green-400" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                         </svg>
@@ -174,10 +174,10 @@
                             @click="selectProductForVariants(p)"
                             :class="['px-3 py-1.5 rounded-lg border text-sm font-medium transition-all',
                                 activeProduct?.id === p.id
-                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                    ? 'bg-green-600 border-green-600 text-white shadow-sm'
                                     : liftItems.some(i => i.product_catalog_id === p.id)
                                         ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                                        : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-600'
+                                        : 'bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:text-green-600'
                             ]">
                             {{ p.name }}
                             <span v-if="liftItems.some(i => i.product_catalog_id === p.id)" class="ml-1 text-xs">✓</span>
@@ -205,12 +205,12 @@
                             <label v-for="opt in variantOptions" :key="opt.value"
                                 :class="['flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none',
                                     variantSelections[opt.value]?.checked
-                                        ? 'border-indigo-400 bg-indigo-50'
+                                        ? 'border-green-400 bg-green-50'
                                         : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                                 ]">
                                 <input type="checkbox"
                                     v-model="variantSelections[opt.value].checked"
-                                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0" />
+                                    class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer flex-shrink-0" />
                                 <div>
                                     <p class="text-sm font-semibold text-gray-800">{{ opt.label }}</p>
                                     <p class="text-xs text-gray-400 mt-0.5">
@@ -226,7 +226,7 @@
                         <div class="flex justify-end">
                             <button @click="addProductWithVariants"
                                 :disabled="!hasCheckedVariants"
-                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm transition-all">
+                                class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
@@ -238,7 +238,7 @@
 
                 <!-- Step 3: Cart Items -->
                 <div v-if="liftItems.length" class="space-y-3">
-                    <div v-for="(item, itemIdx) in liftItems" :key="itemIdx" class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-indigo-400">
+                    <div v-for="(item, itemIdx) in liftItems" :key="itemIdx" class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-400">
                         <!-- Product Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div>
@@ -271,7 +271,7 @@
                                         class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td class="px-2 py-2">
                                             <select v-model="v.variant"
-                                                class="w-full min-w-[120px] pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 bg-white"
+                                                class="w-full min-w-[120px] pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
                                                 @change="onVariantSelect(itemIdx, vIdx)">
                                                 <option value="">{{ t('selectVariant') }}</option>
                                                 <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -279,22 +279,22 @@
                                         </td>
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.number_of_cases" type="number" min="0"
-                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
                                         </td>
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.case_buying_price" type="number" step="0.01" min="0"
-                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
                                         </td>
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.bottles_per_case" type="number" min="1"
-                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-green-500 focus:ring-1 focus:ring-green-200" />
                                         </td>
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.free_bottles_per_case" type="number" min="0"
-                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
                                         </td>
                                         <td class="px-3 py-2 text-right">
-                                            <span class="text-sm font-semibold text-indigo-600">
+                                            <span class="text-sm font-semibold text-green-600">
                                                 ৳{{ toBengaliNumber(calcVariantCost(v), 2) }}
                                             </span>
                                             <div v-if="calcFreeBottles(v) > 0" class="text-xs text-green-500 mt-0.5">
@@ -316,7 +316,7 @@
                         </div>
 
                         <!-- Add Variant Button -->
-                        <button @click="addVariant(itemIdx)" class="mt-2 text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1 px-1">
+                        <button @click="addVariant(itemIdx)" class="mt-2 text-sm text-green-600 font-medium hover:text-green-800 flex items-center gap-1 px-1">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
@@ -327,10 +327,10 @@
             </div>
 
             <!-- RIGHT SIDE: Invoice Panel -->
-            <div class="w-[380px] flex-shrink-0 sticky top-24 print:w-full print:static">
+            <div class="w-full lg:w-[380px] lg:flex-shrink-0 lg:sticky lg:top-24 print:w-full print:static">
                 <div id="printable-invoice" class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                     <!-- Invoice Header -->
-                    <div class="bg-indigo-600 text-white px-5 py-4 print:bg-white print:text-gray-800 print:border-b-2 print:border-gray-800">
+                    <div class="bg-green-600 text-white px-5 py-4 print:bg-white print:text-gray-800 print:border-b-2 print:border-gray-800">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-2 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,9 +338,9 @@
                                 </svg>
                                 <h3 class="text-base font-bold">{{ t('liftInvoice') }}</h3>
                             </div>
-                            <span class="text-xs bg-indigo-500 px-2 py-1 rounded-full print:bg-transparent print:text-gray-600 print:px-0">{{ currentDate }}</span>
+                            <span class="text-xs bg-green-500 px-2 py-1 rounded-full print:bg-transparent print:text-gray-600 print:px-0">{{ currentDate }}</span>
                         </div>
-                        <p v-if="selectedSupplier" class="text-indigo-200 text-xs mt-1 print:text-gray-600">{{ selectedSupplier.company_name }}</p>
+                        <p v-if="selectedSupplier" class="text-green-200 text-xs mt-1 print:text-gray-600">{{ selectedSupplier.company_name }}</p>
                     </div>
 
                     <!-- Invoice Body -->
@@ -394,7 +394,7 @@
                             <div class="border-t-2 border-dotted border-gray-300 mt-3 pt-3">
                                 <div class="flex justify-between items-center">
                                     <span class="text-base font-bold text-gray-800">{{ t('totalCost') }}</span>
-                                    <span class="text-xl font-bold text-indigo-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span>
+                                    <span class="text-xl font-bold text-green-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span>
                                 </div>
                             </div>
 
@@ -422,7 +422,7 @@
                     <!-- Invoice Footer -->
                     <div class="px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-2 print:hidden">
                         <button @click="openConfirmModal"
-                            class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all flex items-center justify-center space-x-2 shadow-md"
+                            class="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all flex items-center justify-center space-x-2 shadow-md"
                             :disabled="isLoading || !validItems.length || !selectedSupplier">
                             <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -434,7 +434,7 @@
                         </button>
                         <div class="flex gap-2">
                             <button @click="printInvoice"
-                                class="flex-1 py-2.5 border-2 border-indigo-200 rounded-lg text-indigo-600 font-medium hover:bg-indigo-50 transition-all flex items-center justify-center space-x-2 text-sm"
+                                class="flex-1 py-2.5 border-2 border-green-200 rounded-lg text-green-600 font-medium hover:bg-green-50 transition-all flex items-center justify-center space-x-2 text-sm"
                                 :disabled="!validItems.length">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />

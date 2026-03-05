@@ -1,8 +1,8 @@
 <template>
     <div
-        class="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl"
+        class="max-w-3xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl"
     >
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-8 text-center">
             Record Payment
         </h1>
 
@@ -300,7 +300,7 @@
                 </div>
             </div>
 
-            <div class="flex justify-end mt-8 space-x-4">
+            <div class="flex flex-col sm:flex-row justify-end mt-6 sm:mt-8 gap-3 sm:space-x-4">
                 <button
                     @click="openModal"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:from-blue-700 hover:to-indigo-700 transition duration-200 flex items-center"

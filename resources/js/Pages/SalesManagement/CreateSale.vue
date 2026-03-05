@@ -25,30 +25,30 @@
         />
 
         <!-- Header -->
-        <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <h1 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="p-1.5 bg-indigo-100 rounded-lg">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-400 border-b border-orange-600 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
+            <h1 class="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
+                <div class="p-1.5 bg-white/20 rounded-lg flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                 </div>
                 {{ t('salesManagement') }}
             </h1>
-            <div class="flex gap-2">
+            <div class="flex gap-2 self-start sm:self-auto">
                 <button
                     @click="changeLanguage('en')"
-                    :class="['px-3 py-1.5 rounded text-sm font-medium transition-colors', currentLanguage === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200']"
+                    :class="['px-3 py-1.5 rounded text-sm font-medium transition-colors', currentLanguage === 'en' ? 'bg-white text-orange-600' : 'bg-white/20 text-white hover:bg-white/30']"
                 >English</button>
                 <button
                     @click="changeLanguage('bn')"
-                    :class="['px-3 py-1.5 rounded text-sm font-medium transition-colors', currentLanguage === 'bn' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200']"
+                    :class="['px-3 py-1.5 rounded text-sm font-medium transition-colors', currentLanguage === 'bn' ? 'bg-white text-orange-600' : 'bg-white/20 text-white hover:bg-white/30']"
                 >বাংলা</button>
             </div>
         </div>
 
         <!-- POS Layout -->
-        <div class="flex flex-1 gap-4 p-4 min-h-0">
+        <div class="flex flex-col lg:flex-row flex-1 gap-4 p-4 min-h-0">
 
             <!-- LEFT: Product search + cart -->
             <div class="flex-1 space-y-4 overflow-y-auto">
@@ -63,7 +63,7 @@
                             <svg v-if="!productLoading" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <svg v-else class="w-4 h-4 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <svg v-else class="w-4 h-4 text-orange-500 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                             </svg>
@@ -73,7 +73,7 @@
                             @input="onSearchInput"
                             type="text"
                             :placeholder="t('typeToSearch')"
-                            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition"
                         />
                     </div>
                     <!-- Product Chips -->
@@ -93,10 +93,10 @@
                             @click="selectProduct(p)"
                             :class="['px-3 py-1.5 rounded-lg border text-sm font-medium transition-all',
                                 pendingProduct?.product_id === p.product_id
-                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                    ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
                                     : cartItems.some(c => c.product_id === p.product_id)
                                         ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                                        : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-600'
+                                        : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300 hover:text-orange-600'
                             ]"
                         >
                             {{ p.product_name }}
@@ -107,10 +107,10 @@
                 </div>
 
                 <!-- Variant Picker -->
-                <div v-if="pendingProduct" class="bg-white rounded-xl shadow-sm border border-indigo-200 p-4">
+                <div v-if="pendingProduct" class="bg-white rounded-xl shadow-sm border border-orange-200 p-4">
                     <div class="flex items-center justify-between mb-3">
                         <div>
-                            <p class="text-xs font-medium text-indigo-600 uppercase tracking-wide mb-0.5">{{ t('selectVariants') }}</p>
+                            <p class="text-xs font-medium text-orange-500 uppercase tracking-wide mb-0.5">{{ t('selectVariants') }}</p>
                             <h3 class="text-sm font-semibold text-gray-800">{{ pendingProduct.product_name }}</h3>
                             <p class="text-xs text-gray-500">{{ pendingProduct.supplier_name }}</p>
                         </div>
@@ -124,10 +124,10 @@
                         <label v-for="v in pendingProduct.variants" :key="v.variant"
                             :class="['flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none',
                                 variantSelections[v.variant]
-                                    ? 'border-indigo-400 bg-indigo-50'
+                                    ? 'border-orange-400 bg-orange-50'
                                     : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white'
                             ]">
-                            <input type="checkbox" v-model="variantSelections[v.variant]" class="w-4 h-4 text-indigo-600 rounded" />
+                            <input type="checkbox" v-model="variantSelections[v.variant]" class="w-4 h-4 text-orange-500 rounded" />
                             <div>
                                 <p class="text-sm font-semibold text-gray-800">{{ v.variant }}</p>
                                 <p class="text-xs text-gray-400">{{ v.total_bottles_available }} {{ t('bottlesAvailable') }}</p>
@@ -140,7 +140,7 @@
                             {{ t('cancel') }}
                         </button>
                         <button @click="addVariantsToCart" :disabled="!hasCheckedVariants"
-                            class="px-4 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            class="px-4 py-1.5 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             {{ t('addToCart') }}
                         </button>
                     </div>
@@ -177,7 +177,7 @@
 
                                     <!-- # -->
                                     <td class="px-3 py-2 text-center">
-                                        <span class="w-5 h-5 bg-indigo-600 text-white text-xs rounded-full flex items-center justify-center font-bold mx-auto">
+                                        <span class="w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center font-bold mx-auto">
                                             {{ index + 1 }}
                                         </span>
                                     </td>
@@ -190,7 +190,7 @@
 
                                     <!-- Variant -->
                                     <td class="px-2 py-2">
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100">
                                             {{ item.selected_variant }}
                                         </span>
                                     </td>
@@ -203,10 +203,10 @@
                                             min="1"
                                             :max="getMaxCases(item)"
                                             :placeholder="t('cases')"
-                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
                                             :class="{
                                                 'border-red-300 bg-red-50': (isSubmitted && !(item.cases > 0)) || itemExceedsStock(item),
-                                                'border-indigo-300': !itemExceedsStock(item) && item.cases > 0
+                                                'border-orange-300': !itemExceedsStock(item) && item.cases > 0
                                             }"
                                         />
                                         <p v-if="getVariantData(item)" class="text-xs mt-0.5"
@@ -235,14 +235,14 @@
                                             type="number"
                                             min="0"
                                             :placeholder="t('pricePerCase')"
-                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
                                             :class="{ 'border-red-300 bg-red-50': isSubmitted && !(item.price_per_case > 0) }"
                                         />
                                     </td>
 
                                     <!-- Subtotal -->
                                     <td class="px-3 py-2 text-right">
-                                        <span v-if="getItemSubtotal(item) > 0" class="text-sm font-bold text-indigo-600">
+                                        <span v-if="getItemSubtotal(item) > 0" class="text-sm font-bold text-orange-600">
                                             ৳{{ formatNumber(getItemSubtotal(item)) }}
                                         </span>
                                         <span v-else class="text-gray-300 text-xs">৳0.00</span>
@@ -268,7 +268,7 @@
             </div>
 
             <!-- RIGHT: Sticky invoice panel -->
-            <div class="w-72 flex-shrink-0">
+            <div class="w-full lg:w-72 lg:flex-shrink-0">
                 <div class="sticky top-4 space-y-3">
 
                     <!-- Sale Details card -->
@@ -280,7 +280,7 @@
                             <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('shopName') }}*</label>
                             <select
                                 v-model="shopId"
-                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none bg-white"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
                                 :class="{ 'border-red-300': isSubmitted && !shopId }"
                             >
                                 <option value="">{{ t('selectShop') }}</option>
@@ -299,7 +299,7 @@
                                 <span
                                     v-for="sup in cartSuppliers"
                                     :key="sup.id"
-                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700"
                                 >
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
@@ -315,7 +315,7 @@
                             <input
                                 v-model="saleDate"
                                 type="date"
-                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none"
                                 :class="{ 'border-red-300': isSubmitted && !saleDate }"
                             />
                         </div>
@@ -325,7 +325,7 @@
                             <span class="text-xs font-medium text-gray-600">{{ t('includeFreeBottles') }}</span>
                             <button
                                 @click="includeFreeBottles = !includeFreeBottles"
-                                :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors', includeFreeBottles ? 'bg-indigo-600' : 'bg-gray-300']"
+                                :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors', includeFreeBottles ? 'bg-orange-500' : 'bg-gray-300']"
                             >
                                 <span :class="['inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform', includeFreeBottles ? 'translate-x-4' : 'translate-x-1']" />
                             </button>
@@ -365,7 +365,7 @@
 
                             <div class="border-t border-gray-200 pt-2 flex justify-between items-center">
                                 <span class="text-sm font-semibold text-gray-700">{{ t('totalAmount') }}</span>
-                                <span class="text-lg font-bold text-indigo-700">৳{{ formatNumber(saleSummary.totalAmount) }}</span>
+                                <span class="text-lg font-bold text-orange-600">৳{{ formatNumber(saleSummary.totalAmount) }}</span>
                             </div>
                         </div>
                     </div>
@@ -374,7 +374,7 @@
                     <button
                         @click="openModal"
                         :disabled="isLoading || cartItems.length === 0 || anyItemExceedsStock"
-                        class="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
+                        class="w-full py-3 bg-orange-500 text-white text-sm font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
                         <svg v-if="isLoading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

@@ -723,14 +723,14 @@
 
                     <!-- Action Buttons -->
                     <div
-                        class="flex justify-end space-x-4 pt-6 border-t border-gray-200"
+                        class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 pt-6 border-t border-gray-200"
                     >
                         <Link
                             href="/suppliers/index"
-                            class="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center space-x-2"
+                            class="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap"
                         >
                             <svg
-                                class="w-5 h-5"
+                                class="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -746,12 +746,12 @@
                         </Link>
                         <button
                             @click="submitForm"
-                            class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="px-4 py-2 bg-indigo-600 text-sm text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             :disabled="form.processing"
                         >
                             <svg
                                 v-if="form.processing"
-                                class="w-5 h-5 animate-spin"
+                                class="w-4 h-4 animate-spin"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -765,7 +765,7 @@
                             </svg>
                             <svg
                                 v-else
-                                class="w-5 h-5"
+                                class="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
