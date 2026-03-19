@@ -386,6 +386,138 @@ class SalesController extends Controller
         ]);
     }
 
+    public function editSale($id)
+    {
+        $sale = $this->salesRepository->find($id);
+        if (!$sale) {
+            return redirect()->route('sales.report')->with('error', 'Sale not found');
+        }
+
+        $shop = $this->shopRepository->find($sale->shop_id);
+        $items = $sale->items->map(function ($item) {
+            return [
+                'id'                       => $item->id,
+                'product_name'             => $item->product ? $item->product->name : 'Unknown',
+                'variant'                  => $item->variant,
+                'cases_sold'               => $item->cases_sold,
+                'bottles_per_case'         => $item->bottles_per_case,
+                'free_bottles_sold'        => $item->free_bottles_sold,
+                'total_bottles_sold'       => $item->total_bottles_sold,
+                'target_bottles_to_sell'   => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
+                'selling_price_per_bottle' => $item->selling_price_per_bottle,
+                'selling_price_per_case'   => $item->selling_price_per_case,
+                'total_price'              => $item->total_price,
+                'purchase_unit_price'      => $item->purchase_unit_price,
+                'profit'                   => $item->profit,
+            ];
+        });
+
+        $payment = DB::table('payments')->where('sale_id', $sale->id)->orderBy('payment_date', 'desc')->first();
+
+        return Inertia::render('SalesManagement/EditSale', [
+            'sale' => [
+                'id'             => $sale->id,
+                'invoice_number' => $sale->invoice_number,
+                'sale_date'      => $sale->sale_date->format('Y-m-d'),
+                'total_amount'   => $sale->total_amount,
+                'paid_amount'    => $sale->paid_amount,
+                'due_amount'     => $sale->due_amount,
+                'shop_name'      => $shop ? $shop->shop_name : 'Unknown',
+            ],
+            'items'   => $items,
+            'payment' => $payment ? [
+                'id'             => $payment->id,
+                'amount'         => $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'status'         => $payment->status,
+            ] : null,
+        ]);
+    }
+
+    public function updateSale(Request $request, $id)
+    {
+        $request->validate([
+            'items'                          => 'required|array|min:1',
+            'items.*.id'                     => 'required|exists:sale_items,id',
+            'items.*.selling_price_per_case' => 'required|numeric|min:0',
+            'payment_amount'                 => 'nullable|numeric|min:0',
+            'payment_method'                 => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($request, $id) {
+            $sale = $this->salesRepository->find($id);
+            if (!$sale) {
+                return redirect()->route('sales.report')->with('error', 'Sale not found');
+            }
+
+            $totalAmount = 0;
+
+            foreach ($request->items as $itemData) {
+                $saleItem = $sale->items->firstWhere('id', $itemData['id']);
+                if (!$saleItem) continue;
+
+                $bpc               = (int) $saleItem->bottles_per_case;
+                $freeSold          = (int) $saleItem->free_bottles_sold;
+                $newPricePerCase   = floatval($itemData['selling_price_per_case']);
+                $effectiveBPC      = $bpc + ($freeSold > 0 ? round($freeSold / max($saleItem->cases_sold, 1)) : 0);
+                $newPricePerBottle = $effectiveBPC > 0 ? $newPricePerCase / $effectiveBPC : 0;
+                $targetBottles     = $saleItem->target_bottles_to_sell ?? $saleItem->total_bottles_sold;
+                $newTotalPrice     = round($targetBottles * $newPricePerBottle, 2);
+                $newProfit         = round($newTotalPrice - ($saleItem->total_bottles_sold * $saleItem->purchase_unit_price), 2);
+
+                $saleItem->update([
+                    'selling_price_per_bottle' => $newPricePerBottle,
+                    'selling_price_per_case'   => $newPricePerCase,
+                    'unit_price'               => $newPricePerBottle,
+                    'total_price'              => $newTotalPrice,
+                    'profit'                   => $newProfit,
+                ]);
+
+                $totalAmount += $newTotalPrice;
+            }
+
+            // Update payment if provided
+            $newPaidAmount = $sale->paid_amount;
+            if ($request->has('payment_amount') && $request->payment_amount !== null) {
+                $newPaidAmount = floatval($request->payment_amount);
+
+                $existingPayment = DB::table('payments')->where('sale_id', $sale->id)->orderBy('payment_date', 'desc')->first();
+                if ($existingPayment) {
+                    DB::table('payments')->where('id', $existingPayment->id)->update([
+                        'amount'         => $newPaidAmount,
+                        'payment_method' => $request->payment_method ?? $existingPayment->payment_method,
+                        'status'         => $newPaidAmount >= $totalAmount ? PaymentStatus::PAID->value : PaymentStatus::PENDING->value,
+                        'updated_at'     => now(),
+                    ]);
+                } else {
+                    DB::table('payments')->insert([
+                        'shop_id'        => $sale->shop_id,
+                        'sale_id'        => $sale->id,
+                        'amount'         => $newPaidAmount,
+                        'payment_method' => $request->payment_method ?? 'cash',
+                        'advance_balance'=> 0,
+                        'status'         => $newPaidAmount >= $totalAmount ? PaymentStatus::PAID->value : PaymentStatus::PENDING->value,
+                        'payment_date'   => now(),
+                        'created_at'     => now(),
+                        'updated_at'     => now(),
+                    ]);
+                }
+            }
+
+            $newDue = max(0, $totalAmount - $newPaidAmount);
+            $this->salesRepository->updateSales([
+                'total_amount' => $totalAmount,
+                'subtotal'     => $totalAmount,
+                'paid_amount'  => $newPaidAmount,
+                'due_amount'   => $newDue,
+                'is_paid'      => $newDue <= 0,
+                'status'       => $newDue <= 0 ? SalesStatus::COMPLETED->value : SalesStatus::IN_PROGRESS->value,
+            ], $id);
+
+            return redirect()->route('sales.report')->with('success', 'Sale updated successfully');
+        });
+    }
+
     public function report(Request $request)
     {
         $query = $this->salesRepository->query()->with(['shop', 'items.product', 'supplier']);

@@ -100,31 +100,31 @@
                 <!-- Form -->
                 <form class="mt-8 space-y-6" @submit.prevent="submit">
                     <div class="space-y-4">
-                        <!-- Email Field -->
+                        <!-- Login Field -->
                         <div>
                             <label
-                                for="email"
+                                for="login"
                                 class="block text-sm font-medium text-gray-700"
                             >
-                                {{ t("email") }}
+                                {{ t("login") }}
                             </label>
                             <div class="mt-1 relative">
                                 <input
-                                    id="email"
-                                    v-model="form.email"
-                                    type="email"
-                                    autocomplete="email"
+                                    id="login"
+                                    v-model="form.login"
+                                    type="text"
+                                    autocomplete="username"
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        form.errors.email
+                                        form.errors.login
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
-                                    :placeholder="t('emailPlaceholder')"
+                                    :placeholder="t('loginPlaceholder')"
                                 />
                                 <div
-                                    v-if="form.errors.email"
+                                    v-if="form.errors.login"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
@@ -141,10 +141,10 @@
                                 </div>
                             </div>
                             <p
-                                v-if="form.errors.email"
+                                v-if="form.errors.login"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ form.errors.email }}
+                                {{ form.errors.login }}
                             </p>
                         </div>
 
@@ -197,33 +197,6 @@
                         </div>
                     </div>
 
-                    <!-- Remember Me and Forgot Password -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input
-                                id="remember-me"
-                                v-model="form.remember"
-                                type="checkbox"
-                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            />
-                            <label
-                                for="remember-me"
-                                class="ml-2 block text-sm text-gray-900"
-                            >
-                                {{ t("rememberMe") }}
-                            </label>
-                        </div>
-
-                        <div class="text-sm">
-                            <Link
-                                :href="route('password.request')"
-                                class="font-medium text-indigo-600 hover:text-indigo-500"
-                            >
-                                {{ t("forgotPassword") }}
-                            </Link>
-                        </div>
-                    </div>
-
                     <!-- Submit Button -->
                     <div>
                         <button
@@ -236,16 +209,6 @@
                     </div>
                 </form>
 
-                <!-- Register Link -->
-                <p class="mt-6 text-center text-sm text-gray-600">
-                    {{ t("noAccount") }}
-                    <Link
-                        :href="route('register')"
-                        class="font-medium text-indigo-600 hover:text-indigo-500"
-                    >
-                        {{ t("signUp") }}
-                    </Link>
-                </p>
             </div>
         </div>
     </div>
@@ -253,7 +216,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { useForm, Link } from "@inertiajs/vue3";
+import { useForm } from "@inertiajs/vue3";
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 
@@ -263,8 +226,8 @@ const translations = {
         languageLabel: "English",
         loginTitle: "Sign in to your account",
         loginSubtitle: "Enter your email and password to access the dashboard",
-        email: "Email address",
-        emailPlaceholder: "Enter your email",
+        login: "Username or Email",
+        loginPlaceholder: "Enter your username or email",
         password: "Password",
         passwordPlaceholder: "Enter your password",
         rememberMe: "Remember me",
@@ -278,8 +241,8 @@ const translations = {
         loginTitle: "আপনার অ্যাকাউন্টে সাইন ইন করুন",
         loginSubtitle:
             "ড্যাশবোর্ড অ্যাক্সেস করতে আপনার ইমেল এবং পাসওয়ার্ড লিখুন",
-        email: "ইমেল ঠিকানা",
-        emailPlaceholder: "আপনার ইমেল লিখুন",
+        login: "ইউজারনেম বা ইমেল",
+        loginPlaceholder: "ইউজারনেম বা ইমেল লিখুন",
         password: "পাসওয়ার্ড",
         passwordPlaceholder: "আপনার পাসওয়ার্ড লিখুন",
         rememberMe: "আমাকে মনে রাখুন",
@@ -302,7 +265,7 @@ const changeLanguage = (lang) => {
 
 // Form handling
 const form = useForm({
-    email: "",
+    login: "",
     password: "",
     remember: false,
 });

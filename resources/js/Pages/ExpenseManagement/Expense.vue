@@ -120,95 +120,35 @@
         </div>
 
         <!-- Summary Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
-            >
-                <div class="flex items-center space-x-2">
-                    <div class="p-2 bg-indigo-500 rounded-lg">
-                        <svg
-                            class="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-indigo-700">
-                            {{ getTranslation("totalExpenses") }}
-                        </p>
-                        <p class="text-lg font-bold text-indigo-900">
-                            {{ toBengaliNumber(totalExpenses) }}
-                        </p>
-                    </div>
+        <div class="grid grid-cols-3 gap-2 mb-6">
+            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-2.5 rounded-xl shadow-sm border border-indigo-200 text-center">
+                <div class="p-1.5 bg-indigo-500 rounded-lg w-fit mx-auto mb-1">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                 </div>
+                <p class="text-[10px] font-medium text-indigo-700 leading-tight">{{ getTranslation("totalExpenses") }}</p>
+                <p class="text-sm font-bold text-indigo-900">{{ toBengaliNumber(totalExpenses) }}</p>
             </div>
 
-            <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
-            >
-                <div class="flex items-center space-x-2">
-                    <div class="p-2 bg-green-500 rounded-lg">
-                        <svg
-                            class="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-green-700">
-                            {{ getTranslation("totalAmount") }}
-                        </p>
-                        <p class="text-lg font-bold text-green-900">
-                            {{ toBengaliNumber(totalAmount) }}
-                        </p>
-                    </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-2.5 rounded-xl shadow-sm border border-green-200 text-center">
+                <div class="p-1.5 bg-green-500 rounded-lg w-fit mx-auto mb-1">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
                 </div>
+                <p class="text-[10px] font-medium text-green-700 leading-tight">{{ getTranslation("totalAmount") }}</p>
+                <p class="text-sm font-bold text-green-900">{{ toBengaliNumber(totalAmount) }}</p>
             </div>
 
-            <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-blue-200"
-            >
-                <div class="flex items-center space-x-2">
-                    <div class="p-2 bg-blue-500 rounded-lg">
-                        <svg
-                            class="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 7V3a2 2 0 012-2h8a2 2 0 012 2v4m-4 8l-4-4m0 0l-4 4m4-4v12"
-                            />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-blue-700">
-                            {{ getTranslation("recentExpenses") }}
-                        </p>
-                        <p class="text-lg font-bold text-blue-900">
-                            {{ toBengaliNumber(recentExpenses) }}
-                        </p>
-                    </div>
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-2.5 rounded-xl shadow-sm border border-blue-200 text-center">
+                <div class="p-1.5 bg-blue-500 rounded-lg w-fit mx-auto mb-1">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h8a2 2 0 012 2v4m-4 8l-4-4m0 0l-4 4m4-4v12" />
+                    </svg>
                 </div>
+                <p class="text-[10px] font-medium text-blue-700 leading-tight">{{ getTranslation("recentExpenses") }}</p>
+                <p class="text-sm font-bold text-blue-900">{{ toBengaliNumber(recentExpenses) }}</p>
             </div>
         </div>
 
@@ -222,28 +162,28 @@
         />
 
         <!-- Expenses Table -->
-        <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
+        <div class="bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
             <div class="w-full">
                 <table class="w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gradient-to-r from-indigo-600 to-indigo-500">
                         <tr>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                class="px-2 lg:px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/4"
                             >
                                 {{ getTranslation("reason") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/4 hidden sm:table-cell"
+                                class="px-2 lg:px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-2/4 hidden sm:table-cell"
                             >
                                 {{ getTranslation("description") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 hidden md:table-cell"
+                                class="px-2 lg:px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/4"
                             >
                                 {{ getTranslation("amount") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                class="px-2 lg:px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider w-1/4"
                             >
                                 {{ getTranslation("actions") }}
                             </th>
@@ -258,81 +198,40 @@
                                 class="hover:bg-gray-50 transition-colors cursor-pointer"
                                 @click="toggleGroup(group.reason)"
                             >
-                                <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900 w-1/4"
-                                >
-                                    <div class="flex items-center">
+                                <!-- Reason -->
+                                <td class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900">
+                                    <div class="flex items-center gap-1.5">
                                         <svg
-                                            :class="[
-                                                'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
-                                                expandedGroups[group.reason]
-                                                    ? 'rotate-90'
-                                                    : '',
-                                            ]"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
+                                            :class="['w-3 h-3 transition-transform flex-shrink-0', expandedGroups[group.reason] ? 'rotate-90' : '']"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M9 5l7 7-7 7"
-                                            />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
-                                            <div
-                                                class="p-1 bg-indigo-100 rounded-lg flex-shrink-0"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4 text-indigo-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <div class="min-w-0">
-                                                <p
-                                                    class="font-semibold text-gray-900 truncate"
-                                                    :title="group.reason"
-                                                >
-                                                    {{ group.reason }}
-                                                    <span class="ml-2 px-2 py-0.5 bg-gray-100 text-gray-500 font-normal rounded-full text-[10px]">
-                                                        {{ toBengaliNumber(group.items.length) }} {{ getTranslation('entries') }}
-                                                    </span>
-                                                </p>
-                                            </div>
+                                        <div class="p-1 bg-indigo-100 rounded-lg flex-shrink-0 hidden sm:block">
+                                            <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold text-gray-900 truncate" :title="group.reason">
+                                                {{ group.reason }}
+                                            </p>
+                                            <span class="text-[10px] text-gray-400">{{ group.items.length }} {{ getTranslation('entries') }}</span>
                                         </div>
                                     </div>
                                 </td>
-                                <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-2/4 hidden sm:table-cell"
-                                >
-                                    <div
-                                        class="truncate italic text-gray-400"
-                                        :title="group.items.length > 1 ? group.items.map(i => i.description).filter(Boolean).join(', ') : group.items[0].description || '-'"
-                                    >
+                                <!-- Description (hidden on mobile) -->
+                                <td class="px-2 lg:px-3 py-3 text-xs text-gray-400 hidden sm:table-cell">
+                                    <div class="truncate italic">
                                         {{ group.items.length > 1 ? group.items.map(i => i.description).filter(Boolean).join(', ') : group.items[0].description || "-" }}
                                     </div>
                                 </td>
-                                <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/4 hidden md:table-cell font-bold text-indigo-600"
-                                >
-                                    <div class="text-left">
-                                        {{ toBengaliNumber(group.totalAmount, 2) }}
-                                        {{ getTranslation("currency") }}
-                                    </div>
+                                <!-- Amount -->
+                                <td class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-bold text-indigo-600 whitespace-nowrap">
+                                    {{ toBengaliNumber(group.totalAmount, 2) }} {{ getTranslation("currency") }}
                                 </td>
-                                <td class="px-2 lg:px-3 py-3 w-1/4 text-center">
+                                <!-- Actions -->
+                                <td class="px-2 lg:px-3 py-3 text-center whitespace-nowrap">
                                     <span class="text-[10px] lg:text-xs font-medium text-indigo-500 uppercase tracking-wider">
                                         {{ expandedGroups[group.reason] ? getTranslation('collapse') : getTranslation('expand') }}
                                     </span>
@@ -344,29 +243,29 @@
                                 v-if="expandedGroups[group.reason]"
                                 class="bg-gray-50 border-t border-b border-gray-100"
                             >
-                                <td :colspan="4" class="px-2 sm:px-6 py-4">
-                                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                                        <table class="w-full text-xs lg:text-sm">
-                                            <thead class="bg-gray-50 text-gray-500">
+                                <td :colspan="4" class="px-2 py-3">
+                                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-x-auto">
+                                        <table class="w-full min-w-[360px] text-xs">
+                                            <thead class="bg-indigo-50 text-indigo-700">
                                                 <tr>
-                                                    <th class="px-4 py-2 font-semibold text-left w-32 lg:w-40">{{ getTranslation('createdAt') }}</th>
-                                                    <th class="px-4 py-2 font-semibold text-left">{{ getTranslation('description') }}</th>
-                                                    <th class="px-4 py-2 font-semibold text-right w-32 lg:w-40">{{ getTranslation('amount') }}</th>
-                                                    <th class="px-4 py-2 font-semibold text-center w-20 lg:w-24">{{ getTranslation('actions') }}</th>
+                                                    <th class="px-3 py-2 font-semibold text-left whitespace-nowrap">{{ getTranslation('createdAt') }}</th>
+                                                    <th class="px-3 py-2 font-semibold text-left">{{ getTranslation('description') }}</th>
+                                                    <th class="px-3 py-2 font-semibold text-right whitespace-nowrap">{{ getTranslation('amount') }}</th>
+                                                    <th class="px-3 py-2 font-semibold text-center w-10">{{ getTranslation('actions') }}</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-50 text-gray-700">
-                                                <tr v-for="item in group.items" :key="item.id" class="hover:bg-indigo-50/30 transition-colors">
-                                                    <td class="px-4 py-2 whitespace-nowrap text-left">{{ new Date(item.created_at).toLocaleDateString() }}</td>
-                                                    <td class="px-4 py-2 min-w-[150px] text-left">{{ item.description || '-' }}</td>
-                                                    <td class="px-4 py-2 font-medium text-right whitespace-nowrap">{{ toBengaliNumber(item.amount, 2) }} {{ getTranslation('currency') }}</td>
-                                                    <td class="px-4 py-2 text-center">
+                                            <tbody class="divide-y divide-gray-100 text-gray-700">
+                                                <tr v-for="item in group.items" :key="item.id" class="hover:bg-indigo-50/30">
+                                                    <td class="px-3 py-2 whitespace-nowrap">{{ new Date(item.created_at).toLocaleDateString() }}</td>
+                                                    <td class="px-3 py-2">{{ item.description || '-' }}</td>
+                                                    <td class="px-3 py-2 font-semibold text-right whitespace-nowrap text-indigo-600">{{ toBengaliNumber(item.amount, 2) }} {{ getTranslation('currency') }}</td>
+                                                    <td class="px-3 py-2 text-center">
                                                         <button
                                                             @click.stop="editExpense(item)"
                                                             class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-all"
                                                             :title="getTranslation('edit')"
                                                         >
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                             </svg>
@@ -375,7 +274,7 @@
                                                 </tr>
                                             </tbody>
                                         </table>
-                                     </div>
+                                    </div>
                                 </td>
                             </tr>
                         </template>

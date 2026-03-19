@@ -156,7 +156,7 @@
 
                 <div v-if="cartItems.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm border-collapse">
+                        <table class="w-full min-w-[800px] text-sm border-collapse">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200">
                                     <th class="px-3 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-8">#</th>
@@ -165,8 +165,8 @@
                                     <th class="px-2 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-20">{{ t('cases') }}</th>
                                     <th class="px-3 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-16">{{ t('bpc') }}</th>
                                     <th class="px-3 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-14">{{ t('free') }}</th>
-                                    <th class="px-2 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">{{ t('pricePerCase') }} (৳)</th>
-                                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">{{ t('subtotal') }}</th>
+                                    <th class="px-2 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">{{ t('pricePerCase') }} (৳)</th>
+                                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">{{ t('subtotal') }}</th>
                                     <th class="w-8 px-2 py-2.5"></th>
                                 </tr>
                             </thead>

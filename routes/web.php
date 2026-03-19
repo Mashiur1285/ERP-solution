@@ -80,6 +80,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->name('sales.payment');
     Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->name('sales.payment.store');
     Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->name('sales.cash-memo');
+    Route::get('/sales/{id}/edit', [SalesController::class, 'editSale'])->name('sales.edit');
+    Route::put('/sales/{id}', [SalesController::class, 'updateSale'])->name('sales.update');
 
     // API Routes for Sales
     Route::get('/api/products-by-supplier', [SalesController::class, 'getProductsBySupplier']);

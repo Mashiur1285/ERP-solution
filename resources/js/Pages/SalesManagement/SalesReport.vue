@@ -555,6 +555,12 @@
                                         >
                                             {{ getTranslation("view") }}
                                         </button>
+                                        <button
+                                            @click.stop="router.visit(`/sales/${sale.id}/edit`)"
+                                            class="px-2 py-1 bg-orange-100 text-orange-600 rounded text-xs hover:bg-orange-200 transition duration-200 whitespace-nowrap"
+                                        >
+                                            Edit
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
