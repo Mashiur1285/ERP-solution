@@ -86,7 +86,7 @@
                     <div v-else-if="productList.length === 0" class="text-center text-gray-400 text-sm py-3">
                         {{ t('noProductsFound') }}
                     </div>
-                    <div v-else class="flex flex-wrap gap-2">
+                    <div v-else class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
                         <button
                             v-for="p in productList"
                             :key="p.product_id"

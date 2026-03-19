@@ -157,6 +157,7 @@
             v-if="showExpenseModal"
             :expense="currentExpense"
             :editMode="editMode"
+            :existing-reasons="uniqueReasons"
             @close="closeExpenseModal"
             @submit="submitExpense"
         />
@@ -180,7 +181,7 @@
                             <th
                                 class="px-2 lg:px-3 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/4"
                             >
-                                {{ getTranslation("amount") }}
+                                {{ getTranslation("totalAmount") }}
                             </th>
                             <th
                                 class="px-2 lg:px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider w-1/4"
@@ -196,13 +197,13 @@
                         >
                             <tr
                                 class="hover:bg-gray-50 transition-colors cursor-pointer"
-                                @click="toggleGroup(group.reason)"
+                                @click="toggleGroup(group.key)"
                             >
                                 <!-- Reason -->
                                 <td class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900">
                                     <div class="flex items-center gap-1.5">
                                         <svg
-                                            :class="['w-3 h-3 transition-transform flex-shrink-0', expandedGroups[group.reason] ? 'rotate-90' : '']"
+                                            :class="['w-3 h-3 transition-transform flex-shrink-0', expandedGroups[group.key] ? 'rotate-90' : '']"
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         >
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -420,29 +421,35 @@ const toggleGroup = (reason: string) => {
     expandedGroups.value[reason] = !expandedGroups.value[reason];
 };
 
-// Group expenses by reason
+// Group expenses by reason (case-insensitive)
 const groupedExpenses = computed(() => {
     const groups: Record<string, {
+        key: string;
         reason: string;
         totalAmount: number;
         items: Expense[];
     }> = {};
 
     filteredExpenses.value.forEach(expense => {
-        if (!groups[expense.reason]) {
-            groups[expense.reason] = {
-                reason: expense.reason,
+        const key = expense.reason.toLowerCase();
+        if (!groups[key]) {
+            groups[key] = {
+                key,
+                reason: expense.reason, // first-seen casing used for display
                 totalAmount: 0,
                 items: []
             };
         }
-        groups[expense.reason].totalAmount += Number(expense.amount);
-        groups[expense.reason].items.push(expense);
+        groups[key].totalAmount += Number(expense.amount);
+        groups[key].items.push(expense);
     });
 
     // Sort by reason name for consistency
     return Object.values(groups).sort((a, b) => a.reason.localeCompare(b.reason));
 });
+
+// Unique reasons for chips in modal
+const uniqueReasons = computed(() => groupedExpenses.value.map(g => g.reason));
 
 const getTranslation = (key: string) => {
     return translations[currentLanguage.value]?.[key] || key;

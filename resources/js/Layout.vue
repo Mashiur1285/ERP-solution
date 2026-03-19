@@ -1,5 +1,6 @@
 <template>
     <div>
+        <Head :title="pageTitle" />
         <TheNavbar class="print:hidden" @toggle-sidebar="toggleSidebar" />
         <TheSidebar
             class="print:hidden"
@@ -27,9 +28,41 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { Head, usePage } from "@inertiajs/vue3";
 import TheNavbar from "@/Layouts/Navbar/TheNavbar.vue";
 import TheSidebar from "@/Layouts/Sidebar/TheSidebar.vue";
+
+const page = usePage();
+
+const pageTitleMap = {
+    "Dashboard": "Dashboard",
+    "SalesManagement/CreateSale": "Create Sale",
+    "SalesManagement/SalesReport": "Sales Report",
+    "SalesManagement/EditSale": "Edit Sale",
+    "SalesManagement/CashMemo": "Cash Memo",
+    "SalesManagement/SalesPayment": "Sales Payment",
+    "SalesManagement/Index": "Sales",
+    "SalesManagement/CreateShop": "Create Shop",
+    "LiftManagement/Lift": "Create Lift",
+    "LiftManagement/LiftReport": "Lift Report",
+    "ExpenseManagement/Expense": "Expense Management",
+    "DepositManagement/Purchase": "Purchase",
+    "DepositManagement/PurchaseReport": "Purchase Report",
+    "DepositManagement/Deposit": "Deposit",
+    "InventoryManagement/InventoryReport": "Inventory Report",
+    "Suppliers/Index": "Suppliers",
+    "Suppliers/Create": "Add Supplier",
+    "Suppliers/Edit": "Edit Supplier",
+    "Category/Index": "Categories",
+    "Brand/Index": "Brands",
+    "Profile/Edit": "Profile",
+};
+
+const pageTitle = computed(() => {
+    const component = String(page.component ?? "");
+    return pageTitleMap[component] ?? component.split("/").pop() ?? "ERP";
+});
 
 const isSidebarOpen = ref(false);
 

@@ -169,7 +169,7 @@
                         </svg>
                         {{ t('loading') }}
                     </div>
-                    <div v-else-if="productSearchResults.length" class="flex flex-wrap gap-2">
+                    <div v-else-if="productSearchResults.length" class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
                         <button v-for="p in productSearchResults" :key="p.id"
                             @click="selectProductForVariants(p)"
                             :class="['px-3 py-1.5 rounded-lg border text-sm font-medium transition-all',
