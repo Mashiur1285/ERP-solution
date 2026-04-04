@@ -7,7 +7,7 @@ use Illuminate\Support\Collection;
 
 interface LiftContract extends BaseContract
 {
-    public function createLiftWithItems(array $liftData, array $items, int $supplierId): Model;
+    public function saveLiftWithItems(array $liftData, array $items, int $supplierId, ?int $liftId = null): Model;
 
     public function liftHistory(?int $supplierId = null): Collection;
 }

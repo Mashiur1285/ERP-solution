@@ -18,15 +18,21 @@ class LiftRepository extends BaseRepository implements LiftContract
         parent::__construct($model);
     }
 
-    public function createLiftWithItems(array $liftData, array $items, int $supplierId): Model
+    public function saveLiftWithItems(array $liftData, array $items, int $supplierId, ?int $liftId = null): Model
     {
-        return DB::transaction(function () use ($liftData, $items, $supplierId) {
-            // Generate lift number
-            $lastLift = Lift::orderBy('id', 'desc')->first();
-            $nextId = $lastLift ? $lastLift->id + 1 : 1;
-            $liftData['lift_number'] = 'LFT-' . Str::padLeft($nextId, 6, '0');
+        return DB::transaction(function () use ($liftData, $items, $supplierId, $liftId) {
+            $isDraft = ($liftData['status'] ?? 'completed') === 'draft';
 
-            $lift = Lift::create($liftData);
+            if ($liftId) {
+                $lift = Lift::query()->findOrFail($liftId);
+                $lift->update($liftData);
+                $lift->items()->delete();
+            } else {
+                $lastLift = Lift::orderBy('id', 'desc')->first();
+                $nextId = $lastLift ? $lastLift->id + 1 : 1;
+                $liftData['lift_number'] = 'LFT-' . Str::padLeft($nextId, 6, '0');
+                $lift = Lift::create($liftData);
+            }
 
             $totalAmount = 0;
 
@@ -50,40 +56,42 @@ class LiftRepository extends BaseRepository implements LiftContract
                     $extraFreeBottles = $totalFreeBottles - ($casesWithFreeBottles * $bottlesPerCase);
                     $casesWithoutFreeBottles = $numberOfCases - $casesWithFreeBottles;
 
-                    // Create legacy products row for inventory compatibility
-                    $product = Product::create([
-                        'name' => $item['product_name'],
-                        'supplier_id' => $supplierId,
-                        'category_id' => $item['category_id'],
-                        'brand_id' => $item['brand_id'],
-                        'product_catalog_id' => $item['product_catalog_id'],
-                        'metadata' => [
-                            'variants' => [[
-                                'variant' => $variant['variant'],
-                                'number_of_cases' => $numberOfCases,
-                                'case_buying_price' => $caseBuyingPrice,
-                                'bottles_per_case' => $bottlesPerCase,
-                                'free_bottles_per_case' => $freeBottlesPerCase,
-                                'total_bottles' => $totalBottles,
-                                'total_free_bottles' => $totalFreeBottles,
-                                'extra_free_bottles' => $extraFreeBottles,
-                                'total_cost' => $totalCost,
-                                'actual_rate_per_bottle' => round($actualRatePerBottle, 4),
-                                'actual_rate_per_case' => $caseBuyingPrice,
-                                'cases_with_free_bottles' => $casesWithFreeBottles,
-                                'cases_without_free_bottles' => $casesWithoutFreeBottles,
-                                'current_purchased_quantity' => $purchasedBottles,
-                                'current_free_quantity' => $totalFreeBottles,
-                            ]],
-                        ],
-                        'date' => $liftData['lift_date'],
-                    ]);
+                    $product = null;
 
-                    // Create lift_items row
+                    if (!$isDraft) {
+                        $product = Product::create([
+                            'name' => $item['product_name'],
+                            'supplier_id' => $supplierId,
+                            'category_id' => $item['category_id'],
+                            'brand_id' => $item['brand_id'],
+                            'product_catalog_id' => $item['product_catalog_id'],
+                            'metadata' => [
+                                'variants' => [[
+                                    'variant' => $variant['variant'],
+                                    'number_of_cases' => $numberOfCases,
+                                    'case_buying_price' => $caseBuyingPrice,
+                                    'bottles_per_case' => $bottlesPerCase,
+                                    'free_bottles_per_case' => $freeBottlesPerCase,
+                                    'total_bottles' => $totalBottles,
+                                    'total_free_bottles' => $totalFreeBottles,
+                                    'extra_free_bottles' => $extraFreeBottles,
+                                    'total_cost' => $totalCost,
+                                    'actual_rate_per_bottle' => round($actualRatePerBottle, 4),
+                                    'actual_rate_per_case' => $caseBuyingPrice,
+                                    'cases_with_free_bottles' => $casesWithFreeBottles,
+                                    'cases_without_free_bottles' => $casesWithoutFreeBottles,
+                                    'current_purchased_quantity' => $purchasedBottles,
+                                    'current_free_quantity' => $totalFreeBottles,
+                                ]],
+                            ],
+                            'date' => $liftData['lift_date'],
+                        ]);
+                    }
+
                     LiftItem::create([
                         'lift_id' => $lift->id,
                         'product_catalog_id' => $item['product_catalog_id'],
-                        'product_id' => $product->id,
+                        'product_id' => $product?->id,
                         'variant' => $variant['variant'],
                         'number_of_cases' => $numberOfCases,
                         'case_buying_price' => $caseBuyingPrice,

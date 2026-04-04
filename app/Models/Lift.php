@@ -11,6 +11,7 @@ class Lift extends Model
     protected $fillable = [
         'supplier_id',
         'lift_number',
+        'status',
         'total_amount',
         'lift_date',
         'notes',

@@ -90,7 +90,7 @@
 
             <!-- Add Deposit Button -->
             <button
-                @click="showDepositModal = true"
+                @click="closeDepositModal(); showDepositModal = true"
                 class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
             >
                 <svg
@@ -237,7 +237,9 @@
         <DepositModal
             v-if="showDepositModal"
             :suppliers="suppliers"
-            @close="showDepositModal = false"
+            :deposit="currentDeposit"
+            :edit-mode="editMode"
+            @close="closeDepositModal"
             @submit="submitDeposit"
         />
 
@@ -285,6 +287,11 @@
                                 class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
                             >
                                 Remaining (TK)
+                            </th>
+                            <th
+                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                            >
+                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -365,9 +372,7 @@
                                         }}
                                     </div>
                                 </td>
-                                <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-900 w-1/4"
-                                >
+                                <td class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-900 w-1/4">
                                     <div
                                         class="font-medium"
                                         :class="
@@ -383,6 +388,9 @@
                                         }}
                                     </div>
                                 </td>
+                                <td class="px-2 lg:px-3 py-3 text-center text-xs lg:text-sm text-gray-900 w-1/4">
+                                    <span class="text-xs text-gray-400">Expand</span>
+                                </td>
                             </tr>
 
                             <!-- Expanded Details -->
@@ -390,7 +398,7 @@
                                 v-if="expandedSuppliers[supplierName]"
                                 class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                <td :colspan="4" class="px-2 lg:px-6 py-6">
+                                <td :colspan="5" class="px-2 lg:px-6 py-6">
                                     <div class="ml-2 lg:ml-6">
                                         <!-- Mobile Summary (shown on small screens) -->
                                         <div
@@ -588,27 +596,33 @@
                                                     <div
                                                         class="mt-2 sm:mt-0 sm:ml-4"
                                                     >
-                                                        <div
-                                                            class="flex items-center text-xs text-gray-500"
-                                                        >
-                                                            <svg
-                                                                class="w-3 h-3 mr-1"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24"
+                                                        <div class="flex flex-col sm:items-end gap-2">
+                                                            <div class="flex items-center text-xs text-gray-500">
+                                                                <svg
+                                                                    class="w-3 h-3 mr-1"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 7V3a2 2 0 012-2h8a2 2 0 012 2v4m-4 8l-4-4m0 0l-4 4m4-4v12"
+                                                                    />
+                                                                </svg>
+                                                                {{
+                                                                    formatDate(
+                                                                        deposit.date
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                            <button
+                                                                @click.stop="editDeposit(deposit)"
+                                                                class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold hover:bg-blue-200 transition-colors"
                                                             >
-                                                                <path
-                                                                    stroke-linecap="round"
-                                                                    stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M8 7V3a2 2 0 012-2h8a2 2 0 012 2v4m-4 8l-4-4m0 0l-4 4m4-4v12"
-                                                                />
-                                                            </svg>
-                                                            {{
-                                                                formatDate(
-                                                                    deposit.date
-                                                                )
-                                                            }}
+                                                                Edit
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -663,7 +677,8 @@ interface Supplier {
 }
 
 interface Deposit {
-    id?: number;
+    id: number;
+    supplier_id: number;
     name: string;
     phone_number?: string;
     deposit_amount: number;
@@ -689,6 +704,8 @@ defineOptions({
 });
 
 const showDepositModal = ref(false);
+const editMode = ref(false);
+const currentDeposit = ref<{ id?: number; supplier_id: number | string; balance_deposited: number } | null>(null);
 const expandedSuppliers = ref<Record<string, boolean>>({});
 
 // Toast state
@@ -805,23 +822,58 @@ const closeToast = () => {
     showToast.value = false;
 };
 
+const closeDepositModal = () => {
+    showDepositModal.value = false;
+    currentDeposit.value = null;
+    editMode.value = false;
+};
+
 const submitDeposit = (depositData: {
     supplier_id: string;
     balance_deposited: number;
 }) => {
-    router.post("/deposits/store", depositData, {
+    const options = {
         onSuccess: () => {
-            showDepositModal.value = false;
-            showToastWithType("Deposit Added Successfully", "success");
+            const wasEdit = editMode.value;
+            closeDepositModal();
+            showToastWithType(
+                wasEdit
+                    ? "Deposit Updated Successfully"
+                    : "Deposit Added Successfully",
+                "success"
+            );
         },
         onError: (errors) => {
             console.error("Deposit submission errors:", errors);
             showToastWithType(
-                "Failed to add deposit. Please check the form.",
+                editMode.value
+                    ? "Failed to update deposit. Please check the form."
+                    : "Failed to add deposit. Please check the form.",
                 "error"
             );
         },
-    });
+    };
+
+    if (editMode.value && currentDeposit.value?.id) {
+        router.put(
+            `/deposits/${currentDeposit.value.id}`,
+            { balance_deposited: depositData.balance_deposited },
+            options
+        );
+        return;
+    }
+
+    router.post("/deposits/store", depositData, options);
+};
+
+const editDeposit = (deposit: Deposit) => {
+    currentDeposit.value = {
+        id: deposit.id,
+        supplier_id: deposit.supplier_id,
+        balance_deposited: Number(deposit.deposit_amount || 0),
+    };
+    editMode.value = true;
+    showDepositModal.value = true;
 };
 
 console.log("DepositManagement.vue component loaded");

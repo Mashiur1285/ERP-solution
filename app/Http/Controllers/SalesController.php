@@ -38,6 +38,7 @@ class SalesController extends Controller
         $shops = $this->shopRepository->all()->map(function ($shop) {
             return [
                 'id' => $shop->id,
+                'road' => $shop->road,
                 'shop_name' => $shop->shop_name,
             ];
         });
@@ -49,9 +50,39 @@ class SalesController extends Controller
             ];
         });
 
+        $draftSale = null;
+        if (request()->filled('draft')) {
+            $sale = $this->salesRepository->query()
+                ->with(['items.product.supplier', 'shop'])
+                ->where('status', SalesStatus::DRAFT->value)
+                ->find(request()->integer('draft'));
+
+            if ($sale) {
+                $draftSale = [
+                    'id' => $sale->id,
+                    'shop_id' => $sale->shop_id,
+                    'sale_date' => optional($sale->sale_date)->format('Y-m-d'),
+                    'items' => $sale->items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'product_name' => $item->product?->name ?? 'Unknown',
+                            'supplier_id' => $item->supplier_id,
+                            'supplier_name' => $item->product?->supplier?->company_name ?? 'Unknown',
+                            'variant' => $item->variant,
+                            'cases' => $item->cases_sold,
+                            'price_per_case' => $item->selling_price_per_case,
+                            'bottles_per_case' => $item->bottles_per_case,
+                            'free_bottles_per_case' => (int) round(($item->free_bottles_sold ?? 0) / max($item->cases_sold, 1)),
+                        ];
+                    })->values(),
+                ];
+            }
+        }
+
         return Inertia::render('SalesManagement/CreateSale', [
             'shops' => $shops,
             'suppliers' => $suppliers,
+            'draftSale' => $draftSale,
         ]);
     }
 
@@ -102,8 +133,9 @@ class SalesController extends Controller
 
     public function store(Request $request)
     {
-
         $request->validate([
+            'draft_id' => 'nullable|exists:sales,id',
+            'save_as_draft' => 'nullable|boolean',
             'shop_id' => 'required|exists:shops,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'sale_date' => 'required|date',
@@ -116,28 +148,40 @@ class SalesController extends Controller
             'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        $saveAsDraft = $request->boolean('save_as_draft');
+
+        return DB::transaction(function () use ($request, $saveAsDraft) {
+            $sale = null;
             $data = [
                 'shop_id' => $request->shop_id,
                 'supplier_id' => $request->supplier_id,
-                'invoice_number' => 'INV-' . Str::padLeft(mt_rand(1, 999999), 6, '0'),
                 'total_amount' => 0,
                 'subtotal' => 0,
-                'status' => SalesStatus::IN_PROGRESS->value,
+                'status' => $saveAsDraft ? SalesStatus::DRAFT->value : SalesStatus::IN_PROGRESS->value,
                 'sale_date' => $request->sale_date,
                 'due_amount' => 0,
+                'paid_amount' => 0,
+                'is_paid' => false,
             ];
 
-            $sale = $this->salesRepository->create($data);
+            if ($request->draft_id) {
+                $sale = $this->salesRepository->find($request->draft_id);
+                $this->salesRepository->updateSales($data, $sale->id);
+                $sale->items()->delete();
+                $sale = $sale->fresh(['items']);
+            } else {
+                $data['invoice_number'] = 'INV-' . Str::padLeft(mt_rand(1, 999999), 6, '0');
+                $sale = $this->salesRepository->create($data);
+            }
+
+            $invoiceNumber = $sale->invoice_number ?? $data['invoice_number'];
+
             $totalAmount = 0;
             $totalProfit = 0;
 
             foreach ($request->items as $item) {
-                // Use reference product to get name + supplier for sibling lookup
                 $referenceProduct = $this->productPurchaseRepository->find($item['product_id']);
 
-                // Collect ALL purchase records (batches) for this product name + supplier
-                // that contain this variant, ordered oldest-first (FIFO)
                 $batches = Product::where('name', $referenceProduct->name)
                     ->where('supplier_id', $referenceProduct->supplier_id)
                     ->whereNotNull('metadata')
@@ -191,11 +235,10 @@ class SalesController extends Controller
                     $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
                 }
 
-                // Validate against total stock (purchased + free combined)
                 $totalAvailable  = $totalPurchasedAvailable + $totalFreeAvailable;
                 $totalToDeduct   = $purchasedBottlesSold + $freeBottlesSold;
 
-                if ($totalToDeduct > $totalAvailable) {
+                if (!$saveAsDraft && $totalToDeduct > $totalAvailable) {
                     throw ValidationException::withMessages([
                         'inventory' => "Insufficient stock for {$item['variant']}. Available: {$totalAvailable}, Required: {$totalToDeduct}",
                     ]);
@@ -223,31 +266,31 @@ class SalesController extends Controller
                     'total_price'            => $totalSalePrice,
                     'profit'                 => $profit,
                     'delivery_date'          => $request->sale_date,
-                    'invoice_number'         => $data['invoice_number'],
+                    'invoice_number'         => $invoiceNumber,
                     'status'                 => SalesItemsStatus::IN_PROGRESS->value,
                 ];
 
                 $this->salesItemRepository->create($itemsData);
 
-                // FIFO deduction: treat purchased+free as one pool, deplete purchased first per batch
-                $remainingToDeduct = (int) $totalToDeduct;
-                foreach ($batches as $batch) {
-                    if ($remainingToDeduct <= 0) break;
-                    $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
-                    if ($batchTotal <= 0) continue;
+                if (!$saveAsDraft) {
+                    $remainingToDeduct = (int) $totalToDeduct;
+                    foreach ($batches as $batch) {
+                        if ($remainingToDeduct <= 0) break;
+                        $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
+                        if ($batchTotal <= 0) continue;
 
-                    $deductFromBatch = min($remainingToDeduct, $batchTotal);
-                    // Within this batch: use up purchased first, then free
-                    $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
-                    $deductFree      = $deductFromBatch - $deductPurchased;
+                        $deductFromBatch = min($remainingToDeduct, $batchTotal);
+                        $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
+                        $deductFree      = $deductFromBatch - $deductPurchased;
 
-                    $this->productPurchaseRepository->updateInventory(
-                        $batch['product'],
-                        $item['variant'],
-                        $deductPurchased,
-                        $deductFree
-                    );
-                    $remainingToDeduct -= $deductFromBatch;
+                        $this->productPurchaseRepository->updateInventory(
+                            $batch['product'],
+                            $item['variant'],
+                            $deductPurchased,
+                            $deductFree
+                        );
+                        $remainingToDeduct -= $deductFromBatch;
+                    }
                 }
 
                 $totalAmount += $totalSalePrice;
@@ -260,6 +303,10 @@ class SalesController extends Controller
                 'subtotal' => $totalAmount,
                 'due_amount' => $totalAmount,
             ], $sale->id);
+
+            if ($saveAsDraft) {
+                return redirect()->route('sales.report')->with('success', 'Sale draft saved successfully');
+            }
 
             return redirect()->route('sales.payment', $sale->id)->with('success', 'Sale created successfully, please proceed with payment');
         });
@@ -573,6 +620,7 @@ class SalesController extends Controller
         $shops = $this->shopRepository->all()->map(function ($shop) {
             return [
                 'id' => $shop->id,
+                'road' => $shop->road,
                 'shop_name' => $shop->shop_name,
             ];
         });

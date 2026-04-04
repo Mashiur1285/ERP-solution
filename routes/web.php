@@ -6,6 +6,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\Acl\RoleController;
+use App\Http\Controllers\Acl\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductPurchaseController;
 use App\Http\Controllers\SalesController; // Fixed: Correct namespace
@@ -21,7 +23,7 @@ Route::get('/', function () {
 
 // Authentication and ERP Routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
 
     // Profile Routes (from Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -29,72 +31,87 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Suppliers
-    Route::get('suppliers/index', [SupplierController::class, 'index'])->name('suppliers.index');
-    Route::get('suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
-    Route::post('suppliers/store', [SupplierController::class, 'store'])->name('suppliers.store');
-    Route::put('suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
-    Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
-    Route::post('suppliers/quick-store', [SupplierController::class, 'quickStore'])->name('suppliers.quick-store');
+    Route::get('suppliers/index', [SupplierController::class, 'index'])->middleware('permission:supplier.view')->name('suppliers.index');
+    Route::get('suppliers/create', [SupplierController::class, 'create'])->middleware('permission:supplier.add')->name('suppliers.create');
+    Route::post('suppliers/store', [SupplierController::class, 'store'])->middleware('permission:supplier.add')->name('suppliers.store');
+    Route::put('suppliers/{id}', [SupplierController::class, 'update'])->middleware('permission:supplier.update')->name('suppliers.update');
+    Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->middleware('permission:supplier.update')->name('suppliers.edit');
+    Route::post('suppliers/quick-store', [SupplierController::class, 'quickStore'])->middleware('permission:supplier.add')->name('suppliers.quick-store');
 
     // Deposits
-    Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
-    Route::post('deposits/store', [DepositController::class, 'store'])->name('deposits.store');
+    Route::get('deposits', [DepositController::class, 'index'])->middleware('permission:deposit.view')->name('deposits.index');
+    Route::post('deposits/store', [DepositController::class, 'store'])->middleware('permission:deposit.add')->name('deposits.store');
+    Route::put('deposits/{id}', [DepositController::class, 'update'])->middleware('permission:deposit.update')->name('deposits.update');
+    Route::post('/api/deposits/quick-store', [DepositController::class, 'quickStore'])->middleware('permission:deposit.add');
 
     // Categories
-    Route::get('categories/index', [CategoryController::class, 'index'])->name('categories.index');
-    Route::post('categories/store', [CategoryController::class, 'store'])->name('categories.store');
-    Route::put('categories/{id}/update', [CategoryController::class, 'update'])->name('categories.update');
-    Route::delete('categories/{id}/delete', [CategoryController::class, 'destroy'])->name('categories.delete');
-    Route::post('categories/quick-store', [CategoryController::class, 'quickStore'])->name('categories.quick-store');
+    Route::get('categories/index', [CategoryController::class, 'index'])->middleware('permission:category.view')->name('categories.index');
+    Route::post('categories/store', [CategoryController::class, 'store'])->middleware('permission:category.add')->name('categories.store');
+    Route::put('categories/{id}/update', [CategoryController::class, 'update'])->middleware('permission:category.update')->name('categories.update');
+    Route::delete('categories/{id}/delete', [CategoryController::class, 'destroy'])->middleware('permission:category.delete')->name('categories.delete');
+    Route::post('categories/quick-store', [CategoryController::class, 'quickStore'])->middleware('permission:category.add')->name('categories.quick-store');
 
     // Brands
-    Route::get('brands/index', [BrandController::class, 'index'])->name('brands.index');
-    Route::post('brands/store', [BrandController::class, 'store'])->name('brands.store');
-    Route::put('brands/{id}/update', [BrandController::class, 'update'])->name('brands.update');
-    Route::delete('brands/{id}/delete', [BrandController::class, 'destroy'])->name('brands.delete');
-    Route::post('brands/quick-store', [BrandController::class, 'quickStore'])->name('brands.quick-store');
+    Route::get('brands/index', [BrandController::class, 'index'])->middleware('permission:brand.view')->name('brands.index');
+    Route::post('brands/store', [BrandController::class, 'store'])->middleware('permission:brand.add')->name('brands.store');
+    Route::put('brands/{id}/update', [BrandController::class, 'update'])->middleware('permission:brand.update')->name('brands.update');
+    Route::delete('brands/{id}/delete', [BrandController::class, 'destroy'])->middleware('permission:brand.delete')->name('brands.delete');
+    Route::post('brands/quick-store', [BrandController::class, 'quickStore'])->middleware('permission:brand.add')->name('brands.quick-store');
 
     // Purchases/Products (legacy)
-    Route::get('purchases', [ProductPurchaseController::class, 'index'])->name('purchases.index');
-    Route::post('products-store', [ProductPurchaseController::class, 'storeProductPurchase'])->name('products.store');
-    Route::get('/purchases/report', [ProductPurchaseController::class, 'purchaseReport'])->name('purchases.report');
+    Route::get('purchases', [ProductPurchaseController::class, 'index'])->middleware('permission:lift.view')->name('purchases.index');
+    Route::post('products-store', [ProductPurchaseController::class, 'storeProductPurchase'])->middleware('permission:lift.add')->name('products.store');
+    Route::get('/purchases/report', [ProductPurchaseController::class, 'purchaseReport'])->middleware('permission:lift.view')->name('purchases.report');
 
     // Lifts (new purchase system)
-    Route::get('lifts', [LiftController::class, 'index'])->name('lifts.index');
-    Route::post('lifts/store', [LiftController::class, 'store'])->name('lifts.store');
-    Route::get('lifts/report', [LiftController::class, 'report'])->name('lifts.report');
-    Route::get('/api/product-catalog/search', [LiftController::class, 'searchProducts']);
-    Route::post('/api/product-catalog/quick-store', [LiftController::class, 'quickStoreProduct']);
+    Route::get('lifts', [LiftController::class, 'index'])->middleware('permission:lift.add')->name('lifts.index');
+    Route::post('lifts/store', [LiftController::class, 'store'])->middleware('permission:lift.add')->name('lifts.store');
+    Route::get('lifts/report', [LiftController::class, 'report'])->middleware('permission:lift.view')->name('lifts.report');
+    Route::get('/api/product-catalog/search', [LiftController::class, 'searchProducts'])->middleware('permission:lift.add');
+    Route::post('/api/product-catalog/quick-store', [LiftController::class, 'quickStoreProduct'])->middleware('permission:lift.add');
 
     // Shops
-    Route::get('shops', [ShopController::class, 'index'])->name('shops.index');
-    Route::get('shops/create', [ShopController::class, 'create'])->name('shops.create');
-    Route::post('shops/store', [ShopController::class, 'store'])->name('shops.store');
-    Route::get('shops/{id}/edit', [ShopController::class, 'edit'])->name('shops.edit');
-    Route::put('shops/{id}', [ShopController::class, 'update'])->name('shops.update');
+    Route::get('shops', [ShopController::class, 'index'])->middleware('permission:shop.view')->name('shops.index');
+    Route::get('shops/create', [ShopController::class, 'create'])->middleware('permission:shop.add')->name('shops.create');
+    Route::post('shops/store', [ShopController::class, 'store'])->middleware('permission:shop.add')->name('shops.store');
+    Route::get('shops/{id}/edit', [ShopController::class, 'edit'])->middleware('permission:shop.update')->name('shops.edit');
+    Route::put('shops/{id}', [ShopController::class, 'update'])->middleware('permission:shop.update')->name('shops.update');
 
     // Sales
-    Route::get('sales', [SalesController::class, 'index'])->name('sales.index');
-    Route::post('sales/store', [SalesController::class, 'store'])->name('sales.store');
-    Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report');
-    Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->name('sales.payment');
-    Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->name('sales.payment.store');
-    Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->name('sales.cash-memo');
-    Route::get('/sales/{id}/edit', [SalesController::class, 'editSale'])->name('sales.edit');
-    Route::put('/sales/{id}', [SalesController::class, 'updateSale'])->name('sales.update');
+    Route::get('sales', [SalesController::class, 'index'])->middleware('permission:sales.add')->name('sales.index');
+    Route::post('sales/store', [SalesController::class, 'store'])->middleware('permission:sales.add')->name('sales.store');
+    Route::get('/sales/report', [SalesController::class, 'report'])->middleware('permission:sales.view')->name('sales.report');
+    Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->middleware('permission:sales.update')->name('sales.payment');
+    Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->middleware('permission:sales.update')->name('sales.payment.store');
+    Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->middleware('permission:sales.view')->name('sales.cash-memo');
+    Route::get('/sales/{id}/edit', [SalesController::class, 'editSale'])->middleware('permission:sales.update')->name('sales.edit');
+    Route::put('/sales/{id}', [SalesController::class, 'updateSale'])->middleware('permission:sales.update')->name('sales.update');
 
     // API Routes for Sales
-    Route::get('/api/products-by-supplier', [SalesController::class, 'getProductsBySupplier']);
-    Route::get('/api/variant-inventory', [SalesController::class, 'getVariantInventory']);
-    Route::get('/api/inventory/search', [SalesController::class, 'searchInventoryProducts']);
+    Route::get('/api/products-by-supplier', [SalesController::class, 'getProductsBySupplier'])->middleware('permission:sales.add');
+    Route::get('/api/variant-inventory', [SalesController::class, 'getVariantInventory'])->middleware('permission:sales.add');
+    Route::get('/api/inventory/search', [SalesController::class, 'searchInventoryProducts'])->middleware('permission:sales.add');
 
     // Inventory Report
-    Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->name('inventory.report');
+    Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->middleware('permission:inventory.view')->name('inventory.report');
 
     // Expenses
-    Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
-    Route::post('expenses/store', [ExpenseController::class, 'storeExpense'])->name('expenses.store');
-    Route::put('expenses/{id}/update', [ExpenseController::class, 'update'])->name('expenses.update');
+    Route::get('expenses', [ExpenseController::class, 'index'])->middleware('permission:expense.view')->name('expenses.index');
+    Route::post('expenses/store', [ExpenseController::class, 'storeExpense'])->middleware('permission:expense.add')->name('expenses.store');
+    Route::put('expenses/{id}/update', [ExpenseController::class, 'update'])->middleware('permission:expense.update')->name('expenses.update');
+
+    Route::get('roles', [RoleController::class, 'index'])->middleware('permission:role.view')->name('roles.index');
+    Route::get('roles/create', [RoleController::class, 'create'])->middleware('permission:role.add')->name('roles.create');
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:role.add')->name('roles.store');
+    Route::get('roles/{role}/edit', [RoleController::class, 'edit'])->middleware('permission:role.update')->name('roles.edit');
+    Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('permission:role.update')->name('roles.update');
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:role.delete')->name('roles.destroy');
+
+    Route::get('users', [UserController::class, 'index'])->middleware('permission:user.view')->name('users.index');
+    Route::get('users/create', [UserController::class, 'create'])->middleware('permission:user.add')->name('users.create');
+    Route::post('users', [UserController::class, 'store'])->middleware('permission:user.add')->name('users.store');
+    Route::get('users/{user}/edit', [UserController::class, 'edit'])->middleware('permission:user.update')->name('users.edit');
+    Route::put('users/{user}', [UserController::class, 'update'])->middleware('permission:user.update')->name('users.update');
 });
 
 require __DIR__ . '/auth.php';

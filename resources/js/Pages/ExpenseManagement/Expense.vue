@@ -448,8 +448,26 @@ const groupedExpenses = computed(() => {
     return Object.values(groups).sort((a, b) => a.reason.localeCompare(b.reason));
 });
 
-// Unique reasons for chips in modal
-const uniqueReasons = computed(() => groupedExpenses.value.map(g => g.reason));
+// Keep reason suggestions independent from the active date/search filters.
+const uniqueReasons = computed(() => {
+    const reasonsMap = new Map<string, string>();
+
+    props.expenses.forEach((expense) => {
+        const reason = expense.reason?.trim();
+
+        if (!reason) return;
+
+        const key = reason.toLowerCase();
+
+        if (!reasonsMap.has(key)) {
+            reasonsMap.set(key, reason);
+        }
+    });
+
+    return Array.from(reasonsMap.values()).sort((a, b) =>
+        a.localeCompare(b)
+    );
+});
 
 const getTranslation = (key: string) => {
     return translations[currentLanguage.value]?.[key] || key;

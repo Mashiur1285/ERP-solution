@@ -9,10 +9,10 @@ use App\Models\Deposit;
 
 interface DepositContract extends BaseContract
 {
-    // Add any Deposit-specific methods here
     public function depositHistory(): Collection;
     public function updateDepositTable(int $purchaseAmount, Model $deposit): void;
-
     public function findTheLatestDepositForTheSupplier(int $supplierId): ?Deposit;
     public function totalRemainingDepositsBySupplier(): Collection;
+    public function applyAmountAgainstSupplierDeposits(int $supplierId, float $amount): void;
+    public function creditAmountBackToSupplierDeposits(int $supplierId, float $amount): void;
 }

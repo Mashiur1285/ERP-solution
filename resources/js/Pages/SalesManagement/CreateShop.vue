@@ -215,6 +215,60 @@
                             </div>
                             <div>
                                 <label
+                                    for="road"
+                                    class="block text-sm font-semibold text-gray-700 mb-2"
+                                >
+                                    <span class="flex items-center">
+                                        <svg
+                                            class="w-4 h-4 text-indigo-500 mr-1"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M9 20l-5-2.5V6.5L9 4m0 16l6-3m-6 3V4m6 13l5-2.5V3.5L15 4m0 13V4"
+                                            ></path>
+                                        </svg>
+                                        Road
+                                    </span>
+                                </label>
+                                <input
+                                    v-model="shopForm.road"
+                                    type="text"
+                                    id="road"
+                                    placeholder="Enter road name"
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    :class="{
+                                        'border-red-400 focus:border-red-500 focus:ring-red-200':
+                                            shopForm.errors?.road,
+                                    }"
+                                    @input="shopForm.clearErrors?.('road')"
+                                />
+                                <p
+                                    v-if="shopForm.errors?.road"
+                                    class="mt-2 text-sm text-red-600 flex items-center"
+                                >
+                                    <svg
+                                        class="w-4 h-4 mr-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        ></path>
+                                    </svg>
+                                    {{ shopForm.errors.road }}
+                                </p>
+                            </div>
+                            <div>
+                                <label
                                     for="owner_name"
                                     class="block text-sm font-semibold text-gray-700 mb-2"
                                 >
@@ -852,6 +906,7 @@ import Layout from "../../Layout.vue";
 
 interface ShopForm {
     shop_name: string;
+    road: string | null;
     owner_name: string | null;
     shop_address: string | null;
     phone_number: string;
@@ -866,6 +921,7 @@ interface ShopForm {
 
 const shopForm = useForm<ShopForm>({
     shop_name: "",
+    road: null,
     owner_name: null,
     shop_address: null,
     phone_number: "",

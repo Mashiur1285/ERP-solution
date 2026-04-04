@@ -62,8 +62,25 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         });
     }
 
-    public function getInventoryStock(): Collection
+    public function getInventoryStock(?string $snapshotDate = null): Collection
     {
+        $snapshotDate = $snapshotDate ?: now()->toDateString();
+
+        $salesByBatchAndVariant = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->select(
+                'sale_items.product_id',
+                'sale_items.variant',
+                DB::raw('SUM(sale_items.purchased_bottles_sold) as sold_purchased_bottles'),
+                DB::raw('SUM(sale_items.free_bottles_sold) as sold_free_bottles'),
+                DB::raw('SUM(sale_items.total_bottles_sold) as sold_total_bottles')
+            )
+            ->where('sales.status', '!=', 'draft')
+            ->whereDate('sales.sale_date', '<=', $snapshotDate)
+            ->groupBy('sale_items.product_id', 'sale_items.variant')
+            ->get()
+            ->keyBy(fn ($row) => $row->product_id . '::' . $row->variant);
+
         $query = "
         SELECT
             products.id,
@@ -79,7 +96,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         ";
 
         // First, collect all individual variant records
-        $rawData = collect(DB::select($query))->map(function ($item) {
+        $rawData = collect(DB::select($query))->map(function ($item) use ($salesByBatchAndVariant) {
             $variant = json_decode($item->variant_data, true) ?: [];
 
             // CORRECTED: Calculate initial purchased bottles correctly
@@ -89,9 +106,14 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
             $initialFreeBottles = $variant['total_free_bottles'] ?? 0;
 
-            // Get current inventory (subtract sold quantities)
-            $currentPurchased = $variant['current_purchased_quantity'] ?? $initialPurchasedBottles;
-            $currentFree = $variant['current_free_quantity'] ?? $initialFreeBottles;
+            $salesKey = $item->id . '::' . ($variant['variant'] ?? 'N/A');
+            $soldData = $salesByBatchAndVariant->get($salesKey);
+            $soldPurchased = (int) round($soldData->sold_purchased_bottles ?? 0);
+            $soldFree = (int) round($soldData->sold_free_bottles ?? 0);
+            $soldTotal = (int) round($soldData->sold_total_bottles ?? ($soldPurchased + $soldFree));
+
+            $currentPurchased = max(0, $initialPurchasedBottles - $soldPurchased);
+            $currentFree = max(0, $initialFreeBottles - $soldFree);
 
             return [
                 'product_id' => $item->id,
@@ -100,16 +122,28 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'supplier_name' => $item->supplier_name,
                 'purchase_date' => $item->purchase_date,
                 'variant' => $variant['variant'] ?? 'N/A',
+                'purchased_bottles_total' => $initialPurchasedBottles,
+                'free_bottles_total' => $initialFreeBottles,
                 'purchased_bottles_available' => $currentPurchased,
                 'free_bottles_available' => $currentFree,
                 'total_bottles_available' => $currentPurchased + $currentFree,
+                'total_bottles_sold' => $soldTotal,
                 'unit_price' => floatval($variant['actual_rate_per_bottle'] ?? 0),
                 'bottles_per_case' => $bottlesPerCase,
                 'cases_available' => $bottlesPerCase ? floor(($currentPurchased + $currentFree) / $bottlesPerCase) : 0,
                 'purchase_rate' => floatval($variant['actual_rate_per_bottle'] ?? 0),
                 'variant_metadata' => $variant,
             ];
-        })->filter(function ($item) {
+        })->filter(function ($item) use ($snapshotDate) {
+            if (empty($item['purchase_date'])) {
+                return false;
+            }
+
+            $purchaseDate = date('Y-m-d', strtotime((string) $item['purchase_date']));
+            if ($purchaseDate > $snapshotDate) {
+                return false;
+            }
+
             // Exclude variants with no name (N/A fallback from missing variant field)
             if (($item['variant'] ?? 'N/A') === 'N/A') return false;
             return $item['total_bottles_available'] >= 0; // Include 0-stock items so they remain visible
@@ -123,6 +157,9 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 $totalPurchasedBottles = $variantGroup->sum('purchased_bottles_available');
                 $totalFreeBottles = $variantGroup->sum('free_bottles_available');
                 $totalBottlesAvailable = $variantGroup->sum('total_bottles_available');
+                $totalSoldBottles = $variantGroup->sum('total_bottles_sold');
+                $totalPurchasedBottlesInitial = $variantGroup->sum('purchased_bottles_total');
+                $totalFreeBottlesInitial = $variantGroup->sum('free_bottles_total');
                 $bottlesPerCase = $variantGroup->first()['bottles_per_case'] ?? 0;
                 $totalCasesAvailable = $bottlesPerCase ? floor($totalBottlesAvailable / $bottlesPerCase) : 0;
 
@@ -139,9 +176,12 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                     'supplier_name' => $variantGroup->first()['supplier_name'],
                     'purchase_date' => $variantGroup->first()['purchase_date'],
                     'variant' => $variantName,
+                    'purchased_bottles_total' => $totalPurchasedBottlesInitial,
+                    'free_bottles_total' => $totalFreeBottlesInitial,
                     'purchased_bottles_available' => $totalPurchasedBottles,
                     'free_bottles_available' => $totalFreeBottles,
                     'total_bottles_available' => $totalBottlesAvailable,
+                    'total_bottles_sold' => $totalSoldBottles,
                     'unit_price' => $unitPrice,
                     'bottles_per_case' => $bottlesPerCase,
                     'cases_available' => $totalCasesAvailable,
@@ -157,6 +197,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'supplier_name' => $productGroup->first()['supplier_name'],
                 'purchase_date' => $productGroup->first()['purchase_date'],
                 'variants' => $aggregatedVariants,
+                'total_bottles_sold' => $aggregatedVariants->sum('total_bottles_sold'),
                 'total_available_bottles' => $aggregatedVariants->sum('total_bottles_available'),
                 'total_available_cases' => $aggregatedVariants->sum('cases_available'),
             ];

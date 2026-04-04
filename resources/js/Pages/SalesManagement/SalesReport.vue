@@ -324,6 +324,26 @@
 
         <!-- Search & Filter Fields -->
         <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
+            <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
+                <button
+                    @click="activeTab = 'completed'"
+                    :class="[
+                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                        activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                    ]"
+                >
+                    {{ getTranslation("completedTab") }}
+                </button>
+                <button
+                    @click="activeTab = 'draft'"
+                    :class="[
+                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                        activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
+                    ]"
+                >
+                    {{ getTranslation("draftTab") }}
+                </button>
+            </div>
             <DateRangePicker
                 v-model:startDate="filters.start_date"
                 v-model:endDate="filters.end_date"
@@ -550,7 +570,15 @@
                                             }}
                                         </button>
                                         <button
+                                            v-if="sale.status === 'draft'"
+                                            @click.stop="continueDraft(sale.id)"
+                                            class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs hover:bg-amber-200 transition duration-200 whitespace-nowrap"
+                                        >
+                                            {{ getTranslation("continueDraft") }}
+                                        </button>
+                                        <button
                                             @click.stop="viewCashMemo(sale.id)"
+                                            v-if="sale.status !== 'draft'"
                                             class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs hover:bg-green-200 transition duration-200 whitespace-nowrap"
                                         >
                                             {{ getTranslation("view") }}
@@ -1216,13 +1244,20 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedSale = ref<number | null>(null);
 const isLoading = ref(false);
+const activeTab = ref<"completed" | "draft">("completed");
 
 // Computed properties
-const totalSales = computed(() => props.sales?.length || 0);
+const tabbedSales = computed(() =>
+    (props.sales || []).filter((sale) =>
+        activeTab.value === "draft" ? sale.status === "draft" : sale.status !== "draft"
+    )
+);
+
+const totalSales = computed(() => tabbedSales.value.length || 0);
 
 const totalAmount = computed(() => {
     return (
-        props.sales?.reduce(
+        tabbedSales.value.reduce(
             (sum, sale) => sum + parseFloat(sale.total_amount.toString()),
             0
         ) || 0
@@ -1231,7 +1266,7 @@ const totalAmount = computed(() => {
 
 const totalProfit = computed(() => {
     return (
-        props.sales?.reduce(
+        tabbedSales.value.reduce(
             (sum, sale) => sum + parseFloat(sale.total_profit.toString()),
             0
         ) || 0
@@ -1240,7 +1275,7 @@ const totalProfit = computed(() => {
 
 const totalItemsSold = computed(() => {
     return (
-        props.sales?.reduce((sum, sale) => {
+        tabbedSales.value.reduce((sum, sale) => {
             return (
                 sum +
                 (sale.items?.reduce((itemSum, item) => {
@@ -1256,17 +1291,17 @@ const totalItemsSold = computed(() => {
 
 const hasAnyCases = computed(() => {
     return (
-        props.sales?.some((sale) =>
+        tabbedSales.value.some((sale) =>
             sale.items?.some((item) => item.cases_sold && item.cases_sold > 0)
         ) || false
     );
 });
 
 const filteredSales = computed(() => {
-    if (!searchQuery.value || !props.sales) return props.sales;
+    if (!searchQuery.value) return tabbedSales.value;
 
     const query = searchQuery.value.toLowerCase();
-    return props.sales.filter(
+    return tabbedSales.value.filter(
         (sale) =>
             sale.invoice_number.toLowerCase().includes(query) ||
             sale.shop_name.toLowerCase().includes(query) ||
@@ -1319,9 +1354,13 @@ const translations = {
         applyFilters: "Apply Filters",
         clearFilters: "Clear Filters",
         searchSales: "Search with Invoice",
+        completedTab: "Completed",
+        draftTab: "Drafts",
+        continueDraft: "Continue Sale",
         pending: "Pending",
         in_progress: "In Progress",
         completed: "Completed",
+        draft: "Draft",
         actions: "Actions",
         show: "Show",
         hide: "Hide",
@@ -1360,9 +1399,13 @@ const translations = {
         applyFilters: "ফিল্টার প্রয়োগ করুন",
         clearFilters: "ফিল্টার পরিষ্কার করুন",
         searchSales: "ইনভয়েস দিয়ে খুঁজুন",
+        completedTab: "সম্পন্ন",
+        draftTab: "ড্রাফট",
+        continueDraft: "ড্রাফট চালিয়ে যান",
         pending: "অপেক্ষায়",
         in_progress: "চলমান",
         completed: "সম্পন্ন",
+        draft: "ড্রাফট",
         actions: "কর্ম",
         show: "দেখান",
         hide: "লুকান",
@@ -1457,6 +1500,10 @@ function clearFilters(): void {
 
 function viewCashMemo(saleId: number): void {
     router.visit(`/sales/cash-memo/${saleId}`);
+}
+
+function continueDraft(saleId: number): void {
+    router.visit(`/sales?draft=${saleId}`);
 }
 
 // Lifecycle

@@ -60,12 +60,17 @@
 
         <!-- Search & Filter Fields -->
         <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
-            <DateRangePicker
-                v-model:startDate="dateStart"
-                v-model:endDate="dateEnd"
-                :language="currentLanguage"
-                class="w-full sm:w-auto"
-            />
+            <div class="w-full sm:w-auto">
+                <DateRangePicker
+                    v-model:startDate="dateStart"
+                    v-model:endDate="dateEnd"
+                    :language="currentLanguage"
+                    class="w-full sm:w-auto"
+                />
+                <p class="mt-2 text-xs text-gray-500">
+                    {{ getTranslation("snapshotInfo") }}: {{ dateEnd || dateStart }}
+                </p>
+            </div>
             <div class="relative w-full sm:w-80">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +90,7 @@
         <div class="space-y-6 mb-6">
 
             <!-- Total Metrics -->
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                 <div
                     class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
                 >
@@ -192,6 +197,35 @@
                     </div>
                 </div>
                 <div
+                    class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl shadow-sm border border-amber-200"
+                >
+                    <div class="flex items-center">
+                        <div class="p-2 bg-amber-500 rounded-lg mr-3">
+                            <svg
+                                class="w-6 h-6 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2 6H6l-2-6m16 0H4"
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-amber-700">
+                                {{ getTranslation("totalSold") }}
+                            </p>
+                            <p class="text-lg lg:text-lg font-bold text-amber-900 metric-value">
+                                {{ toBengaliNumber(totalSold) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
                     class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
                 >
                     <div class="flex items-center">
@@ -257,7 +291,17 @@
                                 {{ getTranslation("cases") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden md:table-cell"
+                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                            >
+                                {{ getTranslation("sold") }}
+                            </th>
+                            <th
+                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                            >
+                                {{ getTranslation("stockStatus") }}
+                            </th>
+                            <th
+                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden lg:table-cell"
                             >
                                 {{ getTranslation("unitPrice") }}
                             </th>
@@ -340,7 +384,30 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5 hidden md:table-cell"
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                >
+                                    <div class="text-center font-medium text-amber-600">
+                                        {{
+                                            toBengaliNumber(
+                                                item.total_sold
+                                            )
+                                        }}
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                >
+                                    <div class="flex justify-center">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                            :class="stockStatusClass(item.stock_status)"
+                                        >
+                                            {{ getTranslation(item.stock_status) }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5 hidden lg:table-cell"
                                 >
                                     <div class="text-right font-medium">
                                         ৳{{
@@ -367,7 +434,7 @@
                                 v-if="expandedVariants[index]"
                                 class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                <td :colspan="6" class="px-2 lg:px-6 py-6">
+                                <td :colspan="8" class="px-2 lg:px-6 py-6">
                                     <div class="ml-2 lg:ml-6">
                                         <!-- Mobile view for hidden columns -->
                                         <div
@@ -437,10 +504,23 @@
                                                             }}</span
                                                         >
                                                     </div>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("sold") }}</span>
+                                                        <span class="text-amber-600 font-medium">{{ toBengaliNumber(item.total_sold) }}</span>
+                                                    </div>
                                                 </div>
                                                 <div class="space-y-2">
+                                                    <div class="flex flex-col">
+                                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("stockStatus") }}</span>
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit"
+                                                            :class="stockStatusClass(item.stock_status)"
+                                                        >
+                                                            {{ getTranslation(item.stock_status) }}
+                                                        </span>
+                                                    </div>
                                                     <div
-                                                        class="md:hidden flex flex-col"
+                                                        class="lg:hidden flex flex-col"
                                                     >
                                                         <span
                                                             class="text-xs text-gray-500 font-medium"
@@ -547,6 +627,16 @@
                                                         <p
                                                             class="text-sm text-gray-600 mt-1"
                                                         >
+                                                            {{ getTranslation("sold") }}:
+                                                            {{
+                                                                toBengaliNumber(
+                                                                    variant.total_bottles_sold
+                                                                )
+                                                            }}
+                                                        </p>
+                                                        <p
+                                                            class="text-sm text-gray-600 mt-1"
+                                                        >
                                                             {{
                                                                 getTranslation(
                                                                     "cases"
@@ -562,6 +652,14 @@
                                                     <div
                                                         class="ml-3 text-right"
                                                     >
+                                                        <div class="mb-2">
+                                                            <span
+                                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                                :class="stockStatusClass(getStockStatus(variant.cases_available))"
+                                                            >
+                                                                {{ getTranslation(getStockStatus(variant.cases_available)) }}
+                                                            </span>
+                                                        </div>
                                                         <div
                                                             class="flex items-center justify-end mb-1"
                                                         >
@@ -708,6 +806,16 @@
                                                             </div>
                                                         </th>
                                                         <th
+                                                            class="w-1/5 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            {{ getTranslation("sold") }}
+                                                        </th>
+                                                        <th
+                                                            class="w-1/5 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            {{ getTranslation("stockStatus") }}
+                                                        </th>
+                                                        <th
                                                             class="w-1/5 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
                                                         >
                                                             <div
@@ -838,6 +946,23 @@
                                                             </span>
                                                         </td>
                                                         <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span class="font-bold text-amber-600 text-sm">
+                                                                {{ toBengaliNumber(variant.total_bottles_sold) }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                                :class="stockStatusClass(getStockStatus(variant.cases_available))"
+                                                            >
+                                                                {{ getTranslation(getStockStatus(variant.cases_available)) }}
+                                                            </span>
+                                                        </td>
+                                                        <td
                                                             class="px-4 py-4 text-right border-r border-gray-200"
                                                         >
                                                             <span
@@ -880,14 +1005,16 @@
 </template>
 
 <script setup>
-import { defineProps, ref, computed } from "vue";
+import { defineProps, ref, computed, watch } from "vue";
 import Layout from "@/Layout.vue";
+import { router } from "@inertiajs/vue3";
 import DateRangePicker from "../../Components/DateRangePicker.vue";
 
 defineOptions({ layout: Layout });
 
 const props = defineProps({
     inventoryStock: Array,
+    snapshotDate: String,
 });
 
 const translations = {
@@ -904,11 +1031,18 @@ const translations = {
         totalProducts: "Total Products",
         totalQuantity: "Total Products and Variants",
         totalCases: "Total Cases",
+        totalSold: "Total Sold",
         totalPurchaseValue: "Total Purchase Value",
         searchProducts: "Search products...",
+        snapshotInfo: "Inventory snapshot as of",
         productDetails: "Product Details",
         productVariants: "Product Variants",
         variants: "variants",
+        sold: "Sold",
+        stockStatus: "Stock Status",
+        inStock: "In Stock",
+        mediumStock: "Medium",
+        lowStock: "Low",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -923,11 +1057,18 @@ const translations = {
         totalProducts: "মোট পণ্য",
         totalQuantity: "মোট পণ্য এবং ভেরিয়েন্ট",
         totalCases: "মোট কেস",
+        totalSold: "মোট বিক্রি",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
         searchProducts: "পণ্য অনুসন্ধান করুন...",
+        snapshotInfo: "এই তারিখ পর্যন্ত ইনভেন্টরি",
         productDetails: "পণ্য বিবরণ",
         productVariants: "পণ্য ভেরিয়েন্ট",
         variants: "ভেরিয়েন্ট",
+        sold: "বিক্রি",
+        stockStatus: "স্টক অবস্থা",
+        inStock: "ভালো",
+        mediumStock: "মাঝারি",
+        lowStock: "কম",
     },
 };
 
@@ -935,13 +1076,27 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedVariants = ref({});
 
-// Date range state (default: today) – decorative for inventory snapshot
+// Date range state (snapshot uses end date)
 const _todayInv = new Date();
 const _todayStrInv = `${_todayInv.getFullYear()}-${String(_todayInv.getMonth() + 1).padStart(2, "0")}-${String(_todayInv.getDate()).padStart(2, "0")}`;
-const dateStart = ref(_todayStrInv);
-const dateEnd = ref(_todayStrInv);
+const initialSnapshotDate = props.snapshotDate || _todayStrInv;
+const dateStart = ref(initialSnapshotDate);
+const dateEnd = ref(initialSnapshotDate);
 
-// Process inventory stock to include total_quantity, total_cases, and total_value
+const getStockStatus = (cases) => {
+    const totalCases = Number(cases || 0);
+    if (totalCases <= 5) return "lowStock";
+    if (totalCases <= 20) return "mediumStock";
+    return "inStock";
+};
+
+const stockStatusClass = (status) => ({
+    "bg-green-100 text-green-700": status === "inStock",
+    "bg-yellow-100 text-yellow-700": status === "mediumStock",
+    "bg-red-100 text-red-700": status === "lowStock",
+});
+
+// Process inventory stock to include total_quantity, total_cases and sold status
 const processedInventory = computed(() => {
     return props.inventoryStock.map((item) => {
         const total_quantity = item.variants.reduce(
@@ -950,6 +1105,10 @@ const processedInventory = computed(() => {
         );
         const total_cases = item.variants.reduce(
             (sum, variant) => sum + variant.cases_available,
+            0
+        );
+        const total_sold = item.variants.reduce(
+            (sum, variant) => sum + (variant.total_bottles_sold || 0),
             0
         );
         const total_value = item.variants.reduce(
@@ -962,7 +1121,9 @@ const processedInventory = computed(() => {
             ...item,
             total_quantity,
             total_cases,
+            total_sold,
             total_value,
+            stock_status: getStockStatus(total_cases),
         };
     });
 });
@@ -974,25 +1135,15 @@ const totalQuantity = computed(() =>
 const totalCases = computed(() =>
     filteredInventory.value.reduce((sum, item) => sum + item.total_cases, 0)
 );
+const totalSold = computed(() =>
+    filteredInventory.value.reduce((sum, item) => sum + item.total_sold, 0)
+);
 const totalPurchaseValue = computed(() =>
     filteredInventory.value.reduce((sum, item) => sum + item.total_value, 0)
 );
 
 const filteredInventory = computed(() => {
     let result = processedInventory.value;
-
-    // Apply date range filter
-    if (dateStart.value || dateEnd.value) {
-        result = result.filter((item) => {
-            if (!item.purchase_date) return false;
-            const d = new Date(String(item.purchase_date).replace(' ', 'T'));
-            const pDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            
-            if (dateStart.value && pDateStr < dateStart.value) return false;
-            if (dateEnd.value && pDateStr > dateEnd.value) return false;
-            return true;
-        });
-    }
 
     // Apply search filter
     if (searchQuery.value) {
@@ -1003,6 +1154,23 @@ const filteredInventory = computed(() => {
     }
 
     return result;
+});
+
+let snapshotReloadTimer;
+watch([dateStart, dateEnd], ([start, end]) => {
+    const effectiveDate = end || start;
+    if (!effectiveDate || effectiveDate === props.snapshotDate) {
+        return;
+    }
+
+    clearTimeout(snapshotReloadTimer);
+    snapshotReloadTimer = setTimeout(() => {
+        router.get(
+            "/inventory/report",
+            { snapshot_date: effectiveDate },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    }, 250);
 });
 
 function getTranslation(key) {

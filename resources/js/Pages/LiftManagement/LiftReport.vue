@@ -179,6 +179,26 @@
 
         <!-- Search & Filter Fields -->
         <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
+            <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
+                <button
+                    @click="activeTab = 'completed'"
+                    :class="[
+                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                        activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                    ]"
+                >
+                    {{ t("completedTab") }}
+                </button>
+                <button
+                    @click="activeTab = 'draft'"
+                    :class="[
+                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                        activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
+                    ]"
+                >
+                    {{ t("draftTab") }}
+                </button>
+            </div>
             <DateRangePicker
                 v-model:startDate="dateStart"
                 v-model:endDate="dateEnd"
@@ -256,6 +276,13 @@
                         </div>
                     </div>
                     <div class="text-right">
+                        <button
+                            class="mb-2 inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium transition-colors"
+                            :class="lift.status === 'draft' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'"
+                            @click.stop="editLift(lift)"
+                        >
+                            {{ lift.status === 'draft' ? t("editDraft") : t("editLift") }}
+                        </button>
                         <p class="text-lg font-bold text-green-600">
                             ৳{{ toBn(Number(lift.total_amount || 0).toFixed(2)) }}
                         </p>
@@ -421,6 +448,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import DateRangePicker from "../../Components/DateRangePicker.vue";
 
@@ -443,6 +471,11 @@ const translations = {
         totalCases: "Total Cases",
         totalBottles: "Total Bottles",
         totalAmount: "Total Amount",
+        completedTab: "Completed",
+        draftTab: "Drafts",
+        editDraft: "Edit Draft",
+        editLift: "Edit Lift",
+        continueDraft: "Continue Lifting",
         searchLifts: "Search by supplier or lift number...",
         noLifts: "No lifting records found",
         items: "items",
@@ -465,6 +498,11 @@ const translations = {
         totalCases: "মোট কেস",
         totalBottles: "মোট বোতল",
         totalAmount: "মোট পরিমাণ",
+        completedTab: "সম্পন্ন",
+        draftTab: "ড্রাফট",
+        editDraft: "ড্রাফট এডিট করুন",
+        editLift: "লিফট এডিট করুন",
+        continueDraft: "ড্রাফট চালিয়ে যান",
         searchLifts: "সরবরাহকারী বা লিফট নম্বর দিয়ে খুঁজুন...",
         noLifts: "কোন লিফটিং রেকর্ড পাওয়া যায়নি",
         items: "আইটেম",
@@ -485,6 +523,7 @@ const translations = {
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedLifts = ref({});
+const activeTab = ref("completed");
 
 // Date range state (default: today)
 const _today = new Date();
@@ -539,33 +578,47 @@ function getLiftTotalBottles(lift) {
 }
 
 // Computed metrics
-const totalLifts = computed(() => props.liftHistory.length);
+const tabbedLifts = computed(() =>
+    props.liftHistory.filter((lift) =>
+        activeTab.value === "draft" ? lift.status === "draft" : lift.status !== "draft"
+    )
+);
+
+const totalLifts = computed(() => tabbedLifts.value.length);
 
 const totalAmount = computed(() =>
-    props.liftHistory.reduce(
+    tabbedLifts.value.reduce(
         (sum, lift) => sum + Number(lift.total_amount || 0),
         0
     )
 );
 
 const totalCases = computed(() =>
-    props.liftHistory.reduce(
+    tabbedLifts.value.reduce(
         (sum, lift) => sum + getLiftTotalCases(lift),
         0
     )
 );
 
 const totalBottles = computed(() =>
-    props.liftHistory.reduce(
+    tabbedLifts.value.reduce(
         (sum, lift) => sum + getLiftTotalBottles(lift),
         0
     )
 );
 
+function continueDraft(id) {
+    router.visit(`/lifts?draft=${id}`);
+}
+
+function editLift(lift) {
+    router.visit(lift.status === "draft" ? `/lifts?draft=${lift.id}` : `/lifts?edit=${lift.id}`);
+}
+
 const filteredLifts = computed(() => {
     const query = searchQuery.value.toLowerCase();
     
-    return props.liftHistory.filter((lift) => {
+    return tabbedLifts.value.filter((lift) => {
         // Date range filter (parse in local timezone to avoid UTC offset mismatch)
         if (dateStart.value || dateEnd.value) {
             if (!lift.lift_date) return false;

@@ -56,6 +56,12 @@ const pageTitleMap = {
     "Suppliers/Edit": "Edit Supplier",
     "Category/Index": "Categories",
     "Brand/Index": "Brands",
+    "ACL/Roles/Index": "Roles",
+    "ACL/Roles/Create": "Create Role",
+    "ACL/Roles/Edit": "Edit Role",
+    "ACL/Users/Index": "Users",
+    "ACL/Users/Create": "Create User",
+    "ACL/Users/Edit": "Edit User",
     "Profile/Edit": "Profile",
 };
 

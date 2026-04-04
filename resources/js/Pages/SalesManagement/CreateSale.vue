@@ -221,11 +221,14 @@
                                     </td>
 
                                     <!-- Free -->
-                                    <td class="px-3 py-2 text-center">
-                                        <span v-if="item.free_bottles_per_case > 0" class="text-xs font-semibold text-green-600">
-                                            +{{ item.free_bottles_per_case }}
-                                        </span>
-                                        <span v-else class="text-gray-300 text-xs">—</span>
+                                    <td class="px-2 py-2">
+                                        <input
+                                            v-model.number="item.free_bottles_per_case"
+                                            type="number"
+                                            min="0"
+                                            :placeholder="t('free')"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm text-center focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
+                                        />
                                     </td>
 
                                     <!-- Price/Case -->
@@ -275,17 +278,79 @@
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-3">
                         <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-2">{{ t('saleDetails') }}</h3>
 
+                        <!-- Road -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('road') }}*</label>
+                            <div class="relative">
+                                <input
+                                    v-model="roadSearchQuery"
+                                    type="text"
+                                    :placeholder="t('selectRoad')"
+                                    class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
+                                    :class="{ 'border-red-300': isSubmitted && !selectedRoad }"
+                                    @focus="showRoadOptions = true"
+                                    @input="handleRoadInput"
+                                    @blur="hideRoadOptions"
+                                />
+                                <div
+                                    v-if="showRoadOptions"
+                                    class="absolute z-20 mt-1 w-full max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                                >
+                                    <button
+                                        v-for="road in filteredRoadOptions"
+                                        :key="road.value"
+                                        type="button"
+                                        class="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                                        @mousedown.prevent="selectRoadOption(road)"
+                                    >
+                                        {{ road.label }}
+                                    </button>
+                                    <div
+                                        v-if="filteredRoadOptions.length === 0"
+                                        class="px-3 py-2 text-sm text-gray-400"
+                                    >
+                                        {{ t('noRoadsFound') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Shop -->
                         <div>
                             <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('shopName') }}*</label>
-                            <select
-                                v-model="shopId"
-                                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
-                                :class="{ 'border-red-300': isSubmitted && !shopId }"
-                            >
-                                <option value="">{{ t('selectShop') }}</option>
-                                <option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.shop_name }}</option>
-                            </select>
+                            <div class="relative">
+                                <input
+                                    v-model="shopSearchQuery"
+                                    type="text"
+                                    :placeholder="selectedRoad ? t('selectShop') : t('selectRoadFirst')"
+                                    class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
+                                    :class="{ 'border-red-300': isSubmitted && (!selectedRoad || !shopId) }"
+                                    :disabled="!selectedRoad"
+                                    @focus="showShopOptions = true"
+                                    @input="handleShopInput"
+                                    @blur="hideShopOptions"
+                                />
+                                <div
+                                    v-if="showShopOptions && selectedRoad"
+                                    class="absolute z-20 mt-1 w-full max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                                >
+                                    <button
+                                        v-for="shop in filteredShops"
+                                        :key="shop.id"
+                                        type="button"
+                                        class="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                                        @mousedown.prevent="selectShopOption(shop)"
+                                    >
+                                        {{ shop.shop_name }}
+                                    </button>
+                                    <div
+                                        v-if="filteredShops.length === 0"
+                                        class="px-3 py-2 text-sm text-gray-400"
+                                    >
+                                        {{ t('noShopsFound') }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Suppliers (auto from cart) -->
@@ -387,6 +452,14 @@
                     </button>
 
                     <button
+                        @click="saveDraft"
+                        :disabled="isLoading || cartItems.length === 0"
+                        class="w-full py-2.5 border border-amber-300 text-amber-700 text-sm font-medium rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {{ draftSaleId ? t('updateDraft') : t('saveDraft') }}
+                    </button>
+
+                    <button
                         @click="resetForm"
                         class="w-full py-2.5 border border-gray-300 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
                     >
@@ -399,7 +472,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import ToastNotification from "./partials/salesPartials/ToastNotification.vue";
@@ -407,7 +480,27 @@ import SalesConfirmationModal from "./partials/salesPartials/SalesConfirmationMo
 
 interface Shop {
     id: number;
+    road: string | null;
     shop_name: string;
+}
+
+interface DraftSaleItem {
+    product_id: number;
+    product_name: string;
+    supplier_id: number;
+    supplier_name: string;
+    variant: string;
+    cases: number;
+    price_per_case: number;
+    bottles_per_case: number;
+    free_bottles_per_case: number;
+}
+
+interface DraftSale {
+    id: number;
+    shop_id: number;
+    sale_date: string | null;
+    items: DraftSaleItem[];
 }
 
 interface Supplier {
@@ -453,6 +546,7 @@ interface CartItem {
 const props = defineProps<{
     shops: Shop[];
     suppliers: Supplier[];
+    draftSale?: DraftSale | null;
 }>();
 
 defineOptions({ layout: Layout });
@@ -482,8 +576,13 @@ const translations: Record<string, Record<string, string>> = {
         subtotal: "Subtotal",
         pricePerCase: "Price / Case",
         avail: "avail",
+        road: "Road",
         shopName: "Shop Name",
+        selectRoad: "Select a road",
+        selectRoadFirst: "Select a road first",
         selectShop: "Select a shop",
+        noRoadsFound: "No roads found",
+        noShopsFound: "No shops found",
         saleDate: "Sale Date",
         includeFreeBottles: "Include Free Bottles",
         saleDetails: "Sale Details",
@@ -493,6 +592,8 @@ const translations: Record<string, Record<string, string>> = {
         totalBottles: "Total Bottles",
         totalAmount: "Total Amount",
         confirmSale: "Confirm Sale",
+        saveDraft: "Save Draft",
+        updateDraft: "Update Draft",
         processing: "Processing...",
         resetForm: "Reset",
         confirmSalePrompt: "Are you sure you want to create this sale?",
@@ -539,8 +640,13 @@ const translations: Record<string, Record<string, string>> = {
         subtotal: "সাবটোটাল",
         pricePerCase: "কেস প্রতি মূল্য",
         avail: "উপলব্ধ",
+        road: "রোড",
         shopName: "দোকানের নাম",
+        selectRoad: "রোড নির্বাচন করুন",
+        selectRoadFirst: "আগে রোড নির্বাচন করুন",
         selectShop: "দোকান নির্বাচন করুন",
+        noRoadsFound: "কোনো রোড পাওয়া যায়নি",
+        noShopsFound: "কোনো দোকান পাওয়া যায়নি",
         saleDate: "বিক্রয়ের তারিখ",
         includeFreeBottles: "বিনামূল্যে বোতল",
         saleDetails: "বিক্রয়ের তথ্য",
@@ -550,6 +656,8 @@ const translations: Record<string, Record<string, string>> = {
         totalBottles: "মোট বোতল",
         totalAmount: "মোট পরিমাণ",
         confirmSale: "বিক্রয় নিশ্চিত করুন",
+        saveDraft: "ড্রাফট সেভ করুন",
+        updateDraft: "ড্রাফট আপডেট করুন",
         processing: "প্রক্রিয়াকরণ...",
         resetForm: "রিসেট",
         confirmSalePrompt: "আপনি কি নিশ্চিতভাবে এই বিক্রয়টি তৈরি করতে চান?",
@@ -619,10 +727,111 @@ const safeNumber = (v: any): number => {
 };
 
 // Form state
+const selectedRoad = ref("");
+const roadSearchQuery = ref("");
+const shopSearchQuery = ref("");
 const shopId = ref<number | string>("");
 const saleDate = ref(localDateString());
+const draftSaleId = ref<number | null>(props.draftSale?.id ?? null);
 const includeFreeBottles = ref(true);
 const cartItems = ref<CartItem[]>([]);
+const showRoadOptions = ref(false);
+const showShopOptions = ref(false);
+
+const normalizeRoadValue = (road: string | null | undefined) =>
+    road && road.trim() ? road.trim() : "__UNASSIGNED__";
+
+const roadOptions = computed(() => {
+    const roads = new Map<string, string>();
+
+    props.shops.forEach((shop) => {
+        const value = normalizeRoadValue(shop.road);
+        const label =
+            value === "__UNASSIGNED__"
+                ? currentLanguage.value === "bn"
+                    ? "রোড সেট করা হয়নি"
+                    : "Unassigned Road"
+                : value;
+
+        if (!roads.has(value)) {
+            roads.set(value, label);
+        }
+    });
+
+    return Array.from(roads.entries())
+        .map(([value, label]) => ({ value, label }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+});
+
+const filteredRoadOptions = computed(() => {
+    const query = roadSearchQuery.value.trim().toLowerCase();
+
+    if (!query) return roadOptions.value;
+
+    return roadOptions.value.filter((road) =>
+        road.label.toLowerCase().includes(query)
+    );
+});
+
+const filteredShops = computed(() => {
+    if (!selectedRoad.value) return [];
+
+    const query = shopSearchQuery.value.trim().toLowerCase();
+
+    return props.shops.filter((shop) => {
+        if (normalizeRoadValue(shop.road) !== selectedRoad.value) return false;
+        if (!query) return true;
+
+        return shop.shop_name.toLowerCase().includes(query);
+    });
+});
+
+watch(selectedRoad, () => {
+    shopId.value = "";
+    shopSearchQuery.value = "";
+});
+
+const handleRoadInput = () => {
+    selectedRoad.value = "";
+    showRoadOptions.value = true;
+};
+
+const selectRoadOption = (road: { value: string; label: string }) => {
+    selectedRoad.value = road.value;
+    roadSearchQuery.value = road.label;
+    showRoadOptions.value = false;
+};
+
+const hideRoadOptions = () => {
+    setTimeout(() => {
+        showRoadOptions.value = false;
+
+        if (!selectedRoad.value) {
+            roadSearchQuery.value = "";
+        }
+    }, 150);
+};
+
+const handleShopInput = () => {
+    shopId.value = "";
+    showShopOptions.value = true;
+};
+
+const selectShopOption = (shop: Shop) => {
+    shopId.value = shop.id;
+    shopSearchQuery.value = shop.shop_name;
+    showShopOptions.value = false;
+};
+
+const hideShopOptions = () => {
+    setTimeout(() => {
+        showShopOptions.value = false;
+
+        if (!shopId.value) {
+            shopSearchQuery.value = "";
+        }
+    }, 150);
+};
 
 // Search / product list state
 const searchQuery = ref("");
@@ -659,6 +868,9 @@ const toastType = ref<"success" | "error">("success");
 onMounted(() => {
     document.documentElement.lang = currentLanguage.value;
     fetchProducts();
+    if (props.draftSale) {
+        loadDraftSale(props.draftSale);
+    }
 });
 
 // Search
@@ -678,6 +890,66 @@ const fetchProducts = async () => {
     } finally {
         productLoading.value = false;
     }
+};
+
+const loadDraftSale = async (draftSale: DraftSale) => {
+    draftSaleId.value = draftSale.id;
+    shopId.value = draftSale.shop_id;
+    saleDate.value = draftSale.sale_date || localDateString();
+
+    const selectedShop = props.shops.find((shop) => shop.id === draftSale.shop_id);
+    if (selectedShop) {
+        selectedRoad.value = normalizeRoadValue(selectedShop.road);
+        roadSearchQuery.value =
+            selectedRoad.value === "__UNASSIGNED__"
+                ? currentLanguage.value === "bn"
+                    ? "রোড সেট করা হয়নি"
+                    : "Unassigned Road"
+                : selectedRoad.value;
+        shopSearchQuery.value = selectedShop.shop_name;
+    }
+
+    cartItems.value = await Promise.all(
+        draftSale.items.map(async (item) => {
+            let variantInventory: ProductVariant | null = null;
+
+            try {
+                const response = await fetch(
+                    `/api/variant-inventory?product_id=${item.product_id}&variant=${encodeURIComponent(item.variant)}`
+                );
+                if (response.ok) {
+                    variantInventory = await response.json();
+                }
+            } catch {}
+
+            return {
+                product_id: item.product_id,
+                product_name: item.product_name,
+                supplier_id: item.supplier_id,
+                supplier_name: item.supplier_name,
+                available_variants: variantInventory
+                    ? [variantInventory]
+                    : [{
+                        variant: item.variant,
+                        purchased_bottles_available: 0,
+                        free_bottles_available: 0,
+                        total_bottles_available: 0,
+                        bottles_per_case: item.bottles_per_case,
+                        purchase_rate: 0,
+                        cases_available: 0,
+                        variant_metadata: {
+                            free_bottles_per_case: item.free_bottles_per_case,
+                        },
+                    }],
+                selected_variant: item.variant,
+                bottles_per_case: item.bottles_per_case,
+                free_bottles_per_case: item.free_bottles_per_case,
+                purchase_rate: variantInventory?.purchase_rate ?? 0,
+                cases: item.cases,
+                price_per_case: item.price_per_case,
+            };
+        })
+    );
 };
 
 // Variant picker state
@@ -741,7 +1013,7 @@ const getVariantData = (item: CartItem): ProductVariant | null =>
 const getMaxCases = (item: CartItem): number => {
     const vd = getVariantData(item);
     if (!vd) return 0;
-    const fbpc = safeNumber(vd.variant_metadata?.free_bottles_per_case ?? 0);
+    const fbpc = safeNumber(item.free_bottles_per_case);
     if (includeFreeBottles.value && fbpc > 0) {
         const effectiveBPC = safeNumber(vd.bottles_per_case) + fbpc;
         return effectiveBPC > 0 ? Math.floor(vd.total_bottles_available / effectiveBPC) : 0;
@@ -821,8 +1093,12 @@ const showToastMessage = (msg: string, type: "success" | "error" = "success") =>
 
 const resetForm = () => {
     cartItems.value = [];
+    selectedRoad.value = "";
+    roadSearchQuery.value = "";
+    shopSearchQuery.value = "";
     shopId.value = "";
     saleDate.value = localDateString();
+    draftSaleId.value = null;
     includeFreeBottles.value = true;
     isSubmitted.value = false;
     searchQuery.value = "";
@@ -833,7 +1109,7 @@ const resetForm = () => {
 const openModal = () => {
     isSubmitted.value = true;
 
-    if (!shopId.value || !saleDate.value || cartItems.value.length === 0) {
+    if (!selectedRoad.value || !shopId.value || !saleDate.value || cartItems.value.length === 0) {
         showToastMessage("saleError", "error");
         return;
     }
@@ -875,6 +1151,7 @@ const confirmSale = () => {
     });
 
     const payload = {
+        draft_id: draftSaleId.value,
         shop_id: shopId.value,
         supplier_id: primarySupplierId.value,
         sale_date: saleDate.value,
@@ -896,6 +1173,61 @@ const confirmSale = () => {
             // t() returns the raw string as-is when the key is not in translations,
             // so Laravel validation messages display correctly.
             showToastMessage(messages.length > 0 ? messages[0] : "saleError", "error");
+        },
+    });
+};
+
+const saveDraft = () => {
+    isSubmitted.value = true;
+
+    if (!selectedRoad.value || !shopId.value || !saleDate.value || cartItems.value.length === 0) {
+        showToastMessage("saleError", "error");
+        return;
+    }
+
+    const allItemsValid = cartItems.value.every(
+        item =>
+            item.selected_variant &&
+            safeNumber(item.cases) > 0 &&
+            safeNumber(item.price_per_case) > 0
+    );
+
+    if (!allItemsValid) {
+        showToastMessage("saleError", "error");
+        return;
+    }
+
+    isLoading.value = true;
+
+    const items = cartItems.value.map(item => {
+        const cases = safeNumber(item.cases);
+        const pricePerCase = safeNumber(item.price_per_case);
+        const bpc = safeNumber(item.bottles_per_case);
+        const freePerCase = safeNumber(item.free_bottles_per_case);
+        const effectiveBPC = bpc + freePerCase;
+        const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+        const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bpc;
+
+        return {
+            product_id: item.product_id,
+            variant: item.selected_variant,
+            total_bottles_to_sell: targetBottles,
+            selling_price_per_bottle: pricePerBottle,
+            free_bottles_per_case: freePerCase,
+        };
+    });
+
+    router.post("/sales/store", {
+        draft_id: draftSaleId.value,
+        save_as_draft: true,
+        shop_id: shopId.value,
+        supplier_id: primarySupplierId.value,
+        sale_date: saleDate.value,
+        include_free_bottles: includeFreeBottles.value,
+        items,
+    }, {
+        onFinish: () => {
+            isLoading.value = false;
         },
     });
 };
@@ -928,4 +1260,3 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 </style>
-

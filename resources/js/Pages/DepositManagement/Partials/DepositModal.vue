@@ -43,7 +43,7 @@
                                     />
                                 </svg>
                             </div>
-                            {{ getTranslation("addDeposit") }}
+                            {{ editMode ? getTranslation("editDeposit") : getTranslation("addDeposit") }}
                         </h3>
                         <button
                             @click="$emit('close')"
@@ -103,6 +103,7 @@
                                             isSubmitted &&
                                             !depositForm.supplier_id,
                                     }"
+                                    :disabled="editMode"
                                     required
                                 >
                                     <option value="" disabled>
@@ -323,7 +324,9 @@
                         <span>{{
                             isLoading
                                 ? getTranslation("processing")
-                                : getTranslation("addDeposit")
+                                : editMode
+                                    ? getTranslation("updateDeposit")
+                                    : getTranslation("addDeposit")
                         }}</span>
                     </button>
                 </div>
@@ -333,7 +336,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, onUnmounted } from "vue";
 
 interface Supplier {
     id: number;
@@ -342,6 +345,12 @@ interface Supplier {
 
 const props = defineProps<{
     suppliers: Supplier[];
+    editMode?: boolean;
+    deposit?: {
+        id?: number;
+        supplier_id: number | string;
+        balance_deposited: number;
+    } | null;
 }>();
 
 const emit = defineEmits<{
@@ -364,6 +373,8 @@ const translations = {
         amountRequired: "Please enter a valid amount greater than 0",
         depositPreview: "Deposit Preview",
         selectedSupplier: "Selected Supplier",
+        editDeposit: "Edit Deposit",
+        updateDeposit: "Update Deposit",
         cancel: "Cancel",
         processing: "Processing...",
     },
@@ -378,6 +389,8 @@ const translations = {
         amountRequired: "অনুগ্রহ করে ০-এর বেশি একটি বৈধ পরিমাণ লিখুন",
         depositPreview: "আমানত পূর্বরূপ",
         selectedSupplier: "নির্বাচিত সরবরাহকারী",
+        editDeposit: "আমানত সম্পাদনা করুন",
+        updateDeposit: "আমানত আপডেট করুন",
         cancel: "বাতিল",
         processing: "প্রক্রিয়াকরণ...",
     },
@@ -386,11 +399,26 @@ const translations = {
 const currentLanguage = ref(localStorage?.getItem("language") || "en");
 const isSubmitted = ref(false);
 const isLoading = ref(false);
+const editMode = computed(() => Boolean(props.editMode));
 
 const depositForm = ref({
     supplier_id: "",
     balance_deposited: 0,
 });
+
+watch(
+    () => props.deposit,
+    (deposit) => {
+        depositForm.value = deposit
+            ? {
+                  supplier_id: String(deposit.supplier_id ?? ""),
+                  balance_deposited: Number(deposit.balance_deposited ?? 0),
+              }
+            : { supplier_id: "", balance_deposited: 0 };
+        isSubmitted.value = false;
+    },
+    { immediate: true }
+);
 
 const selectedSupplierName = computed(() => {
     const supplier = props.suppliers.find(
@@ -431,13 +459,7 @@ const submit = () => {
     ) {
         isLoading.value = true;
         emit("submit", { ...depositForm.value });
-
-        // Reset form after submission
-        setTimeout(() => {
-            depositForm.value = { supplier_id: "", balance_deposited: 0 };
-            isSubmitted.value = false;
-            isLoading.value = false;
-        }, 1000);
+        isLoading.value = false;
     } else {
         console.error("Please fill all required fields");
     }
@@ -462,8 +484,6 @@ const cleanup = () => {
     }
 };
 
-// Cleanup on unmount
-import { onUnmounted } from "vue";
 onUnmounted(cleanup);
 </script>
 

@@ -35,6 +35,7 @@
             <ul class="space-y-1 pt-3 font-medium">
                 <!-- Dashboard -->
                 <SidebarSingleLink
+                    v-if="hasPermission('dashboard.view')"
                     label="Dashboard"
                     href="/dashboard"
                     icon="fa-solid fa-house"
@@ -43,6 +44,7 @@
 
                 <!-- Suppliers -->
                 <SidebarMultiLevelMenu
+                    v-if="suppliersMenu.length"
                     label="Suppliers"
                     icon="fa-solid fa-users"
                     :submenu="suppliersMenu"
@@ -51,6 +53,7 @@
 
                 <!-- Lift -->
                 <SidebarMultiLevelMenu
+                    v-if="purchaseMenu.length"
                     label="Lift"
                     icon="fa-solid fa-credit-card"
                     :submenu="purchaseMenu"
@@ -59,6 +62,7 @@
 
                 <!-- Sales -->
                 <SidebarMultiLevelMenu
+                    v-if="salesMenu.length"
                     label="Sales"
                     icon="fa-solid fa-shopping-bag"
                     :submenu="salesMenu"
@@ -67,6 +71,7 @@
 
                 <!-- Expense -->
                 <SidebarMultiLevelMenu
+                    v-if="expenseMenu.length"
                     label="Expense"
                     icon="fa-solid fa-money-bill-wave"
                     :submenu="expenseMenu"
@@ -75,9 +80,18 @@
 
                 <!-- Inventory -->
                 <SidebarMultiLevelMenu
+                    v-if="inventoryMenu.length"
                     label="Inventory"
                     icon="fa-solid fa-box"
                     :submenu="inventoryMenu"
+                    @link-clicked="$emit('close')"
+                />
+
+                <SidebarMultiLevelMenu
+                    v-if="aclMenu.length"
+                    label="ACL"
+                    icon="fa-solid fa-user-shield"
+                    :submenu="aclMenu"
                     @link-clicked="$emit('close')"
                 />
             </ul>
@@ -103,7 +117,7 @@
 <script setup>
 import SidebarSingleLink from "@/Layouts/Sidebar/Partials/SidebarSingleLevelMenu.vue";
 import SidebarMultiLevelMenu from "@/Layouts/Sidebar/Partials/SidebarMultiLevelMenu.vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
 
 const props = defineProps({
@@ -114,6 +128,10 @@ const props = defineProps({
 });
 
 defineEmits(['close']);
+
+const page = usePage();
+const permissions = computed(() => page.props.userPermissions || []);
+const hasPermission = (permission) => permissions.value.includes(permission);
 
 const sidebarClasses = computed(() => {
     return {
@@ -126,91 +144,119 @@ const sidebarClasses = computed(() => {
 });
 
 // Suppliers submenu
-const suppliersMenu = ref([
+const suppliersMenu = computed(() => [
     {
         label: "Add Supplier",
         href: "/suppliers/create",
         icon: "fa-solid fa-plus",
+        visible: hasPermission("supplier.add"),
     },
     {
         label: "Supplier List",
         href: "/suppliers/index",
         icon: "fa-solid fa-list",
+        visible: hasPermission("supplier.view"),
     },
-]);
+].filter((item) => item.visible));
 
 // Purchase submenu
-const purchaseMenu = ref([
+const purchaseMenu = computed(() => [
     {
         label: "Manage Deposits",
         href: "/deposits",
         icon: "fa-solid fa-money-check",
+        visible: hasPermission("deposit.view"),
     },
     {
         label: "Manage Category",
         href: "/categories/index",
         icon: "fa-solid fa-folder",
+        visible: hasPermission("category.view"),
     },
     {
         label: "Manage Brand",
         href: "/brands/index",
         icon: "fa-solid fa-tag",
+        visible: hasPermission("brand.view"),
     },
     {
         label: "Manage Lift",
         href: "/lifts",
         icon: "fa-solid fa-shopping-cart",
         color: "green",
+        visible: hasPermission("lift.add"),
     },
     {
         label: "Lifting Report",
         href: "/lifts/report",
         icon: "fa-solid fa-file-alt",
+        visible: hasPermission("lift.view"),
     },
-]);
+].filter((item) => item.visible));
 
 // Sales submenu
-const salesMenu = ref([
+const salesMenu = computed(() => [
     {
         label: "Create Shop",
         href: "/shops/create",
         icon: "fa-solid fa-plus",
+        visible: hasPermission("shop.add"),
     },
     {
         label: "Shop List",
         href: "/shops",
         icon: "fa-solid fa-list",
+        visible: hasPermission("shop.view"),
     },
     {
         label: "Create Sale",
         href: "/sales",
         icon: "fa-solid fa-plus-circle",
         color: "orange",
+        visible: hasPermission("sales.add"),
     },
     {
         label: "Sales Report",
         href: "/sales/report",
         icon: "fa-solid fa-file-alt",
+        visible: hasPermission("sales.view"),
     },
-]);
+].filter((item) => item.visible));
 
 // Expense submenu
-const expenseMenu = ref([
+const expenseMenu = computed(() => [
     {
         label: "Expense Management",
         href: "/expenses",
         icon: "fa-solid fa-clipboard-list",
+        visible: hasPermission("expense.view"),
     },
-]);
+].filter((item) => item.visible));
 
 // Inventory submenu
-const inventoryMenu = ref([
+const inventoryMenu = computed(() => [
     {
         label: "Inventory Report",
         href: "/inventory/report",
         icon: "fa-solid fa-file-alt",
+        visible: hasPermission("inventory.view"),
     },
-]);
+].filter((item) => item.visible));
+
+const aclMenu = computed(() => [
+    {
+        label: "Role Management",
+        href: "/roles",
+        icon: "fa-solid fa-user-shield",
+        visible: hasPermission("role.view"),
+    },
+    {
+        label: "User Management",
+        href: "/users",
+        icon: "fa-solid fa-users-gear",
+        visible: hasPermission("user.view"),
+    },
+].filter((item) => item.visible));
 </script>
 
 <style scoped>

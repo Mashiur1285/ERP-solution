@@ -21,6 +21,7 @@ class StoreShopRequest extends FormRequest
     {
         return [
             'shop_name' => 'required|string|max:255',
+            'road' => 'nullable|string|max:100',
             'owner_name' => 'nullable|string|max:255',
             'shop_address' => 'nullable|string|max:255',
             'phone_number' => 'required|string|max:20|unique:shops,phone_number',

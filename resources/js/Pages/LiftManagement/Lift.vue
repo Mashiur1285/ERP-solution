@@ -49,6 +49,47 @@
             </div>
         </div>
 
+        <!-- Quick Deposit Modal -->
+        <div v-if="showQuickDepositModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
+            <div class="bg-white rounded-xl p-5 max-w-md w-full mx-4 shadow-xl">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ t('quickDeposit') }}</h3>
+                <p class="text-gray-600 text-sm mb-4">{{ t('quickDepositPrompt') }}</p>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-3 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">{{ t('supplier') }}</span>
+                        <span class="font-bold">{{ selectedSupplier?.company_name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">{{ t('currentDeposit') }}</span>
+                        <span class="font-bold">৳{{ toBengaliNumber(selectedSupplier?.remaining_deposit ?? 0, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between border-t border-blue-200 pt-2">
+                        <span class="text-gray-600">{{ t('depositShortfall') }}</span>
+                        <span class="font-bold text-blue-600">৳{{ toBengaliNumber(shortfallAmount, 2) }}</span>
+                    </div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-4 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">{{ t('totalProducts') }}</span>
+                        <span class="font-bold">{{ validItems.length }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">{{ t('totalCost') }}</span>
+                        <span class="font-bold text-green-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button @click="showQuickDepositModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">{{ t('cancel') }}</button>
+                    <button @click="submitQuickDeposit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2" :disabled="isQuickDepositLoading">
+                        <svg v-if="isQuickDepositLoading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {{ isQuickDepositLoading ? t('processing') : t('depositAndLift') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Confirmation Modal -->
         <div v-if="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
             <div class="bg-white rounded-xl p-5 max-w-md w-full mx-4 shadow-xl">
@@ -290,7 +331,7 @@
                                                 class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-green-500 focus:ring-1 focus:ring-green-200" />
                                         </td>
                                         <td class="px-2 py-2">
-                                            <input v-model.number="v.free_bottles_per_case" type="number" min="0"
+                                            <input v-model.number="v.free_bottles_per_case" type="number" min="0" step="any"
                                                 class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
                                         </td>
                                         <td class="px-3 py-2 text-right">
@@ -416,6 +457,17 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Quick Deposit Button (when shortfall) -->
+                            <div v-if="selectedSupplier && remainingDeposit < 0" class="mt-2">
+                                <button @click="showQuickDepositModal = true"
+                                    class="w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 shadow-sm transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    {{ t('addMissingDeposit') }} ৳{{ toBengaliNumber(shortfallAmount, 2) }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -430,9 +482,17 @@
                             <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>{{ isLoading ? t('processing') : t('confirmLift') }}</span>
+                            <span>{{ isLoading ? t('processing') : editingCompletedLift ? t('updateLift') : t('confirmLift') }}</span>
                         </button>
                         <div class="flex gap-2">
+                            <button v-if="!editingCompletedLift" @click="saveDraft"
+                                class="flex-1 py-2.5 border-2 border-amber-300 rounded-lg text-amber-700 font-medium hover:bg-amber-50 transition-all flex items-center justify-center space-x-2 text-sm"
+                                :disabled="isLoading || !selectedSupplier || !validItems.length">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v14H5V5zm3 0v4h8V5" />
+                                </svg>
+                                <span>{{ editingCompletedLift ? t('updateLift') : draftLiftId ? t('updateDraft') : t('saveDraft') }}</span>
+                            </button>
                             <button @click="printInvoice"
                                 class="flex-1 py-2.5 border-2 border-green-200 rounded-lg text-green-600 font-medium hover:bg-green-50 transition-all flex items-center justify-center space-x-2 text-sm"
                                 :disabled="!validItems.length">
@@ -501,10 +561,31 @@ interface LiftItem {
     variants: LiftVariant[];
 }
 
+interface DraftLift {
+    id: number;
+    supplier_id: number;
+    lift_date: string;
+    status?: string;
+    notes?: string | null;
+    items: Array<{
+        product_catalog_id: number;
+        variant: string;
+        number_of_cases: number;
+        case_buying_price: number;
+        bottles_per_case: number;
+        free_bottles_per_case: number;
+        product_catalog?: {
+            id: number;
+            name: string;
+        } | null;
+    }>;
+}
+
 const props = defineProps<{
     suppliers: Supplier[];
     categories: Array<{ id: number; name: string }>;
     brands: Array<{ id: number; brand_name: string }>;
+    draftLift?: DraftLift | null;
 }>();
 
 defineOptions({ layout: Layout });
@@ -519,6 +600,10 @@ const variantOptions = [
 
 // Template refs for click-outside detection
 const supplierDDRef = ref<HTMLElement | null>(null);
+const getTodayString = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
 
 // State
 const lang = ref(localStorage.getItem("language") || "en");
@@ -527,6 +612,12 @@ const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMeta
 const isLoading = ref(false);
 const showConfirmModal = ref(false);
 const showCreateProductModal = ref(false);
+const showQuickDepositModal = ref(false);
+const isQuickDepositLoading = ref(false);
+const draftLiftId = ref<number | null>(props.draftLift?.id ?? null);
+const loadedLiftStatus = ref(props.draftLift?.status || null);
+const editingCompletedLift = computed(() => loadedLiftStatus.value === "completed" && !!draftLiftId.value);
+const liftDate = ref(props.draftLift?.lift_date || getTodayString());
 
 // Toast
 const toast = ref({ show: false, message: "", type: "success" });
@@ -550,11 +641,56 @@ const selectSupplier = (s: Supplier) => {
     selectedSupplier.value = s;
     supplierSearch.value = s.company_name;
     showSupplierDD.value = false;
+    draftLiftId.value = null;
+    loadedLiftStatus.value = null;
     liftItems.value = [];
     productSearch.value = "";
     activeProduct.value = null;
     variantSelections.value = {};
     fetchProducts(""); // auto-load on supplier select
+};
+
+const fillDraft = (draft: DraftLift) => {
+    const supplier = props.suppliers.find((item) => item.id === draft.supplier_id);
+    if (!supplier) return;
+
+    selectedSupplier.value = { ...supplier };
+    supplierSearch.value = supplier.company_name;
+    draftLiftId.value = draft.id;
+    loadedLiftStatus.value = draft.status || null;
+    liftDate.value = draft.lift_date || getTodayString();
+    liftItems.value = [];
+
+    const groupedItems = new Map<number, LiftItem>();
+
+    draft.items.forEach((item) => {
+        const existing = groupedItems.get(item.product_catalog_id);
+        const variantData: LiftVariant = {
+            variant: item.variant,
+            number_of_cases: item.number_of_cases,
+            case_buying_price: Number(item.case_buying_price),
+            bottles_per_case: item.bottles_per_case,
+            free_bottles_per_case: item.free_bottles_per_case,
+        };
+
+        if (existing) {
+            existing.variants.push(variantData);
+            return;
+        }
+
+        groupedItems.set(item.product_catalog_id, {
+            product_catalog_id: item.product_catalog_id,
+            product_name: item.product_catalog?.name || "",
+            category_name: "",
+            brand_name: "",
+            category_id: null,
+            brand_id: null,
+            variants: [variantData],
+        });
+    });
+
+    liftItems.value = Array.from(groupedItems.values());
+    fetchProducts("");
 };
 
 // Product Search
@@ -752,6 +888,41 @@ const remainingDeposit = computed(() => {
     return selectedSupplier.value.remaining_deposit - grandTotal.value;
 });
 
+const shortfallAmount = computed(() =>
+    remainingDeposit.value < 0 ? Math.abs(remainingDeposit.value) : 0
+);
+
+const submitQuickDeposit = async () => {
+    if (!selectedSupplier.value || shortfallAmount.value <= 0) return;
+    isQuickDepositLoading.value = true;
+    try {
+        const res = await fetch('/api/deposits/quick-store', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                supplier_id: selectedSupplier.value.id,
+                balance_deposited: shortfallAmount.value,
+            }),
+        });
+        if (!res.ok) throw new Error(t('error'));
+        selectedSupplier.value = {
+            ...selectedSupplier.value,
+            remaining_deposit: selectedSupplier.value.remaining_deposit + shortfallAmount.value,
+        };
+        showQuickDepositModal.value = false;
+        showToast(t('depositSuccess'), 'success');
+        submitLift();
+    } catch (err: any) {
+        showToast(err.message || t('error'), 'error');
+    }
+    isQuickDepositLoading.value = false;
+};
+
 // Submit
 const openConfirmModal = () => {
     if (!validItems.value.length || !selectedSupplier.value) return;
@@ -782,8 +953,10 @@ const submitLift = () => {
     router.post(
         "/lifts/store",
         {
+            draft_id: draftLiftId.value,
             supplier_id: selectedSupplier.value!.id,
-            lift_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
+            lift_date: liftDate.value,
+            deposit_from_here_amount: shortfallAmount.value > 0 ? shortfallAmount.value : null,
             items,
         },
         {
@@ -802,12 +975,47 @@ const submitLift = () => {
     );
 };
 
+const saveDraft = () => {
+    if (!selectedSupplier.value || !validItems.value.length) return;
+
+    isLoading.value = true;
+
+    const items = validItems.value.map((item) => ({
+        product_catalog_id: item.product_catalog_id,
+        product_name: item.product_name,
+        category_id: item.category_id,
+        brand_id: item.brand_id,
+        variants: item.validVariants.map((v) => ({
+            variant: v.variant,
+            number_of_cases: v.number_of_cases,
+            case_buying_price: v.case_buying_price,
+            bottles_per_case: v.bottles_per_case,
+            free_bottles_per_case: v.free_bottles_per_case,
+        })),
+    }));
+
+    router.post("/lifts/store", {
+        draft_id: draftLiftId.value,
+        supplier_id: selectedSupplier.value.id,
+        lift_date: liftDate.value,
+        save_as_draft: true,
+        items,
+    }, {
+        onFinish: () => {
+            isLoading.value = false;
+        },
+    });
+};
+
 const resetAll = () => {
     liftItems.value = [];
     productSearch.value = "";
     productSearchResults.value = [];
     activeProduct.value = null;
     variantSelections.value = {};
+    draftLiftId.value = null;
+    loadedLiftStatus.value = null;
+    liftDate.value = getTodayString();
 };
 
 const printInvoice = () => {
@@ -824,6 +1032,9 @@ const handleClickOutside = (e: MouseEvent) => {
 
 onMounted(() => {
     document.addEventListener("mousedown", handleClickOutside);
+    if (props.draftLift) {
+        fillDraft(props.draftLift);
+    }
 });
 
 onUnmounted(() => {
@@ -869,8 +1080,11 @@ const translations: Record<string, Record<string, string>> = {
         confirmLiftPrompt: "Are you sure you want to record this lift?",
         cancel: "Cancel",
         confirm: "Confirm",
+        updateLift: "Update Lift",
         save: "Save",
         processing: "Processing...",
+        saveDraft: "Save Draft",
+        updateDraft: "Update Draft",
         resetForm: "Reset",
         liftSuccess: "Lift recorded successfully!",
         insufficientDeposit: "Lift amount exceeds supplier's deposit",
@@ -884,6 +1098,14 @@ const translations: Record<string, Record<string, string>> = {
         selectVariantsToAdd: "Select variants to add",
         addToCart: "Add to Cart",
         loading: "Loading...",
+        quickDeposit: "Quick Deposit",
+        quickDepositPrompt: "The lift amount exceeds the supplier's deposit. Add the shortfall to proceed.",
+        supplier: "Supplier",
+        currentDeposit: "Current Deposit",
+        depositShortfall: "Shortfall Amount",
+        addMissingDeposit: "Add Deposit",
+        depositAndLift: "Deposit & Lift",
+        depositSuccess: "Deposit added successfully!",
     },
     bn: {
         liftManagement: "লিফট ব্যবস্থাপনা",
@@ -920,8 +1142,11 @@ const translations: Record<string, Record<string, string>> = {
         confirmLiftPrompt: "আপনি কি নিশ্চিতভাবে এই লিফট রেকর্ড করতে চান?",
         cancel: "বাতিল",
         confirm: "নিশ্চিত",
+        updateLift: "লিফট আপডেট করুন",
         save: "সংরক্ষণ",
         processing: "প্রক্রিয়াকরণ...",
+        saveDraft: "ড্রাফট সেভ করুন",
+        updateDraft: "ড্রাফট আপডেট করুন",
         resetForm: "রিসেট",
         liftSuccess: "লিফট সফলভাবে রেকর্ড হয়েছে!",
         insufficientDeposit: "লিফটের পরিমাণ সরবরাহকারীর আমানত অতিক্রম করেছে",
@@ -935,6 +1160,14 @@ const translations: Record<string, Record<string, string>> = {
         selectVariantsToAdd: "যোগ করতে ভেরিয়েন্ট বেছে নিন",
         addToCart: "কার্টে যোগ করুন",
         loading: "লোড হচ্ছে...",
+        quickDeposit: "দ্রুত ডিপোজিট",
+        quickDepositPrompt: "লিফটের পরিমাণ সরবরাহকারীর আমানতের চেয়ে বেশি। অগ্রসর হতে ঘাটতি পরিমাণ জমা দিন।",
+        supplier: "সরবরাহকারী",
+        currentDeposit: "বর্তমান আমানত",
+        depositShortfall: "ঘাটতি পরিমাণ",
+        addMissingDeposit: "ডিপোজিট যোগ করুন",
+        depositAndLift: "ডিপোজিট ও লিফট",
+        depositSuccess: "ডিপোজিট সফলভাবে যোগ হয়েছে!",
     },
 };
 

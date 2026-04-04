@@ -7,6 +7,7 @@ use App\Contracts\ShopContract;
 use App\Repositories\ShopRepository;
 use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ShopController extends Controller
@@ -70,7 +71,30 @@ class ShopController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $data = $request->all();
+        $data = $request->validate([
+            'shop_name' => 'required|string|max:255',
+            'road' => 'nullable|string|max:100',
+            'owner_name' => 'nullable|string|max:255',
+            'shop_address' => 'nullable|string|max:255',
+            'phone_number' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('shops', 'phone_number')->ignore($id),
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('shops', 'email')->ignore($id),
+            ],
+            'website' => 'nullable|url|max:255',
+            'national_id' => 'nullable|string|max:50',
+            'trade_license' => 'nullable|string|max:50',
+            'tax_id' => 'nullable|string|max:50',
+            'notes' => 'nullable|string',
+        ]);
+
         if ($this->shopRepository->update($data, $id) instanceof Shop) {
             return redirect()->route('shops.index')->with('success', 'Shop updated successfully.');
         }

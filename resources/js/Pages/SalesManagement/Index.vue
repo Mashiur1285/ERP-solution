@@ -149,6 +149,14 @@
                                     Owner Name
                                 </span>
                             </th>
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider hidden md:table-cell">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5-2.5V6.5L9 4m0 16l6-3m-6 3V4m6 13l5-2.5V3.5L15 4m0 13V4"></path>
+                                    </svg>
+                                    Road
+                                </span>
+                            </th>
                             <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider">
                                 <span class="flex items-center">
                                     <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,6 +202,11 @@
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                                 <div class="text-sm text-gray-900">
                                     {{ shop.owner_name ?? "-" }}
+                                </div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                                <div class="text-sm text-gray-900">
+                                    {{ shop.road ?? "-" }}
                                 </div>
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -298,6 +311,7 @@ interface Shop {
     id: number;
     shop_name: string;
     owner_name: string | null;
+    road: string | null;
     phone_number: string;
     email: string | null;
     website: string | null;

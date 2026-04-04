@@ -10,6 +10,9 @@ use App\Contracts\SupplierContract;
 use App\Contracts\CategoryContract;
 use App\Contracts\BrandContract;
 use App\Models\ProductCatalog;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class LiftController extends Controller
@@ -23,7 +26,7 @@ class LiftController extends Controller
         protected BrandContract $brandRepository,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $suppliers = $this->supplierRepository->all()->map(function ($supplier) {
             return [
@@ -54,18 +57,38 @@ class LiftController extends Controller
             return ['id' => $brand->id, 'brand_name' => $brand->brand_name];
         });
 
+        $draft = null;
+
+        if ($request->filled('draft')) {
+            $draft = $this->liftRepository->query()
+                ->with(['items.productCatalog'])
+                ->where('status', 'draft')
+                ->find($request->integer('draft'));
+        }
+
+        if (!$draft && $request->filled('edit')) {
+            $draft = $this->liftRepository->query()
+                ->with(['items.productCatalog'])
+                ->find($request->integer('edit'));
+        }
+
         return Inertia::render('LiftManagement/Lift', [
             'suppliers' => $suppliers,
             'categories' => $categories,
             'brands' => $brands,
+            'draftLift' => $draft,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'draft_id' => 'nullable|exists:lifts,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'lift_date' => 'required|date',
+            'deposit_from_here_amount' => 'nullable|numeric|min:0.01',
+            'save_as_draft' => 'nullable|boolean',
+            'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_catalog_id' => 'required|exists:product_catalog,id',
             'items.*.product_name' => 'required|string',
@@ -74,13 +97,16 @@ class LiftController extends Controller
             'items.*.variants.*.number_of_cases' => 'required|integer|min:1',
             'items.*.variants.*.case_buying_price' => 'required|numeric|min:0.01',
             'items.*.variants.*.bottles_per_case' => 'required|integer|min:1',
-            'items.*.variants.*.free_bottles_per_case' => 'required|integer|min:0',
+            'items.*.variants.*.free_bottles_per_case' => 'required|numeric|min:0',
         ]);
+
+        $saveAsDraft = $request->boolean('save_as_draft');
 
         $liftData = [
             'supplier_id' => $request->supplier_id,
             'lift_date' => $request->lift_date,
             'notes' => $request->notes,
+            'status' => $saveAsDraft ? 'draft' : 'completed',
         ];
 
         // Add category_id and brand_id from product_catalog for each item
@@ -91,15 +117,85 @@ class LiftController extends Controller
             return $item;
         })->toArray();
 
-        $lift = $this->liftRepository->createLiftWithItems($liftData, $items, $request->supplier_id);
+        DB::transaction(function () use ($request, $liftData, $items, $saveAsDraft) {
+            $existingLift = $request->draft_id
+                ? $this->liftRepository->query()->with(['items.product'])->find($request->draft_id)
+                : null;
 
-        // Deduct from deposit
-        $latestDeposit = $this->depositRepository->findTheLatestDepositForTheSupplier($request->supplier_id);
-        if ($latestDeposit) {
-            $this->depositRepository->updateDepositTable($lift->total_amount, $latestDeposit);
+            if ($existingLift && $existingLift->status === 'completed') {
+                $this->revertCompletedLift($existingLift);
+            }
+
+            if (!$saveAsDraft && $request->filled('deposit_from_here_amount')) {
+                $depositAmount = round((float) $request->deposit_from_here_amount, 2);
+
+                $this->depositRepository->create([
+                    'supplier_id' => $request->supplier_id,
+                    'balance_deposited' => $depositAmount,
+                    'balance_used' => 0,
+                    'balance_remaining' => $depositAmount,
+                ]);
+            }
+
+            $lift = $this->liftRepository->saveLiftWithItems(
+                $liftData,
+                $items,
+                $request->supplier_id,
+                $request->draft_id
+            );
+
+            if (!$saveAsDraft) {
+                $this->depositRepository->applyAmountAgainstSupplierDeposits(
+                    $request->supplier_id,
+                    (float) $lift->total_amount
+                );
+            }
+        });
+
+        return redirect()
+            ->route($saveAsDraft ? 'lifts.report' : 'lifts.index')
+            ->with('success', $saveAsDraft ? 'Lift draft saved successfully' : 'Lift recorded successfully');
+    }
+
+    protected function revertCompletedLift($lift): void
+    {
+        foreach ($lift->items as $item) {
+            if (!$item->product_id) {
+                continue;
+            }
+
+            $product = Product::query()->find($item->product_id);
+            if (!$product) {
+                continue;
+            }
+
+            $variantIndex = collect($product->metadata['variants'] ?? [])->search(function ($variant) use ($item) {
+                return ($variant['variant'] ?? null) === $item->variant;
+            });
+
+            if ($variantIndex === false) {
+                continue;
+            }
+
+            $variantData = $product->metadata['variants'][$variantIndex];
+            $currentPurchased = (int) ($variantData['current_purchased_quantity'] ?? 0);
+            $currentFree = (int) ($variantData['current_free_quantity'] ?? 0);
+            $originalPurchased = ((int) $item->number_of_cases) * ((int) $item->bottles_per_case);
+            $originalFree = (int) $item->total_free_bottles;
+
+            if ($currentPurchased < $originalPurchased || $currentFree < $originalFree) {
+                throw ValidationException::withMessages([
+                    'lift' => 'This lift cannot be edited because some bottles from it have already been sold.',
+                ]);
+            }
+
+            $product->delete();
         }
 
-        return redirect()->route('lifts.index')->with('success', 'Lift recorded successfully');
+        $this->depositRepository->creditAmountBackToSupplierDeposits(
+            $lift->supplier_id,
+            (float) $lift->total_amount
+        );
     }
 
     public function report()

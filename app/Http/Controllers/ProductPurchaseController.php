@@ -105,11 +105,13 @@ class ProductPurchaseController extends Controller
         ]);
     }
 
-    public function inventoryReport()
+    public function inventoryReport(Request $request)
     {
+        $snapshotDate = $request->input('snapshot_date', now()->toDateString());
+
         return Inertia::render('InventoryManagement/InventoryReport', [
-            'inventoryStock' => $this->productPurchaseRepository->getInventoryStock(),
+            'inventoryStock' => $this->productPurchaseRepository->getInventoryStock($snapshotDate),
+            'snapshotDate' => $snapshotDate,
         ]);
     }
 }
-
