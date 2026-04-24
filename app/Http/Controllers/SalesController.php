@@ -567,6 +567,16 @@ class SalesController extends Controller
 
     public function report(Request $request)
     {
+        return $this->renderReport($request, 'product');
+    }
+
+    public function summaryReport(Request $request)
+    {
+        return $this->renderReport($request, 'summary');
+    }
+
+    protected function renderReport(Request $request, string $defaultView)
+    {
         $query = $this->salesRepository->query()->with(['shop', 'items.product', 'supplier']);
 
         // Apply filters
@@ -644,6 +654,7 @@ class SalesController extends Controller
             'shops' => $shops,
             'products' => $products,
             'suppliers' => $suppliers,
+            'defaultView' => $defaultView,
             'filters' => [
                 'id' => $request->id,
                 'start_date' => $request->start_date,

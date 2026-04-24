@@ -8,6 +8,7 @@ use App\Contracts\ProductPurchaseContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProductPurchaseRepository extends BaseRepository implements ProductPurchaseContract
 {
@@ -23,9 +24,11 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 suppliers.company_name as supplier_name,
                 products.name as product_name,
                 products.date as purchase_date,
+                pc.image_path,
                 variant_data
             FROM products
             INNER JOIN suppliers ON products.supplier_id = suppliers.id
+            LEFT JOIN product_catalog pc ON products.product_catalog_id = pc.id
             LEFT JOIN LATERAL jsonb_array_elements(COALESCE(products.metadata->'variants', '[]'::jsonb)) as variant_data ON true
             WHERE products.deleted_at IS NULL
             ORDER BY products.date DESC
@@ -47,6 +50,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             return [
                 'supplier_name' => $purchase->supplier_name,
                 'product_name' => $purchase->product_name,
+                'image_url' => $purchase->image_path ? '/storage/' . ltrim($purchase->image_path, '/') : null,
                 'variant' => $variant['variant'] ?? 'N/A',
                 'bottles_per_case' => $bottles_per_case ?? 0,
                 'quantity' => $quantity,
@@ -87,10 +91,12 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             products.name as product_name,
             products.supplier_id,
             products.date as purchase_date,
+            pc.image_path,
             suppliers.company_name as supplier_name,
             variant_data
         FROM products
         INNER JOIN suppliers ON products.supplier_id = suppliers.id
+        LEFT JOIN product_catalog pc ON products.product_catalog_id = pc.id
         LEFT JOIN LATERAL jsonb_array_elements(COALESCE(products.metadata->'variants', '[]'::jsonb)) as variant_data ON true
         WHERE products.deleted_at IS NULL
         ";
@@ -118,6 +124,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             return [
                 'product_id' => $item->id,
                 'product_name' => $item->product_name,
+                'image_url' => $item->image_path ? '/storage/' . ltrim($item->image_path, '/') : null,
                 'supplier_id' => $item->supplier_id,
                 'supplier_name' => $item->supplier_name,
                 'purchase_date' => $item->purchase_date,
@@ -172,6 +179,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 return [
                     'product_id' => $variantGroup->first()['product_id'],
                     'product_name' => $variantGroup->first()['product_name'],
+                    'image_url' => $variantGroup->first()['image_url'],
                     'supplier_id' => $variantGroup->first()['supplier_id'],
                     'supplier_name' => $variantGroup->first()['supplier_name'],
                     'purchase_date' => $variantGroup->first()['purchase_date'],
@@ -193,6 +201,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             return [
                 'product_name' => $productName,
                 'product_id' => $productGroup->first()['product_id'],
+                'image_url' => $productGroup->first()['image_url'],
                 'supplier_id' => $productGroup->first()['supplier_id'],
                 'supplier_name' => $productGroup->first()['supplier_name'],
                 'purchase_date' => $productGroup->first()['purchase_date'],

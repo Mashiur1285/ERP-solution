@@ -442,6 +442,10 @@ const translations = {
         productName: "Product Name",
         enterProductName: "Enter product name",
         productNameRequired: "Product name is required",
+        productImage: "Product Image",
+        uploadProductImage: "Upload product image",
+        changeProductImage: "Change image",
+        removeImage: "Remove image",
         category: "Category",
         selectCategory: "Select a category",
         categoryRequired: "Please select a category",
@@ -539,6 +543,10 @@ const translations = {
         productName: "পণ্যের নাম",
         enterProductName: "পণ্যের নাম লিখুন",
         productNameRequired: "পণ্যের নাম প্রয়োজন",
+        productImage: "পণ্যের ছবি",
+        uploadProductImage: "পণ্যের ছবি আপলোড করুন",
+        changeProductImage: "ছবি পরিবর্তন করুন",
+        removeImage: "ছবি মুছুন",
         category: "বিভাগ",
         selectCategory: "একটি বিভাগ নির্বাচন করুন",
         categoryRequired: "অনুগ্রহ করে একটি বিভাগ নির্বাচন করুন",
@@ -631,6 +639,7 @@ const translations = {
 
 const productForm = ref({
     product_name: "",
+    product_image: null as File | null,
     category_id: "",
     brand_id: "",
     supplier_id: "",
@@ -941,6 +950,7 @@ const handleVariantChange = (index: number, variantValue: string) => {
 const resetForm = () => {
     productForm.value = {
         product_name: "",
+        product_image: null,
         category_id: "",
         brand_id: "",
         supplier_id: "",
@@ -1046,6 +1056,7 @@ const confirmPurchase = () => {
     isLoading.value = true;
     const purchaseData = {
         product_name: productForm.value.product_name,
+        product_image: productForm.value.product_image,
         category_id: productForm.value.category_id,
         brand_id: productForm.value.brand_id,
         supplier_id: productForm.value.supplier_id,
@@ -1076,6 +1087,7 @@ const confirmPurchase = () => {
     };
 
     router.post("/products-store", purchaseData, {
+        forceFormData: true,
         onSuccess: () => {
             showModal.value = false;
             isLoading.value = false;

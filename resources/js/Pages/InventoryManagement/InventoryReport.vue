@@ -61,14 +61,25 @@
         <!-- Search & Filter Fields -->
         <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
             <div class="w-full sm:w-auto">
-                <DateRangePicker
-                    v-model:startDate="dateStart"
-                    v-model:endDate="dateEnd"
-                    :language="currentLanguage"
-                    class="w-full sm:w-auto"
-                />
+                <div class="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-gray-400">
+                            {{ getTranslation("snapshotDate") }}
+                        </p>
+                        <input
+                            v-model="snapshotDate"
+                            type="date"
+                            class="mt-1 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+                </div>
                 <p class="mt-2 text-xs text-gray-500">
-                    {{ getTranslation("snapshotInfo") }}: {{ dateEnd || dateStart }}
+                    {{ getTranslation("snapshotInfo") }}: {{ snapshotDate }}
                 </p>
             </div>
             <div class="relative w-full sm:w-80">
@@ -267,46 +278,46 @@
         <!-- Inventory Table -->
         <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
             <div class="w-full overflow-x-auto">
-                <table class="w-full divide-y divide-gray-200">
+                <table class="w-full min-w-[1100px] divide-y divide-gray-200 table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-[24rem] px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("productName") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden sm:table-cell"
+                                class="hidden w-28 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider sm:table-cell"
                             >
                                 {{ getTranslation("variantCount") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("quantity") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("cases") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("sold") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-36 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("stockStatus") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden lg:table-cell"
+                                class="hidden w-32 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider lg:table-cell"
                             >
                                 {{ getTranslation("unitPrice") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-36 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("totalValue") }}
                             </th>
@@ -322,9 +333,9 @@
                                 @click="toggleVariants(index)"
                             >
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900 w-1/5"
+                                    class="w-[24rem] px-2 lg:px-3 py-3 text-xs font-medium text-gray-900 lg:text-sm"
                                 >
-                                    <div class="flex items-center">
+                                    <div class="flex min-w-0 items-center gap-3">
                                         <svg
                                             :class="[
                                                 'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
@@ -343,15 +354,38 @@
                                                 d="M9 5l7 7-7 7"
                                             />
                                         </svg>
+                                        <div class="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                            <img
+                                                v-if="item.image_url"
+                                                :src="item.image_url"
+                                                :alt="item.product_name"
+                                                class="h-full w-full object-cover"
+                                            />
+                                            <svg
+                                                v-else
+                                                class="w-5 h-5 text-gray-300"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-10h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                />
+                                            </svg>
+                                        </div>
                                         <span
-                                            class="break-all"
+                                            class="min-w-0 break-words font-medium text-gray-900"
                                             :title="item.product_name"
-                                            >{{ item.product_name }}</span
                                         >
+                                            {{ item.product_name }}
+                                        </span>
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5 hidden sm:table-cell"
+                                    class="hidden w-28 px-2 lg:px-3 py-3 text-xs text-gray-500 sm:table-cell lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -362,7 +396,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -373,7 +407,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -384,7 +418,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium text-amber-600">
                                         {{
@@ -395,7 +429,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="flex justify-center">
                                         <span
@@ -407,7 +441,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5 hidden lg:table-cell"
+                                    class="hidden w-32 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:table-cell lg:text-sm"
                                 >
                                     <div class="text-right font-medium">
                                         ৳{{
@@ -420,7 +454,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-right font-medium">
                                         ৳{{
@@ -1008,7 +1042,6 @@
 import { defineProps, ref, computed, watch } from "vue";
 import Layout from "@/Layout.vue";
 import { router } from "@inertiajs/vue3";
-import DateRangePicker from "../../Components/DateRangePicker.vue";
 
 defineOptions({ layout: Layout });
 
@@ -1034,6 +1067,7 @@ const translations = {
         totalSold: "Total Sold",
         totalPurchaseValue: "Total Purchase Value",
         searchProducts: "Search products...",
+        snapshotDate: "Snapshot Date",
         snapshotInfo: "Inventory snapshot as of",
         productDetails: "Product Details",
         productVariants: "Product Variants",
@@ -1060,6 +1094,7 @@ const translations = {
         totalSold: "মোট বিক্রি",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
         searchProducts: "পণ্য অনুসন্ধান করুন...",
+        snapshotDate: "স্ন্যাপশট তারিখ",
         snapshotInfo: "এই তারিখ পর্যন্ত ইনভেন্টরি",
         productDetails: "পণ্য বিবরণ",
         productVariants: "পণ্য ভেরিয়েন্ট",
@@ -1076,12 +1111,11 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedVariants = ref({});
 
-// Date range state (snapshot uses end date)
+// Snapshot date state
 const _todayInv = new Date();
 const _todayStrInv = `${_todayInv.getFullYear()}-${String(_todayInv.getMonth() + 1).padStart(2, "0")}-${String(_todayInv.getDate()).padStart(2, "0")}`;
 const initialSnapshotDate = props.snapshotDate || _todayStrInv;
-const dateStart = ref(initialSnapshotDate);
-const dateEnd = ref(initialSnapshotDate);
+const snapshotDate = ref(initialSnapshotDate);
 
 const getStockStatus = (cases) => {
     const totalCases = Number(cases || 0);
@@ -1157,9 +1191,8 @@ const filteredInventory = computed(() => {
 });
 
 let snapshotReloadTimer;
-watch([dateStart, dateEnd], ([start, end]) => {
-    const effectiveDate = end || start;
-    if (!effectiveDate || effectiveDate === props.snapshotDate) {
+watch(snapshotDate, (value) => {
+    if (!value || value === props.snapshotDate) {
         return;
     }
 
@@ -1167,7 +1200,7 @@ watch([dateStart, dateEnd], ([start, end]) => {
     snapshotReloadTimer = setTimeout(() => {
         router.get(
             "/inventory/report",
-            { snapshot_date: effectiveDate },
+            { snapshot_date: value },
             { preserveState: true, preserveScroll: true, replace: true }
         );
     }, 250);
@@ -1278,15 +1311,6 @@ function toggleVariants(index) {
 
 .max-w-24 {
     max-width: 6rem;
-}
-
-table {
-    table-layout: fixed;
-}
-
-th,
-td {
-    width: 16.67%;
 }
 
 /* Adjust metrics card text to prevent overflow */

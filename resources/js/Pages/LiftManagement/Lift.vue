@@ -25,6 +25,61 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('productName') }}*</label>
                         <input v-model="newProduct.name" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200" />
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('productImage') }}</label>
+                        <div class="rounded-xl border-2 border-dashed border-green-200 bg-green-50/40 p-4">
+                            <div class="flex items-start gap-4">
+                                <div class="h-20 w-20 overflow-hidden rounded-xl border border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                                    <img
+                                        v-if="newProduct.imagePreviewUrl"
+                                        :src="newProduct.imagePreviewUrl"
+                                        alt="Product preview"
+                                        class="h-full w-full object-cover"
+                                    />
+                                    <svg
+                                        v-else
+                                        class="w-8 h-8 text-gray-300"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-10h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <input
+                                        id="lift-product-image"
+                                        type="file"
+                                        accept="image/*"
+                                        class="hidden"
+                                        @change="handleNewProductImageChange"
+                                    />
+                                    <label
+                                        for="lift-product-image"
+                                        class="inline-flex cursor-pointer items-center rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                                    >
+                                        {{ newProduct.imageFile ? t('changeProductImage') : t('uploadProductImage') }}
+                                    </label>
+                                    <p v-if="newProduct.imageFile" class="mt-2 text-sm text-gray-600 break-all">
+                                        {{ newProduct.imageFile.name }}
+                                    </p>
+                                    <button
+                                        v-if="newProduct.imageFile"
+                                        type="button"
+                                        class="mt-3 text-sm font-medium text-red-600 hover:text-red-700"
+                                        @click="removeNewProductImage"
+                                    >
+                                        {{ t('removeImage') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('category') }}</label>
@@ -530,6 +585,7 @@ interface Supplier {
 interface CatalogProduct {
     id: number;
     name: string;
+    image_url?: string | null;
     category_id: number | null;
     category_name: string;
     brand_id: number | null;
@@ -554,6 +610,7 @@ interface LiftVariant {
 interface LiftItem {
     product_catalog_id: number;
     product_name: string;
+    image_url?: string | null;
     category_name: string;
     brand_name: string;
     category_id: number | null;
@@ -780,6 +837,7 @@ const addProductWithVariants = () => {
         liftItems.value.push({
             product_catalog_id: p.id,
             product_name: p.name,
+            image_url: p.image_url || null,
             category_name: p.category_name,
             brand_name: p.brand_name,
             category_id: p.category_id,
@@ -818,25 +876,52 @@ const onVariantSelect = (itemIdx: number, vIdx: number) => {
 };
 
 // Create Product
-const newProduct = ref({ name: "", category_id: "" as any, brand_id: "" as any });
+const newProduct = ref({
+    name: "",
+    category_id: "" as any,
+    brand_id: "" as any,
+    imageFile: null as File | null,
+    imagePreviewUrl: "",
+});
 
 const openCreateProductModal = () => {
-    newProduct.value = { name: productSearch.value, category_id: "", brand_id: "" };
+    newProduct.value = {
+        name: productSearch.value,
+        category_id: "",
+        brand_id: "",
+        imageFile: null,
+        imagePreviewUrl: "",
+    };
     showCreateProductModal.value = true;
+};
+
+const handleNewProductImageChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0] || null;
+
+    newProduct.value.imageFile = file;
+    newProduct.value.imagePreviewUrl = file ? URL.createObjectURL(file) : "";
+};
+
+const removeNewProductImage = () => {
+    newProduct.value.imageFile = null;
+    newProduct.value.imagePreviewUrl = "";
 };
 
 const createProduct = async () => {
     if (!newProduct.value.name || !selectedSupplier.value) return;
     try {
+        const formData = new FormData();
+        formData.append("name", newProduct.value.name);
+        formData.append("supplier_id", String(selectedSupplier.value.id));
+        if (newProduct.value.category_id) formData.append("category_id", String(newProduct.value.category_id));
+        if (newProduct.value.brand_id) formData.append("brand_id", String(newProduct.value.brand_id));
+        if (newProduct.value.imageFile) formData.append("product_image", newProduct.value.imageFile);
+
         const res = await fetch("/api/product-catalog/quick-store", {
             method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-TOKEN": csrfToken, "X-Requested-With": "XMLHttpRequest" },
-            body: JSON.stringify({
-                name: newProduct.value.name,
-                supplier_id: selectedSupplier.value.id,
-                category_id: newProduct.value.category_id || null,
-                brand_id: newProduct.value.brand_id || null,
-            }),
+            headers: { Accept: "application/json", "X-CSRF-TOKEN": csrfToken, "X-Requested-With": "XMLHttpRequest" },
+            body: formData,
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed");
@@ -1053,6 +1138,10 @@ const translations: Record<string, Record<string, string>> = {
         addProducts: "Add Products",
         searchProduct: "Search product by name...",
         createNewProduct: "Create New Product",
+        productImage: "Product Image",
+        uploadProductImage: "Upload product image",
+        changeProductImage: "Change image",
+        removeImage: "Remove image",
         productName: "Product Name",
         category: "Category",
         selectCategory: "Select category",
@@ -1115,6 +1204,10 @@ const translations: Record<string, Record<string, string>> = {
         addProducts: "পণ্য যোগ করুন",
         searchProduct: "পণ্যের নাম দিয়ে খুঁজুন...",
         createNewProduct: "নতুন পণ্য তৈরি করুন",
+        productImage: "পণ্যের ছবি",
+        uploadProductImage: "পণ্যের ছবি আপলোড করুন",
+        changeProductImage: "ছবি পরিবর্তন করুন",
+        removeImage: "ছবি মুছুন",
         productName: "পণ্যের নাম",
         category: "বিভাগ",
         selectCategory: "বিভাগ নির্বাচন",

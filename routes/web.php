@@ -58,11 +58,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('brands/{id}/delete', [BrandController::class, 'destroy'])->middleware('permission:brand.delete')->name('brands.delete');
     Route::post('brands/quick-store', [BrandController::class, 'quickStore'])->middleware('permission:brand.add')->name('brands.quick-store');
 
-    // Purchases/Products (legacy)
-    Route::get('purchases', [ProductPurchaseController::class, 'index'])->middleware('permission:lift.view')->name('purchases.index');
-    Route::post('products-store', [ProductPurchaseController::class, 'storeProductPurchase'])->middleware('permission:lift.add')->name('products.store');
-    Route::get('/purchases/report', [ProductPurchaseController::class, 'purchaseReport'])->middleware('permission:lift.view')->name('purchases.report');
-
     // Lifts (new purchase system)
     Route::get('lifts', [LiftController::class, 'index'])->middleware('permission:lift.add')->name('lifts.index');
     Route::post('lifts/store', [LiftController::class, 'store'])->middleware('permission:lift.add')->name('lifts.store');
@@ -81,6 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('sales', [SalesController::class, 'index'])->middleware('permission:sales.add')->name('sales.index');
     Route::post('sales/store', [SalesController::class, 'store'])->middleware('permission:sales.add')->name('sales.store');
     Route::get('/sales/report', [SalesController::class, 'report'])->middleware('permission:sales.view')->name('sales.report');
+    Route::get('/sales/summary', [SalesController::class, 'summaryReport'])->middleware('permission:sales.view')->name('sales.summary');
     Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->middleware('permission:sales.update')->name('sales.payment');
     Route::post('/sales/payment/store/{id}', [SalesController::class, 'storePayment'])->middleware('permission:sales.update')->name('sales.payment.store');
     Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->middleware('permission:sales.view')->name('sales.cash-memo');
@@ -93,6 +89,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/inventory/search', [SalesController::class, 'searchInventoryProducts'])->middleware('permission:sales.add');
 
     // Inventory Report
+    Route::get('/products', [ProductPurchaseController::class, 'productList'])->middleware('permission:inventory.view')->name('products.index');
+    Route::post('/products/{id}/update', [ProductPurchaseController::class, 'updateProductCatalog'])->middleware('permission:lift.add')->name('products.update');
     Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->middleware('permission:inventory.view')->name('inventory.report');
 
     // Expenses

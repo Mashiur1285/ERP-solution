@@ -199,6 +199,29 @@ function emitCustomRange() {
     emit("change");
 }
 
+function resolvePreset(start: string, end: string) {
+    if (!start || !end) return "today";
+
+    const presetKeys = [
+        "today",
+        "last_week",
+        "this_week",
+        "last_month",
+        "this_month",
+        "last_year",
+        "this_year",
+    ];
+
+    for (const key of presetKeys) {
+        const range = computeRange(key);
+        if (range.start === start && range.end === end) {
+            return key;
+        }
+    }
+
+    return "custom";
+}
+
 // If parent passes initial values, sync
 watch(
     () => [props.startDate, props.endDate],
@@ -206,13 +229,20 @@ watch(
         if (s && e) {
             localStart.value = s;
             localEnd.value = e;
+            activePreset.value = resolvePreset(s, e);
         }
     },
     { immediate: true }
 );
 
 onMounted(() => {
-    // Default: today
+    if (props.startDate && props.endDate) {
+        localStart.value = props.startDate;
+        localEnd.value = props.endDate;
+        activePreset.value = resolvePreset(props.startDate, props.endDate);
+        return;
+    }
+
     selectPreset("today");
 });
 </script>

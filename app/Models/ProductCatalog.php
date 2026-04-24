@@ -15,6 +15,7 @@ class ProductCatalog extends Model
         'supplier_id',
         'category_id',
         'brand_id',
+        'image_path',
         'default_variants',
         'is_active',
     ];

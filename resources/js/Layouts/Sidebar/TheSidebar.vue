@@ -221,6 +221,12 @@ const salesMenu = computed(() => [
         icon: "fa-solid fa-file-alt",
         visible: hasPermission("sales.view"),
     },
+    {
+        label: "Sales Summary",
+        href: "/sales/summary",
+        icon: "fa-solid fa-chart-line",
+        visible: hasPermission("sales.view"),
+    },
 ].filter((item) => item.visible));
 
 // Expense submenu
@@ -235,6 +241,12 @@ const expenseMenu = computed(() => [
 
 // Inventory submenu
 const inventoryMenu = computed(() => [
+    {
+        label: "Product List",
+        href: "/products",
+        icon: "fa-solid fa-list",
+        visible: hasPermission("inventory.view"),
+    },
     {
         label: "Inventory Report",
         href: "/inventory/report",

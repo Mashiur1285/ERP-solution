@@ -8,6 +8,7 @@ use App\Contracts\SalesContract;
 use App\Contracts\ShopContract;
 use App\Contracts\ProductPurchaseContract;
 use App\Contracts\ExpenseContract; // Add this
+use App\Contracts\LiftContract;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,7 +21,8 @@ class DashboardController extends Controller
         protected SalesContract $salesRepository,
         protected ShopContract $shopRepository,
         protected ProductPurchaseContract $productPurchaseRepository,
-        protected ExpenseContract $expenseRepository // Add this
+        protected ExpenseContract $expenseRepository, // Add this
+        protected LiftContract $liftRepository
     ) {
     }
 
@@ -36,9 +38,9 @@ class DashboardController extends Controller
         $suppliers = $this->supplierRepository->all();
         $shops = $this->shopRepository->getAllShopsWithDues($shopDuesDate);
         $dateWiseSalesData = $this->shopRepository->getDateWiseSalesData($graphStartDate, $graphEndDate);
-        $topDeposits = $this->depositRepository
-            ->totalRemainingDepositsBySupplier()
-            ->take(5);
+        $depositSummary = $this->depositRepository->totalRemainingDepositsBySupplier();
+        $topDeposits = $depositSummary->take(4)->values();
+        $totalDepositAmount = $depositSummary->sum('total_remaining_deposit');
 
         // Fetch inventory stock
         $inventoryStock = $this->productPurchaseRepository->getInventoryStock();
@@ -92,8 +94,20 @@ class DashboardController extends Controller
             ->whereDate('created_at', $dailySalesDate)
             ->sum('amount');
 
+        $lifts = $this->liftRepository->query()
+            ->where('status', 'completed')
+            ->whereBetween('lift_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->with(['supplier', 'items.productCatalog'])
+            ->orderByDesc('lift_date')
+            ->orderByDesc('id')
+            ->get();
+
         $totalShopsSold = $sales->pluck('shop_id')->unique()->count();
         $totalCasesSold = $sales->flatMap->items->sum('cases_sold');
+        $totalLiftCases = $lifts->flatMap->items->sum('number_of_cases');
+        $totalLiftBottles = $lifts->flatMap->items->sum('total_bottles');
+        $totalLiftAmount = $lifts->sum('total_amount');
+        $totalFreeLiftBottles = $lifts->flatMap->items->sum('total_free_bottles');
 
 
         return Inertia::render('Dashboard/Dashboard', [
@@ -101,6 +115,7 @@ class DashboardController extends Controller
             'shops' => $shops,
             'dateWiseSalesData' => $dateWiseSalesData,
             'topDeposits' => $topDeposits,
+            'totalDepositAmount' => $totalDepositAmount,
             'inventoryStock' => $inventoryStock,
             'topSellingProducts' => $topSellingProducts,
             'lowStockProducts' => $lowStockProducts,
@@ -118,8 +133,13 @@ class DashboardController extends Controller
             'month' => $month,
             'year' => $year,
             'sales' => $sales,
+            'lifts' => $lifts,
             'totalShopsSold' => $totalShopsSold,
             'totalCasesSold' => $totalCasesSold,
+            'totalLiftCases' => $totalLiftCases,
+            'totalLiftBottles' => $totalLiftBottles,
+            'totalLiftAmount' => $totalLiftAmount,
+            'totalFreeLiftBottles' => $totalFreeLiftBottles,
             'todaysExpensesAmount' => $todaysExpensesAmount,
             'todaysLiftingCount' => $todaysLiftingCount,
         ]);

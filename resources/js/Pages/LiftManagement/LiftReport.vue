@@ -55,10 +55,96 @@
                 </div>
                 {{ t("liftReport") }}
             </h1>
+            <button
+                @click="printReport"
+                class="print:hidden inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1m-10 0h10v4H10v-4z" />
+                </svg>
+                {{ t("printPdf") }}
+            </button>
         </div>
 
+        <section class="print-only lift-print-sheet">
+            <div class="lift-print-header">
+                <div>
+                    <p class="lift-print-kicker">{{ t("liftReport") }}</p>
+                    <h2 class="lift-print-title">{{ t("liftingPerformanceSummary") }}</h2>
+                    <p class="lift-print-subtitle">
+                        {{ t("reportPeriod") }}:
+                        {{ formatDate(dateStart || "") }}
+                        <span v-if="dateEnd">- {{ formatDate(dateEnd || "") }}</span>
+                    </p>
+                </div>
+                <div class="lift-print-meta">
+                    <p>{{ t("generatedOn") }}: {{ printedAtLabel }}</p>
+                    <p>{{ t("status") }}: {{ t(activeTab === "draft" ? "draftTab" : "completedTab") }}</p>
+                </div>
+            </div>
+
+            <div class="lift-print-summary">
+                <div class="lift-print-card">
+                    <span>{{ t("totalLifts") }}</span>
+                    <strong>{{ toBn(totalLifts) }}</strong>
+                </div>
+                <div class="lift-print-card">
+                    <span>{{ t("totalCases") }}</span>
+                    <strong>{{ toBn(totalCases) }}</strong>
+                </div>
+                <div class="lift-print-card">
+                    <span>{{ t("totalBottles") }}</span>
+                    <strong>{{ toBn(totalBottles) }}</strong>
+                </div>
+                <div class="lift-print-card">
+                    <span>{{ t("totalItems") }}</span>
+                    <strong>{{ toBn(totalItems) }}</strong>
+                </div>
+                <div class="lift-print-card">
+                    <span>{{ t("totalCost") }}</span>
+                    <strong>৳{{ toBn(totalAmount.toFixed(2)) }}</strong>
+                </div>
+            </div>
+
+            <table class="lift-print-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ t("liftNumber") }}</th>
+                        <th>{{ t("supplier") }}</th>
+                        <th>{{ t("liftDate") }}</th>
+                        <th>{{ t("totalItems") }}</th>
+                        <th>{{ t("totalCases") }}</th>
+                        <th>{{ t("totalBottles") }}</th>
+                        <th>{{ t("totalCost") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(lift, index) in filteredLifts" :key="`print-${lift.id}`">
+                        <td>{{ toBn(index + 1) }}</td>
+                        <td>{{ lift.lift_number || "-" }}</td>
+                        <td>{{ lift.supplier?.company_name || "-" }}</td>
+                        <td>{{ formatDate(lift.lift_date) }}</td>
+                        <td>{{ toBn(lift.items?.length || 0) }}</td>
+                        <td>{{ toBn(getLiftTotalCases(lift)) }}</td>
+                        <td>{{ toBn(getLiftTotalBottles(lift)) }}</td>
+                        <td>৳{{ toBn(Number(lift.total_amount || 0).toFixed(2)) }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">{{ t("total") }}</td>
+                        <td>{{ toBn(totalItems) }}</td>
+                        <td>{{ toBn(totalCases) }}</td>
+                        <td>{{ toBn(totalBottles) }}</td>
+                        <td>৳{{ toBn(totalAmount.toFixed(2)) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
         <!-- Total Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="print:hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div
                 class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
             >
@@ -178,7 +264,7 @@
         </div>
 
         <!-- Search & Filter Fields -->
-        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
+        <div class="print:hidden flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
             <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
                 <button
                     @click="activeTab = 'completed'"
@@ -221,7 +307,7 @@
         </div>
 
         <!-- Lift Cards -->
-        <div class="space-y-4">
+        <div class="print:hidden space-y-4">
             <div
                 v-if="!filteredLifts.length"
                 class="text-center text-gray-500 py-8 text-sm bg-white rounded-xl shadow-sm"
@@ -457,6 +543,14 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    initialStartDate: {
+        type: String,
+        default: "",
+    },
+    initialEndDate: {
+        type: String,
+        default: "",
+    },
 });
 
 defineOptions({
@@ -471,6 +565,7 @@ const translations = {
         totalCases: "Total Cases",
         totalBottles: "Total Bottles",
         totalAmount: "Total Amount",
+        totalItems: "Total Items",
         completedTab: "Completed",
         draftTab: "Drafts",
         editDraft: "Edit Draft",
@@ -490,6 +585,15 @@ const translations = {
         freeBottles: "Free Bottles",
         ratePerBottle: "Rate/Bottle",
         totalCost: "Total Cost",
+        liftNumber: "Lift Number",
+        supplier: "Supplier",
+        liftDate: "Lift Date",
+        reportPeriod: "Report Period",
+        generatedOn: "Generated On",
+        status: "Status",
+        total: "Total",
+        printPdf: "Print / PDF",
+        liftingPerformanceSummary: "Lifting Performance Summary",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -498,6 +602,7 @@ const translations = {
         totalCases: "মোট কেস",
         totalBottles: "মোট বোতল",
         totalAmount: "মোট পরিমাণ",
+        totalItems: "মোট আইটেম",
         completedTab: "সম্পন্ন",
         draftTab: "ড্রাফট",
         editDraft: "ড্রাফট এডিট করুন",
@@ -517,6 +622,15 @@ const translations = {
         freeBottles: "বিনামূল্যে বোতল",
         ratePerBottle: "দর/বোতল",
         totalCost: "মোট খরচ",
+        liftNumber: "লিফট নম্বর",
+        supplier: "সরবরাহকারী",
+        liftDate: "লিফটের তারিখ",
+        reportPeriod: "রিপোর্ট সময়কাল",
+        generatedOn: "তৈরি হয়েছে",
+        status: "স্ট্যাটাস",
+        total: "মোট",
+        printPdf: "প্রিন্ট / পিডিএফ",
+        liftingPerformanceSummary: "লিফটিং পারফরম্যান্স সারাংশ",
     },
 };
 
@@ -525,11 +639,11 @@ const searchQuery = ref("");
 const expandedLifts = ref({});
 const activeTab = ref("completed");
 
-// Date range state (default: today)
+// Date range state (default: server-provided range or today)
 const _today = new Date();
 const _todayStr = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, "0")}-${String(_today.getDate()).padStart(2, "0")}`;
-const dateStart = ref(_todayStr);
-const dateEnd = ref(_todayStr);
+const dateStart = ref(props.initialStartDate || _todayStr);
+const dateEnd = ref(props.initialEndDate || _todayStr);
 
 function t(key) {
     return translations[currentLanguage.value]?.[key] || key;
@@ -584,35 +698,16 @@ const tabbedLifts = computed(() =>
     )
 );
 
-const totalLifts = computed(() => tabbedLifts.value.length);
-
-const totalAmount = computed(() =>
-    tabbedLifts.value.reduce(
-        (sum, lift) => sum + Number(lift.total_amount || 0),
-        0
-    )
-);
-
-const totalCases = computed(() =>
-    tabbedLifts.value.reduce(
-        (sum, lift) => sum + getLiftTotalCases(lift),
-        0
-    )
-);
-
-const totalBottles = computed(() =>
-    tabbedLifts.value.reduce(
-        (sum, lift) => sum + getLiftTotalBottles(lift),
-        0
-    )
-);
-
 function continueDraft(id) {
     router.visit(`/lifts?draft=${id}`);
 }
 
 function editLift(lift) {
     router.visit(lift.status === "draft" ? `/lifts?draft=${lift.id}` : `/lifts?edit=${lift.id}`);
+}
+
+function printReport() {
+    window.print();
 }
 
 const filteredLifts = computed(() => {
@@ -639,6 +734,41 @@ const filteredLifts = computed(() => {
         
         return true;
     });
+});
+
+const totalLifts = computed(() => filteredLifts.value.length);
+
+const totalAmount = computed(() =>
+    filteredLifts.value.reduce(
+        (sum, lift) => sum + Number(lift.total_amount || 0),
+        0
+    )
+);
+
+const totalCases = computed(() =>
+    filteredLifts.value.reduce(
+        (sum, lift) => sum + getLiftTotalCases(lift),
+        0
+    )
+);
+
+const totalBottles = computed(() =>
+    filteredLifts.value.reduce(
+        (sum, lift) => sum + getLiftTotalBottles(lift),
+        0
+    )
+);
+
+const totalItems = computed(() =>
+    filteredLifts.value.reduce(
+        (sum, lift) => sum + (lift.items?.length || 0),
+        0
+    )
+);
+
+const printedAtLabel = computed(() => {
+    const now = new Date();
+    return now.toLocaleString(currentLanguage.value === "bn" ? "bn-BD" : "en-GB");
 });
 </script>
 
@@ -681,5 +811,125 @@ const filteredLifts = computed(() => {
 
 .rotate-90 {
     transform: rotate(90deg);
+}
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm;
+    }
+
+    .print\:hidden {
+        display: none !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    .lift-print-sheet {
+        color: #0f172a;
+    }
+
+    .lift-print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        border-bottom: 2px solid #cbd5e1;
+        padding-bottom: 14px;
+        margin-bottom: 16px;
+    }
+
+    .lift-print-kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #475569;
+    }
+
+    .lift-print-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .lift-print-subtitle,
+    .lift-print-meta p {
+        margin: 4px 0 0;
+        font-size: 11px;
+        color: #475569;
+    }
+
+    .lift-print-meta {
+        text-align: right;
+    }
+
+    .lift-print-summary {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .lift-print-card {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f8fafc;
+    }
+
+    .lift-print-card span {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+
+    .lift-print-card strong {
+        display: block;
+        font-size: 16px;
+        line-height: 1.2;
+        color: #0f172a;
+    }
+
+    .lift-print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5px;
+    }
+
+    .lift-print-table th,
+    .lift-print-table td {
+        border: 1px solid #cbd5e1;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .lift-print-table thead th {
+        background: #e2e8f0;
+        font-weight: 700;
+    }
+
+    .lift-print-table tfoot td {
+        background: #f8fafc;
+        font-weight: 700;
+    }
+
+    .bg-gradient-to-br,
+    .max-w-7xl {
+        background: white !important;
+    }
 }
 </style>

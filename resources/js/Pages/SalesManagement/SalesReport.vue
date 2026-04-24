@@ -55,10 +55,134 @@
                 </div>
                 {{ getTranslation("salesReport") }}
             </h1>
+            <button
+                v-if="viewMode !== 'summary'"
+                @click="printReport"
+                class="print:hidden inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1m-10 0h10v4H10v-4z" />
+                </svg>
+                {{ getTranslation("printPdf") }}
+            </button>
         </div>
 
+        <section class="print-only sales-print-sheet">
+            <div class="sales-print-header">
+                <div>
+                    <p class="sales-print-kicker">{{ getTranslation("salesReport") }}</p>
+                    <h2 class="sales-print-title">{{ getTranslation("salesPerformanceSummary") }}</h2>
+                    <p class="sales-print-subtitle">
+                        {{ getTranslation("reportPeriod") }}:
+                        {{ formatDate(filters.start_date || "") }}
+                        <span v-if="filters.end_date">- {{ formatDate(filters.end_date || "") }}</span>
+                    </p>
+                </div>
+                <div class="sales-print-meta">
+                    <p>{{ getTranslation("generatedOn") }}: {{ printedAtLabel }}</p>
+                    <p>{{ getTranslation("status") }}: {{ getTranslation(activeTab) }}</p>
+                    <p>{{ getTranslation("viewModeLabel") }}: {{ getTranslation(printViewMode === "invoice" ? "invoiceView" : printViewMode === "product" ? "productView" : "salesSummary") }}</p>
+                </div>
+            </div>
+
+            <div class="sales-print-summary">
+                <div class="sales-print-card">
+                    <span>{{ getTranslation("totalSales") }}</span>
+                    <strong>{{ toBengaliNumber(filteredSales.length) }}</strong>
+                </div>
+                <div class="sales-print-card">
+                    <span>{{ getTranslation("totalRevenue") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</strong>
+                </div>
+                <div class="sales-print-card">
+                    <span>{{ getTranslation("totalCost") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</strong>
+                </div>
+                <div class="sales-print-card">
+                    <span>{{ getTranslation("totalProfit") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</strong>
+                </div>
+                <div class="sales-print-card">
+                    <span>{{ getTranslation("totalItems") }}</span>
+                    <strong>{{ toBengaliNumber(printTotals.items) }}</strong>
+                </div>
+            </div>
+
+            <table v-if="printViewMode === 'invoice'" class="sales-print-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ getTranslation("invoiceNumber") }}</th>
+                        <th>{{ getTranslation("shop") }}</th>
+                        <th>{{ getTranslation("supplier") }}</th>
+                        <th>{{ getTranslation("saleDate") }}</th>
+                        <th>{{ getTranslation("totalRevenue") }}</th>
+                        <th>{{ getTranslation("totalCost") }}</th>
+                        <th>{{ getTranslation("totalProfit") }}</th>
+                        <th>{{ getTranslation("items") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(sale, index) in filteredSales" :key="`print-${sale.id}`">
+                        <td>{{ toBengaliNumber(index + 1) }}</td>
+                        <td>{{ sale.invoice_number }}</td>
+                        <td>{{ sale.shop_name }}</td>
+                        <td>{{ sale.supplier_name || "-" }}</td>
+                        <td>{{ formatDate(sale.sale_date) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
+                        <td>{{ toBengaliNumber(sale.items?.length || 0) }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5">{{ getTranslation("total") }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
+                        <td>{{ toBengaliNumber(printTotals.items) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <table v-else class="sales-print-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ getTranslation("product") }}</th>
+                        <th>{{ getTranslation("variant") }}</th>
+                        <th>{{ getTranslation("totalCases") }}</th>
+                        <th>{{ getTranslation("totalQty") }}</th>
+                        <th>{{ getTranslation("totalRevenue") }}</th>
+                        <th>{{ getTranslation("totalProfit") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(row, index) in productSummary" :key="`print-product-${row.product_id}-${row.variant}`">
+                        <td>{{ toBengaliNumber(index + 1) }}</td>
+                        <td>{{ row.product_name }}</td>
+                        <td>{{ row.variant || "-" }}</td>
+                        <td>{{ toBengaliNumber(row.total_cases) }}</td>
+                        <td>{{ toBengaliNumber(row.total_qty) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">{{ getTranslation("total") }}</td>
+                        <td>{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}</td>
+                        <td>{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
         <!-- Total Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div v-if="viewMode !== 'summary'" class="print:hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div
                 class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200 hover:shadow-md transition-shadow"
             >
@@ -189,7 +313,8 @@
 
         <!-- Filters -->
         <div
-            class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6"
+            v-if="viewMode !== 'summary'"
+            class="print:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6"
         >
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
@@ -323,26 +448,57 @@
         </div>
 
         <!-- Search & Filter Fields -->
-        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
-            <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
-                <button
-                    @click="activeTab = 'completed'"
-                    :class="[
-                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                        activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
-                    ]"
-                >
-                    {{ getTranslation("completedTab") }}
-                </button>
-                <button
-                    @click="activeTab = 'draft'"
-                    :class="[
-                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                        activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
-                    ]"
-                >
-                    {{ getTranslation("draftTab") }}
-                </button>
+        <div v-if="viewMode !== 'summary'" class="print:hidden flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- Status Tabs -->
+                <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
+                    <button
+                        @click="activeTab = 'completed'"
+                        :class="[
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                            activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                        ]"
+                    >
+                        {{ getTranslation("completedTab") }}
+                    </button>
+                    <button
+                        @click="activeTab = 'draft'"
+                        :class="[
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                            activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
+                        ]"
+                    >
+                        {{ getTranslation("draftTab") }}
+                    </button>
+                </div>
+
+                <!-- View Mode Toggle -->
+                <div class="flex items-center gap-1 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
+                    <button
+                        @click="viewMode = 'invoice'"
+                        :class="[
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5',
+                            viewMode === 'invoice' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                        ]"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {{ getTranslation("invoiceView") }}
+                    </button>
+                    <button
+                        @click="viewMode = 'product'"
+                        :class="[
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5',
+                            viewMode === 'product' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                        ]"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        {{ getTranslation("productView") }}
+                    </button>
+                </div>
             </div>
             <DateRangePicker
                 v-model:startDate="filters.start_date"
@@ -367,14 +523,14 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="isLoading" class="flex justify-center items-center py-12">
+        <div v-if="isLoading" class="print:hidden flex justify-center items-center py-12">
             <div
                 class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"
             ></div>
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="filteredSales.length === 0" class="text-center py-12">
+        <div v-else-if="(viewMode === 'invoice' && filteredSales.length === 0) || (viewMode === 'product' && productSummary.length === 0) || (viewMode === 'summary' && filteredSales.length === 0)" class="print:hidden text-center py-12">
             <svg
                 class="mx-auto h-12 w-12 text-gray-400"
                 fill="none"
@@ -396,8 +552,178 @@
             </p>
         </div>
 
-        <!-- Sales Table -->
-        <div v-else class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div v-else-if="viewMode === 'summary'" class="print:hidden space-y-6">
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                <DateRangePicker
+                    v-model:startDate="filters.start_date"
+                    v-model:endDate="filters.end_date"
+                    :language="currentLanguage"
+                    @change="applyFilters"
+                    class="w-full sm:w-auto"
+                />
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
+                        <button
+                            @click="summaryDisplayMode = 'invoice'"
+                            :class="[
+                                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                summaryDisplayMode === 'invoice' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:bg-white/70',
+                            ]"
+                        >
+                            {{ getTranslation("invoiceView") }}
+                        </button>
+                        <button
+                            @click="summaryDisplayMode = 'product'"
+                            :class="[
+                                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                summaryDisplayMode === 'product' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-600 hover:bg-white/70',
+                            ]"
+                        >
+                            {{ getTranslation("productView") }}
+                        </button>
+                    </div>
+                    <button
+                        @click="clearFilters"
+                        class="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        {{ getTranslation("clearFilters") }}
+                    </button>
+                    <button
+                        @click="applyFilters"
+                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                        {{ getTranslation("applyFilters") }}
+                    </button>
+                    <button
+                        @click="printReport"
+                        class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1m-10 0h10v4H10v-4z" />
+                        </svg>
+                        {{ getTranslation("printPdf") }}
+                    </button>
+                </div>
+            </div>
+
+            <section class="sales-summary-sheet">
+            <div class="mb-5 flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ getTranslation("salesSummary") }}</p>
+                    <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ getTranslation("salesPerformanceSummary") }}</h2>
+                    <p class="mt-2 text-sm text-slate-500">
+                        {{ getTranslation("reportPeriod") }}:
+                        {{ formatDate(filters.start_date || "") }}
+                        <span v-if="filters.end_date">- {{ formatDate(filters.end_date || "") }}</span>
+                    </p>
+                </div>
+                <div class="text-sm text-slate-500">
+                    {{ getTranslation("generatedOn") }}: {{ printedAtLabel }}
+                </div>
+            </div>
+
+            <div class="sales-summary-stats mb-5">
+                <div class="sales-summary-stat">
+                    <span>{{ summaryDisplayMode === 'invoice' ? getTranslation("totalSales") : getTranslation("product") }}</span>
+                    <strong>{{ toBengaliNumber(summaryDisplayMode === 'invoice' ? filteredSales.length : productSummary.length) }}</strong>
+                </div>
+                <div class="sales-summary-stat">
+                    <span>{{ getTranslation("totalRevenue") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</strong>
+                </div>
+                <div class="sales-summary-stat">
+                    <span>{{ getTranslation("totalCost") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</strong>
+                </div>
+                <div class="sales-summary-stat">
+                    <span>{{ getTranslation("totalProfit") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</strong>
+                </div>
+                <div class="sales-summary-stat">
+                    <span>{{ summaryDisplayMode === 'invoice' ? getTranslation("totalItems") : getTranslation("totalQty") }}</span>
+                    <strong>{{ toBengaliNumber(summaryDisplayMode === 'invoice' ? printTotals.items : productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</strong>
+                </div>
+            </div>
+
+            <div v-if="summaryDisplayMode === 'invoice'" class="overflow-x-auto">
+                <table class="w-full min-w-[920px] divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">#</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("invoiceNumber") }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("shop") }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("supplier") }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("saleDate") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalRevenue") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCost") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("items") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr v-for="(sale, index) in filteredSales" :key="`summary-${sale.id}`" class="hover:bg-slate-50">
+                            <td class="px-4 py-3 text-sm text-slate-500">{{ toBengaliNumber(index + 1) }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-slate-800">{{ sale.invoice_number }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-700">{{ sale.shop_name }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">{{ sale.supplier_name || "-" }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">{{ formatDate(sale.sale_date) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold" :class="sale.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.length || 0) }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-slate-50">
+                        <tr>
+                            <td colspan="5" class="px-4 py-3 text-sm font-semibold text-slate-700">{{ getTranslation("total") }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(printTotals.items) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div v-else class="overflow-x-auto">
+                <table class="w-full min-w-[920px] divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">#</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("product") }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("variant") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCases") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalQty") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalRevenue") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr v-for="(row, index) in productSummary" :key="`summary-product-${row.product_id}-${row.variant}`" class="hover:bg-slate-50">
+                            <td class="px-4 py-3 text-sm text-slate-500">{{ toBengaliNumber(index + 1) }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-slate-800">{{ row.product_name }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">{{ row.variant || "-" }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-medium text-slate-700">{{ toBengaliNumber(row.total_cases) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-medium text-slate-700">{{ toBengaliNumber(row.total_qty) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold" :class="row.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-slate-50">
+                        <tr>
+                            <td colspan="3" class="px-4 py-3 text-sm font-semibold text-slate-700">{{ getTranslation("total") }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold" :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            </section>
+        </div>
+
+        <!-- Sales Table (Invoice View) -->
+        <div v-else-if="viewMode === 'invoice'" class="print:hidden bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -1165,6 +1491,146 @@
                 </table>
             </div>
         </div>
+
+        <!-- Product Summary Table (Product View) -->
+        <div v-else-if="viewMode === 'product'" class="print:hidden bg-white rounded-xl shadow-sm overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+                <div class="p-2 bg-teal-100 rounded-lg">
+                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-800">{{ getTranslation("productSummaryTitle") }}</h2>
+                <span class="ml-auto px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
+                    {{ toBengaliNumber(productSummary.length) }} {{ getTranslation("product") }}
+                </span>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="overflow-x-auto hidden lg:block">
+                <table class="w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("product") }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("variant") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalCases") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalQty") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalRevenue") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalProfit") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        <tr
+                            v-for="(row, idx) in productSummary"
+                            :key="`${row.product_id}-${row.variant}`"
+                            class="hover:bg-gray-50 transition-colors"
+                        >
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ toBengaliNumber(idx + 1) }}</td>
+                            <td class="px-4 py-3 text-sm font-semibold text-gray-800">{{ row.product_name }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                <span v-if="row.variant" class="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium">{{ row.variant }}</span>
+                                <span v-else class="text-gray-400">—</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 text-right font-medium">{{ toBengaliNumber(row.total_cases) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700 text-right font-medium">{{ toBengaliNumber(row.total_qty) }}</td>
+                            <td class="px-4 py-3 text-sm text-right font-semibold text-gray-800">
+                                ৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}
+                            </td>
+                            <td
+                                class="px-4 py-3 text-sm text-right font-semibold"
+                                :class="row.total_profit >= 0 ? 'text-green-600' : 'text-red-600'"
+                            >
+                                ৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}
+                            </td>
+                        </tr>
+                        <!-- Totals row -->
+                        <tr class="bg-teal-50 font-bold border-t-2 border-teal-200">
+                            <td class="px-4 py-3 text-sm text-teal-800" colspan="3">{{ getTranslation("totalSales") }}</td>
+                            <td class="px-4 py-3 text-sm text-teal-800 text-right">
+                                {{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-teal-800 text-right">
+                                {{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-teal-800 text-right">
+                                ৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}
+                            </td>
+                            <td
+                                class="px-4 py-3 text-sm text-right"
+                                :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-green-700' : 'text-red-700'"
+                            >
+                                ৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="lg:hidden divide-y divide-gray-100">
+                <div
+                    v-for="(row, idx) in productSummary"
+                    :key="`m-${row.product_id}-${row.variant}`"
+                    class="p-4 hover:bg-gray-50 transition-colors"
+                >
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-gray-400 mr-1">{{ toBengaliNumber(idx + 1) }}.</span>
+                            <span class="font-semibold text-gray-800 text-sm">{{ row.product_name }}</span>
+                            <span v-if="row.variant" class="ml-2 px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">{{ row.variant }}</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm mt-2">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-500">{{ getTranslation("totalCases") }}</span>
+                            <span class="font-medium text-gray-800">{{ toBengaliNumber(row.total_cases) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-500">{{ getTranslation("totalQty") }}</span>
+                            <span class="font-medium text-gray-800">{{ toBengaliNumber(row.total_qty) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-500">{{ getTranslation("totalRevenue") }}</span>
+                            <span class="font-semibold text-gray-800">৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-500">{{ getTranslation("totalProfit") }}</span>
+                            <span class="font-semibold" :class="row.total_profit >= 0 ? 'text-green-600' : 'text-red-600'">
+                                ৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile totals -->
+                <div class="p-4 bg-teal-50 border-t-2 border-teal-200">
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-teal-600 font-medium">{{ getTranslation("totalCases") }}</span>
+                            <span class="font-bold text-teal-800">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-teal-600 font-medium">{{ getTranslation("totalQty") }}</span>
+                            <span class="font-bold text-teal-800">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-teal-600 font-medium">{{ getTranslation("totalRevenue") }}</span>
+                            <span class="font-bold text-teal-800">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-teal-600 font-medium">{{ getTranslation("totalProfit") }}</span>
+                            <span
+                                class="font-bold"
+                                :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-green-700' : 'text-red-700'"
+                            >
+                                ৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -1237,6 +1703,7 @@ const props = defineProps<{
     products?: Product[];
     suppliers?: Supplier[];
     filters?: Filters;
+    defaultView?: "invoice" | "product" | "summary";
 }>();
 
 // Reactive data
@@ -1245,6 +1712,11 @@ const searchQuery = ref("");
 const expandedSale = ref<number | null>(null);
 const isLoading = ref(false);
 const activeTab = ref<"completed" | "draft">("completed");
+const viewMode = ref<"invoice" | "product" | "summary">(props.defaultView || "product");
+const summaryDisplayMode = ref<"invoice" | "product">("invoice");
+const printViewMode = computed(() =>
+    viewMode.value === "summary" ? summaryDisplayMode.value : viewMode.value
+);
 
 // Computed properties
 const tabbedSales = computed(() =>
@@ -1309,6 +1781,42 @@ const filteredSales = computed(() => {
     );
 });
 
+const productSummary = computed(() => {
+    const map = new Map<string, {
+        product_id: number;
+        product_name: string;
+        variant: string;
+        total_qty: number;
+        total_cases: number;
+        total_revenue: number;
+        total_profit: number;
+    }>();
+
+    for (const sale of filteredSales.value) {
+        for (const item of sale.items || []) {
+            const key = `${item.product_id}-${item.variant}`;
+            if (!map.has(key)) {
+                map.set(key, {
+                    product_id: item.product_id,
+                    product_name: item.product_name,
+                    variant: item.variant,
+                    total_qty: 0,
+                    total_cases: 0,
+                    total_revenue: 0,
+                    total_profit: 0,
+                });
+            }
+            const entry = map.get(key)!;
+            entry.total_qty += item.total_bottles_sold || item.quantity || 0;
+            entry.total_cases += item.cases_sold || 0;
+            entry.total_revenue += parseFloat(item.total_price.toString()) || 0;
+            entry.total_profit += parseFloat(item.profit.toString()) || 0;
+        }
+    }
+
+    return Array.from(map.values()).sort((a, b) => b.total_revenue - a.total_revenue);
+});
+
 // Today's date string helper
 const todayDateStr = (() => {
     const d = new Date();
@@ -1340,6 +1848,7 @@ const translations = {
         totalItems: "Total Items",
         cases: "Cases",
         totalSales: "Total Sales",
+        total: "Total",
         totalPrice: "Total",
         profit: "Profit",
         product: "Product",
@@ -1370,6 +1879,20 @@ const translations = {
         noSales: "No sales found",
         noSalesDescription: "Try adjusting your filters or search criteria.",
         noItemsFound: "No items found for this sale",
+        invoiceView: "Invoice View",
+        productView: "Product View",
+        salesSummary: "Sales Summary",
+        productSummaryTitle: "Product Summary",
+        totalQty: "Total Qty (Bottles)",
+        totalCases: "Total Cases",
+        totalRevenue: "Revenue",
+        totalCost: "Cost",
+        noProducts: "No products found",
+        printPdf: "Print / PDF",
+        salesPerformanceSummary: "Sales Performance Summary",
+        reportPeriod: "Report Period",
+        generatedOn: "Generated On",
+        viewModeLabel: "View",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -1385,6 +1908,7 @@ const translations = {
         totalItems: "মোট আইটেম",
         cases: "কেস",
         totalSales: "মোট বিক্রয়",
+        total: "মোট",
         totalPrice: "মোট",
         profit: "লাভ",
         product: "পণ্য",
@@ -1416,6 +1940,20 @@ const translations = {
         noSalesDescription:
             "ফিল্টার বা অনুসন্ধানের মানদণ্ড সামঞ্জস্য করার চেষ্টা করুন।",
         noItemsFound: "এই বিক্রয়ের জন্য কোন আইটেম পাওয়া যায়নি",
+        invoiceView: "ইনভয়েস ভিউ",
+        productView: "পণ্য ভিউ",
+        salesSummary: "সেলস সামারি",
+        productSummaryTitle: "পণ্য সারসংক্ষেপ",
+        totalQty: "মোট পরিমাণ (বোতল)",
+        totalCases: "মোট কেস",
+        totalRevenue: "রাজস্ব",
+        noProducts: "কোন পণ্য পাওয়া যায়নি",
+        totalCost: "খরচ",
+        printPdf: "প্রিন্ট / পিডিএফ",
+        salesPerformanceSummary: "বিক্রয় সারসংক্ষেপ",
+        reportPeriod: "রিপোর্ট সময়কাল",
+        generatedOn: "তৈরির সময়",
+        viewModeLabel: "ভিউ",
     },
 };
 
@@ -1472,13 +2010,19 @@ function changeLanguage(lang: string): void {
     document.documentElement.lang = lang;
 }
 
+function getSaleCost(sale: Sale): number {
+    const revenue = parseFloat(String(sale.total_amount)) || 0;
+    const profit = parseFloat(String(sale.total_profit)) || 0;
+    return revenue - profit;
+}
+
 function toggleItems(saleId: number): void {
     expandedSale.value = expandedSale.value === saleId ? null : saleId;
 }
 
 function applyFilters(): void {
     isLoading.value = true;
-    router.get("/sales/report", filters.value, {
+    router.get(props.defaultView === "summary" ? "/sales/summary" : "/sales/report", filters.value, {
         preserveState: true,
         preserveScroll: true,
         onFinish: () => {
@@ -1505,6 +2049,43 @@ function viewCashMemo(saleId: number): void {
 function continueDraft(saleId: number): void {
     router.visit(`/sales?draft=${saleId}`);
 }
+
+function printReport(): void {
+    window.print();
+}
+
+const printTotals = computed(() => {
+    const revenue = filteredSales.value.reduce(
+        (sum, sale) => sum + (parseFloat(String(sale.total_amount)) || 0),
+        0
+    );
+    const profit = filteredSales.value.reduce(
+        (sum, sale) => sum + (parseFloat(String(sale.total_profit)) || 0),
+        0
+    );
+    const items = filteredSales.value.reduce(
+        (sum, sale) =>
+            sum +
+            (sale.items?.reduce(
+                (itemSum, item) =>
+                    itemSum + (item.total_bottles_sold || item.quantity || 0),
+                0
+            ) || 0),
+        0
+    );
+
+    return {
+        revenue,
+        profit,
+        items,
+        cost: revenue - profit,
+    };
+});
+
+const printedAtLabel = computed(() => {
+    const now = new Date();
+    return now.toLocaleString(currentLanguage.value === "bn" ? "bn-BD" : "en-GB");
+});
 
 // Lifecycle
 onMounted(() => {
@@ -1613,5 +2194,177 @@ onMounted(() => {
 
 .focus\:ring-indigo-100:focus {
     --tw-ring-color: rgb(224 231 255);
+}
+
+.print-only {
+    display: none;
+}
+
+.sales-summary-sheet {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 24px;
+}
+
+.sales-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.sales-summary-stat {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sales-summary-stat span {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.sales-summary-stat strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm;
+    }
+
+    .print\:hidden {
+        display: none !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    .sales-print-sheet {
+        color: #0f172a;
+    }
+
+    .sales-print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        border-bottom: 2px solid #cbd5e1;
+        padding-bottom: 14px;
+        margin-bottom: 16px;
+    }
+
+    .sales-print-kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #475569;
+    }
+
+    .sales-print-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .sales-print-subtitle,
+    .sales-print-meta p {
+        margin: 4px 0 0;
+        font-size: 11px;
+        color: #475569;
+    }
+
+    .sales-print-meta {
+        text-align: right;
+    }
+
+    .sales-print-summary {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .sales-print-card {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f8fafc;
+    }
+
+    .sales-print-card span {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+
+    .sales-print-card strong {
+        display: block;
+        font-size: 16px;
+        line-height: 1.2;
+        color: #0f172a;
+    }
+
+    .sales-print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5px;
+    }
+
+    .sales-print-table th,
+    .sales-print-table td {
+        border: 1px solid #cbd5e1;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .sales-print-table thead th {
+        background: #e2e8f0;
+        font-weight: 700;
+    }
+
+    .sales-print-table tfoot td {
+        background: #f8fafc;
+        font-weight: 700;
+    }
+
+    .min-h-screen,
+    .bg-gradient-to-br {
+        background: white !important;
+        min-height: auto !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sales-summary-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .sales-summary-sheet {
+        padding: 16px;
+    }
+
+    .sales-summary-stats {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
 }
 </style>

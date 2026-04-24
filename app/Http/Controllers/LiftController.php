@@ -11,7 +11,9 @@ use App\Contracts\CategoryContract;
 use App\Contracts\BrandContract;
 use App\Models\ProductCatalog;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -109,6 +111,37 @@ class LiftController extends Controller
             'status' => $saveAsDraft ? 'draft' : 'completed',
         ];
 
+        // Keep catalog variants in sync with the variants actually used in lifts.
+        collect($request->items)->each(function ($item) {
+            $catalog = ProductCatalog::find($item['product_catalog_id']);
+
+            if (!$catalog) {
+                return;
+            }
+
+            $existingVariants = collect($catalog->default_variants ?? []);
+            $incomingVariants = collect($item['variants'] ?? [])->map(function ($variant) {
+                return [
+                    'variant' => $variant['variant'] ?? '',
+                    'bottles_per_case' => (int) ($variant['bottles_per_case'] ?? 0),
+                    'free_bottles_per_case' => (float) ($variant['free_bottles_per_case'] ?? 0),
+                ];
+            });
+
+            $mergedVariants = $existingVariants
+                ->concat($incomingVariants)
+                ->filter(fn ($variant) => !empty($variant['variant']))
+                ->unique('variant')
+                ->values()
+                ->all();
+
+            if ($mergedVariants !== ($catalog->default_variants ?? [])) {
+                $catalog->update([
+                    'default_variants' => $mergedVariants,
+                ]);
+            }
+        });
+
         // Add category_id and brand_id from product_catalog for each item
         $items = collect($request->items)->map(function ($item) {
             $catalog = ProductCatalog::find($item['product_catalog_id']);
@@ -198,10 +231,15 @@ class LiftController extends Controller
         );
     }
 
-    public function report()
+    public function report(Request $request)
     {
+        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->query('end_date', Carbon::now()->endOfMonth()->toDateString());
+
         return Inertia::render('LiftManagement/LiftReport', [
             'liftHistory' => $this->liftRepository->liftHistory(),
+            'initialStartDate' => $startDate,
+            'initialEndDate' => $endDate,
         ]);
     }
 
@@ -220,6 +258,7 @@ class LiftController extends Controller
             return [
                 'id' => $product->id,
                 'name' => $product->name,
+                'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
                 'category_id' => $product->category_id,
                 'category_name' => $product->category?->name ?? '',
                 'brand_id' => $product->brand_id,
@@ -237,15 +276,30 @@ class LiftController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'default_variants' => 'nullable|array',
+            'product_image' => 'nullable|image|max:2048',
         ]);
 
-        $product = $this->productCatalogRepository->create([
-            'name' => $request->name,
+        $product = ProductCatalog::query()->firstOrNew([
+            'name' => trim((string) $request->name),
             'supplier_id' => $request->supplier_id,
+        ]);
+
+        $product->fill([
             'category_id' => $request->category_id,
             'brand_id' => $request->brand_id,
             'default_variants' => $request->default_variants ?? [],
+            'is_active' => true,
         ]);
+
+        if ($request->hasFile('product_image')) {
+            if ($product->exists && $product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+
+            $product->image_path = $request->file('product_image')->store('product-images', 'public');
+        }
+
+        $product->save();
 
         $product->load(['category', 'brand']);
 
@@ -253,6 +307,7 @@ class LiftController extends Controller
             'product' => [
                 'id' => $product->id,
                 'name' => $product->name,
+                'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
                 'category_id' => $product->category_id,
                 'category_name' => $product->category?->name ?? '',
                 'brand_id' => $product->brand_id,

@@ -53,8 +53,18 @@
                 {{ getTranslation("expenseManagement") }}
             </h1>
 
-            <!-- Language Toggle -->
-            <div class="flex space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    @click="printReport"
+                    class="print:hidden inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1m-10 0h10v4H10v-4z" />
+                    </svg>
+                    <span>{{ getTranslation("printPdf") }}</span>
+                </button>
+
+                <!-- Language Toggle -->
                 <button
                     @click="changeLanguage('en')"
                     :class="[
@@ -80,8 +90,77 @@
             </div>
         </div>
 
+        <section class="print-only expense-print-sheet">
+            <div class="expense-print-header">
+                <div>
+                    <p class="expense-print-kicker">{{ getTranslation("expenseManagement") }}</p>
+                    <h2 class="expense-print-title">{{ getTranslation("expensePerformanceSummary") }}</h2>
+                    <p class="expense-print-subtitle">
+                        {{ getTranslation("reportPeriod") }}:
+                        {{ formatDate(dateStart || "") }}
+                        <span v-if="dateEnd">- {{ formatDate(dateEnd || "") }}</span>
+                    </p>
+                </div>
+                <div class="expense-print-meta">
+                    <p>{{ getTranslation("generatedOn") }}: {{ printedAtLabel }}</p>
+                    <p>{{ getTranslation("totalReasons") }}: {{ toBengaliNumber(groupedExpenses.length) }}</p>
+                </div>
+            </div>
+
+            <div class="expense-print-summary">
+                <div class="expense-print-card">
+                    <span>{{ getTranslation("totalExpenses") }}</span>
+                    <strong>{{ toBengaliNumber(totalExpenses) }}</strong>
+                </div>
+                <div class="expense-print-card">
+                    <span>{{ getTranslation("totalAmount") }}</span>
+                    <strong>{{ toBengaliNumber(totalAmount, 2) }} {{ getTranslation("currency") }}</strong>
+                </div>
+                <div class="expense-print-card">
+                    <span>{{ getTranslation("recentExpenses") }}</span>
+                    <strong>{{ toBengaliNumber(recentExpenses) }}</strong>
+                </div>
+                <div class="expense-print-card">
+                    <span>{{ getTranslation("totalReasons") }}</span>
+                    <strong>{{ toBengaliNumber(groupedExpenses.length) }}</strong>
+                </div>
+            </div>
+
+            <table class="expense-print-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ getTranslation("reason") }}</th>
+                        <th>{{ getTranslation("entries") }}</th>
+                        <th>{{ getTranslation("description") }}</th>
+                        <th>{{ getTranslation("createdAt") }}</th>
+                        <th>{{ getTranslation("totalAmount") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(group, index) in groupedExpenses" :key="`print-group-${group.key}`">
+                        <td>{{ toBengaliNumber(index + 1) }}</td>
+                        <td>{{ group.reason }}</td>
+                        <td>{{ toBengaliNumber(group.items.length) }}</td>
+                        <td>{{ getPrintDescription(group) }}</td>
+                        <td>{{ getPrintCreatedAt(group) }}</td>
+                        <td>{{ toBengaliNumber(group.totalAmount, 2) }} {{ getTranslation("currency") }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2">{{ getTranslation("total") }}</td>
+                        <td>{{ toBengaliNumber(totalExpenses) }}</td>
+                        <td>{{ getTranslation("allReasons") }}</td>
+                        <td>-</td>
+                        <td>{{ toBengaliNumber(totalAmount, 2) }} {{ getTranslation("currency") }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
         <!-- Search, Filter & Add Button -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div class="print:hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <!-- Date Range Picker -->
             <DateRangePicker
                 v-model:startDate="dateStart"
@@ -120,7 +199,7 @@
         </div>
 
         <!-- Summary Metrics -->
-        <div class="grid grid-cols-3 gap-2 mb-6">
+        <div class="print:hidden grid grid-cols-3 gap-2 mb-6">
             <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-2.5 rounded-xl shadow-sm border border-indigo-200 text-center">
                 <div class="p-1.5 bg-indigo-500 rounded-lg w-fit mx-auto mb-1">
                     <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +242,7 @@
         />
 
         <!-- Expenses Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
+        <div class="print:hidden bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
             <div class="w-full">
                 <table class="w-full divide-y divide-gray-200">
                     <thead class="bg-gradient-to-r from-indigo-600 to-indigo-500">
@@ -333,6 +412,13 @@ const translations = {
         entries: "entries",
         expand: "Expand",
         collapse: "Collapse",
+        printPdf: "Print / PDF",
+        expensePerformanceSummary: "Expense Performance Summary",
+        reportPeriod: "Report Period",
+        generatedOn: "Generated On",
+        totalReasons: "Total Reasons",
+        total: "Total",
+        allReasons: "All Reasons",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -356,6 +442,13 @@ const translations = {
         entries: "টি এন্ট্রি",
         expand: "বিস্তারিত",
         collapse: "সংক্ষিপ্ত করুন",
+        printPdf: "প্রিন্ট / পিডিএফ",
+        expensePerformanceSummary: "ব্যয় পারফরম্যান্স সারাংশ",
+        reportPeriod: "রিপোর্ট সময়কাল",
+        generatedOn: "তৈরি হয়েছে",
+        totalReasons: "মোট কারণ",
+        total: "মোট",
+        allReasons: "সব কারণ",
     },
 };
 
@@ -477,6 +570,15 @@ const getTranslationLabel = (key: string, lang: string) => {
     return translations[lang]?.[key] || key;
 };
 
+const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 const toBengaliNumber = (numValue: number | string, decimals: number | null = null): string => {
     if (numValue === null || numValue === undefined || numValue === "") return "";
     
@@ -501,6 +603,39 @@ const changeLanguage = (lang: string) => {
     localStorage.setItem("language", lang);
     document.documentElement.lang = lang;
 };
+
+const getPrintDescription = (group: { items: Expense[] }) => {
+    const descriptions = group.items
+        .map((item) => item.description?.trim())
+        .filter(Boolean);
+
+    return descriptions.length ? descriptions.join(", ") : "-";
+};
+
+const getPrintCreatedAt = (group: { items: Expense[] }) => {
+    if (!group.items.length) return "-";
+
+    const sortedDates = group.items
+        .map((item) => item.created_at)
+        .filter(Boolean)
+        .sort();
+
+    if (!sortedDates.length) return "-";
+
+    const first = formatDate(sortedDates[0]);
+    const last = formatDate(sortedDates[sortedDates.length - 1]);
+
+    return first === last ? first : `${first} - ${last}`;
+};
+
+const printReport = () => {
+    window.print();
+};
+
+const printedAtLabel = computed(() => {
+    const now = new Date();
+    return now.toLocaleString(currentLanguage.value === "bn" ? "bn-BD" : "en-GB");
+});
 
 const closeExpenseModal = () => {
     showExpenseModal.value = false;
@@ -616,6 +751,127 @@ console.log("Expense.vue component loaded");
 
 .rotate-90 {
     transform: rotate(90deg);
+}
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm;
+    }
+
+    .print\:hidden {
+        display: none !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    .expense-print-sheet {
+        color: #0f172a;
+    }
+
+    .expense-print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        border-bottom: 2px solid #cbd5e1;
+        padding-bottom: 14px;
+        margin-bottom: 16px;
+    }
+
+    .expense-print-kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #475569;
+    }
+
+    .expense-print-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .expense-print-subtitle,
+    .expense-print-meta p {
+        margin: 4px 0 0;
+        font-size: 11px;
+        color: #475569;
+    }
+
+    .expense-print-meta {
+        text-align: right;
+    }
+
+    .expense-print-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .expense-print-card {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f8fafc;
+    }
+
+    .expense-print-card span {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+
+    .expense-print-card strong {
+        display: block;
+        font-size: 16px;
+        line-height: 1.2;
+        color: #0f172a;
+    }
+
+    .expense-print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5px;
+    }
+
+    .expense-print-table th,
+    .expense-print-table td {
+        border: 1px solid #cbd5e1;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .expense-print-table thead th {
+        background: #e2e8f0;
+        font-weight: 700;
+    }
+
+    .expense-print-table tfoot td {
+        background: #f8fafc;
+        font-weight: 700;
+    }
+
+    .min-h-screen,
+    .bg-gradient-to-br {
+        background: white !important;
+        min-height: auto !important;
+    }
 }
 
 /* Custom responsive utilities */
