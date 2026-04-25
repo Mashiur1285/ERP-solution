@@ -38,12 +38,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('suppliers/{id}', [SupplierController::class, 'update'])->middleware('permission:supplier.update')->name('suppliers.update');
     Route::get('suppliers/{id}/edit', [SupplierController::class, 'edit'])->middleware('permission:supplier.update')->name('suppliers.edit');
     Route::post('suppliers/quick-store', [SupplierController::class, 'quickStore'])->middleware('permission:supplier.add')->name('suppliers.quick-store');
+    Route::delete('suppliers/{id}/delete', [SupplierController::class, 'destroy'])->middleware('permission:supplier.update')->name('suppliers.destroy');
 
     // Deposits
     Route::get('deposits', [DepositController::class, 'index'])->middleware('permission:deposit.view')->name('deposits.index');
     Route::post('deposits/store', [DepositController::class, 'store'])->middleware('permission:deposit.add')->name('deposits.store');
     Route::put('deposits/{id}', [DepositController::class, 'update'])->middleware('permission:deposit.update')->name('deposits.update');
     Route::post('/api/deposits/quick-store', [DepositController::class, 'quickStore'])->middleware('permission:deposit.add');
+    Route::delete('deposits/{id}/delete', [DepositController::class, 'destroy'])->middleware('permission:deposit.update')->name('deposits.destroy');
 
     // Categories
     Route::get('categories/index', [CategoryController::class, 'index'])->middleware('permission:category.view')->name('categories.index');
@@ -63,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('lifts', [LiftController::class, 'index'])->middleware('permission:lift.add')->name('lifts.index');
     Route::post('lifts/store', [LiftController::class, 'store'])->middleware('permission:lift.add')->name('lifts.store');
     Route::get('lifts/report', [LiftController::class, 'report'])->middleware('permission:lift.view')->name('lifts.report');
+    Route::delete('lifts/{id}/delete', [LiftController::class, 'destroy'])->middleware('permission:lift.update')->name('lifts.destroy');
     Route::get('/api/product-catalog/search', [LiftController::class, 'searchProducts'])->middleware('permission:lift.add');
     Route::post('/api/product-catalog/quick-store', [LiftController::class, 'quickStoreProduct'])->middleware('permission:lift.add');
 
@@ -83,6 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sales/cash-memo/{id}', [SalesController::class, 'cashMemo'])->middleware('permission:sales.view')->name('sales.cash-memo');
     Route::get('/sales/{id}/edit', [SalesController::class, 'editSale'])->middleware('permission:sales.update')->name('sales.edit');
     Route::put('/sales/{id}', [SalesController::class, 'updateSale'])->middleware('permission:sales.update')->name('sales.update');
+    Route::delete('/sales/{id}/delete', [SalesController::class, 'destroy'])->middleware('permission:sales.update')->name('sales.destroy');
 
     // API Routes for Sales
     Route::get('/api/products-by-supplier', [SalesController::class, 'getProductsBySupplier'])->middleware('permission:sales.add');
@@ -99,6 +103,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('expenses/store', [ExpenseController::class, 'storeExpense'])->middleware('permission:expense.add')->name('expenses.store');
     Route::put('expenses/{id}/update', [ExpenseController::class, 'update'])->middleware('permission:expense.update')->name('expenses.update');
     Route::get('expenses/report', [ExpenseController::class, 'report'])->middleware('permission:expense.view')->name('expenses.report');
+    Route::delete('expenses/{id}/delete', [ExpenseController::class, 'destroy'])->middleware('permission:expense.update')->name('expenses.destroy');
 
     // Profit & Loss Report
     Route::get('profit-loss', [ProfitLossController::class, 'index'])->middleware('permission:sales.view')->name('profit-loss.index');

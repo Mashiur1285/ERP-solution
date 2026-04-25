@@ -231,6 +231,12 @@ class LiftController extends Controller
         );
     }
 
+    public function destroy(int $id)
+    {
+        $this->liftRepository->delete($id);
+        return back()->with('success', 'Lift deleted.');
+    }
+
     public function report(Request $request)
     {
         $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());

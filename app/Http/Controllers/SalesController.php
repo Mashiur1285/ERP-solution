@@ -565,6 +565,12 @@ class SalesController extends Controller
         });
     }
 
+    public function destroy(int $id)
+    {
+        \App\Models\Sale::findOrFail($id)->delete();
+        return back()->with('success', 'Sale deleted.');
+    }
+
     public function report(Request $request)
     {
         return $this->renderReport($request, 'product');

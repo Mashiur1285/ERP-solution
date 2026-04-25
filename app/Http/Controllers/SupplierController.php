@@ -103,6 +103,7 @@ class SupplierController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $this->supplierRepository->delete((int) $id);
+        return back()->with('success', 'Supplier deleted.');
     }
 }

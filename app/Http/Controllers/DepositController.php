@@ -79,6 +79,7 @@ class DepositController extends Controller
     {
         $data = $request->validate([
             'balance_deposited' => 'required|numeric|min:0.01',
+            'deposit_date'      => 'nullable|date',
         ]);
 
         $deposit = $this->depositRepository->find($id);
@@ -93,11 +94,16 @@ class DepositController extends Controller
             ]);
         }
 
-        $this->depositRepository->update([
+        $updateData = [
             'balance_deposited' => $newDepositedAmount,
             'balance_remaining' => round($newDepositedAmount - $usedAmount, 2),
-            'is_used' => round($newDepositedAmount - $usedAmount, 2) <= 0,
-        ], $id);
+            'is_used'           => round($newDepositedAmount - $usedAmount, 2) <= 0,
+        ];
+        if (!empty($data['deposit_date'])) {
+            $updateData['deposit_date'] = $data['deposit_date'];
+        }
+
+        $this->depositRepository->update($updateData, $id);
 
         return redirect()->route('deposits.index')->with('success', 'Deposit updated successfully');
     }
@@ -107,6 +113,7 @@ class DepositController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $this->depositRepository->delete((int) $id);
+        return back()->with('success', 'Deposit deleted.');
     }
 }

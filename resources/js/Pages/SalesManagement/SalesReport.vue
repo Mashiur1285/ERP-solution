@@ -649,7 +649,7 @@
                             <td class="px-4 py-3 text-sm text-slate-600">{{ formatDate(sale.sale_date) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm font-semibold" :class="sale.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.length || 0) }}</td>
                         </tr>
                     </tbody>
@@ -818,7 +818,7 @@
                                 <td
                                     class="px-3 py-4 text-sm"
                                     :class="
-                                        sale.total_profit >= 0
+                                        Number(sale.total_profit) >= 0
                                             ? 'text-green-600'
                                             : 'text-red-600'
                                     "
@@ -894,6 +894,12 @@
                                             class="px-2 py-1 bg-orange-100 text-orange-600 rounded text-xs hover:bg-orange-200 transition duration-200 whitespace-nowrap"
                                         >
                                             Edit
+                                        </button>
+                                        <button
+                                            @click.stop="deleteSale(sale.id)"
+                                            class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200 transition duration-200 whitespace-nowrap"
+                                        >
+                                            {{ getTranslation('delete') }}
                                         </button>
                                     </div>
                                 </td>
@@ -1183,7 +1189,7 @@
                                                                 class="text-sm font-bold"
                                                                 :class="
                                                                     parseFloat(
-                                                                        item.profit
+                                                                        item.profit.toString()
                                                                     ) >= 0
                                                                         ? 'text-green-600'
                                                                         : 'text-red-600'
@@ -1437,7 +1443,7 @@
                                                                     class="font-bold text-lg"
                                                                     :class="
                                                                         parseFloat(
-                                                                            item.profit
+                                                                            item.profit.toString()
                                                                         ) >= 0
                                                                             ? 'text-green-600'
                                                                             : 'text-red-600'
@@ -1619,7 +1625,6 @@ import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import DateRangePicker from "../../Components/DateRangePicker.vue";
-import InventoryStock from "../Dashboard/Partials/InventoryStock.vue";
 
 defineOptions({
     layout: Layout,
@@ -1669,11 +1674,11 @@ interface Supplier {
 }
 
 interface Filters {
-    start_date: string | null;
-    end_date: string | null;
-    shop_id: number | string | null;
-    product_id: number | string | null;
-    supplier_id: number | string | null;
+    start_date: string | undefined;
+    end_date: string | undefined;
+    shop_id: number | string | undefined;
+    product_id: number | string | undefined;
+    supplier_id: number | string | undefined;
 }
 
 // Props
@@ -1842,6 +1847,7 @@ const translations = {
         allSuppliers: "All Suppliers",
         applyFilters: "Apply Filters",
         clearFilters: "Clear Filters",
+        delete: "Delete",
         searchSales: "Search with Invoice",
         completedTab: "Completed",
         draftTab: "Drafts",
@@ -1903,6 +1909,7 @@ const translations = {
         allSuppliers: "সকল সরবরাহকারী",
         applyFilters: "ফিল্টার প্রয়োগ করুন",
         clearFilters: "ফিল্টার পরিষ্কার করুন",
+        delete: "মুছুন",
         searchSales: "ইনভয়েস দিয়ে খুঁজুন",
         completedTab: "সম্পন্ন",
         draftTab: "ড্রাফট",
@@ -2035,6 +2042,13 @@ function viewCashMemo(saleId: number): void {
 
 function continueDraft(saleId: number): void {
     router.visit(`/sales?draft=${saleId}`);
+}
+
+function deleteSale(saleId: number): void {
+    if (!confirm('Are you sure you want to delete this sale? This cannot be undone.')) return;
+    router.delete(route('sales.destroy', { id: saleId }), {
+        preserveScroll: true,
+    });
 }
 
 function printReport(): void {

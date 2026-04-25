@@ -36,6 +36,12 @@ class ExpenseController extends Controller
         $expense = $this->expenseRepository->update($validated, $id);
     }
 
+    public function destroy(int $id)
+    {
+        $this->expenseRepository->delete($id);
+        return back()->with('success', 'Expense deleted.');
+    }
+
     public function report(Request $request)
     {
         $month = max(1, min(12, (int) $request->query('month', now()->month)));

@@ -298,7 +298,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         <template
                             v-for="(
-                                supplierData, supplierName, index
+                                supplierData, supplierName
                             ) in groupedDeposits"
                             :key="supplierName"
                         >
@@ -623,6 +623,12 @@
                                                             >
                                                                 Edit
                                                             </button>
+                                                            <button
+                                                                @click.stop="deleteDeposit(deposit.id)"
+                                                                class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs font-semibold hover:bg-red-200 transition-colors"
+                                                            >
+                                                                Delete
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -667,7 +673,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { router, usePage } from "@inertiajs/vue3";
+import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import DepositModal from "./Partials/DepositModal.vue";
 
@@ -831,6 +837,7 @@ const closeDepositModal = () => {
 const submitDeposit = (depositData: {
     supplier_id: string;
     balance_deposited: number;
+    deposit_date: string;
 }) => {
     const options = {
         onSuccess: () => {
@@ -843,7 +850,7 @@ const submitDeposit = (depositData: {
                 "success"
             );
         },
-        onError: (errors) => {
+        onError: (errors: any) => {
             console.error("Deposit submission errors:", errors);
             showToastWithType(
                 editMode.value
@@ -864,6 +871,11 @@ const submitDeposit = (depositData: {
     }
 
     router.post("/deposits/store", depositData, options);
+};
+
+const deleteDeposit = (id: number) => {
+    if (!confirm('Are you sure you want to delete this deposit?')) return;
+    router.delete(route('deposits.destroy', { id }), { preserveScroll: true });
 };
 
 const editDeposit = (deposit: Deposit) => {

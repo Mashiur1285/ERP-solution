@@ -209,6 +209,24 @@
                             </p>
                         </div>
 
+                        <!-- Deposit Date -->
+                        <div>
+                            <label for="deposit_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ getTranslation("depositDate") }}
+                                </div>
+                            </label>
+                            <input
+                                v-model="depositForm.deposit_date"
+                                id="deposit_date"
+                                type="date"
+                                class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
+                            />
+                        </div>
+
                         <!-- Preview Section -->
                         <div
                             v-if="
@@ -357,7 +375,7 @@ const emit = defineEmits<{
     (e: "close"): void;
     (
         e: "submit",
-        depositData: { supplier_id: string; balance_deposited: number }
+        depositData: { supplier_id: string; balance_deposited: number; deposit_date: string }
     ): void;
 }>();
 
@@ -376,6 +394,7 @@ const translations = {
         editDeposit: "Edit Deposit",
         updateDeposit: "Update Deposit",
         cancel: "Cancel",
+        depositDate: "Deposit Date",
         processing: "Processing...",
     },
     bn: {
@@ -392,18 +411,28 @@ const translations = {
         editDeposit: "আমানত সম্পাদনা করুন",
         updateDeposit: "আমানত আপডেট করুন",
         cancel: "বাতিল",
+        depositDate: "আমানতের তারিখ",
         processing: "প্রক্রিয়াকরণ...",
     },
-};
+} as const;
+
+type DepositTranslationKey  = keyof typeof translations.en;
+type DepositTranslationLang = keyof typeof translations;
 
 const currentLanguage = ref(localStorage?.getItem("language") || "en");
 const isSubmitted = ref(false);
 const isLoading = ref(false);
 const editMode = computed(() => Boolean(props.editMode));
 
+const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+
 const depositForm = ref({
     supplier_id: "",
     balance_deposited: 0,
+    deposit_date: getTodayStr(),
 });
 
 watch(
@@ -413,8 +442,9 @@ watch(
             ? {
                   supplier_id: String(deposit.supplier_id ?? ""),
                   balance_deposited: Number(deposit.balance_deposited ?? 0),
+                  deposit_date: getTodayStr(),
               }
-            : { supplier_id: "", balance_deposited: 0 };
+            : { supplier_id: "", balance_deposited: 0, deposit_date: getTodayStr() };
         isSubmitted.value = false;
     },
     { immediate: true }
@@ -427,13 +457,8 @@ const selectedSupplierName = computed(() => {
     return supplier?.company_name || "";
 });
 
-const getTranslation = (key: string) => {
-    return (
-        translations[currentLanguage.value]?.[key] ||
-        translations.en[key] ||
-        key
-    );
-};
+const getTranslation = (key: DepositTranslationKey) =>
+    translations[currentLanguage.value as DepositTranslationLang]?.[key] ?? translations.en[key] ?? key;
 
 const toBengaliNumber = (num: number | string): string => {
     if (num === null || num === undefined || num === "") return "";

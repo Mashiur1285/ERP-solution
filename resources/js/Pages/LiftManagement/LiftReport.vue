@@ -336,13 +336,21 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <button
-                            class="mb-2 inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium transition-colors"
-                            :class="lift.status === 'draft' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'"
-                            @click.stop="editLift(lift)"
-                        >
-                            {{ lift.status === 'draft' ? t("editDraft") : t("editLift") }}
-                        </button>
+                        <div class="flex items-center justify-end gap-2 mb-2">
+                            <button
+                                class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium transition-colors"
+                                :class="lift.status === 'draft' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'"
+                                @click.stop="editLift(lift)"
+                            >
+                                {{ lift.status === 'draft' ? t("editDraft") : t("editLift") }}
+                            </button>
+                            <button
+                                class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                                @click.stop="deleteLift(lift.id)"
+                            >
+                                {{ t("deleteLift") }}
+                            </button>
+                        </div>
                         <p class="text-lg font-bold text-green-600">
                             ৳{{ toBn(Number(lift.total_amount || 0).toFixed(2)) }}
                         </p>
@@ -544,6 +552,7 @@ const translations = {
         draftTab: "Drafts",
         editDraft: "Edit Draft",
         editLift: "Edit Lift",
+        deleteLift: "Delete",
         continueDraft: "Continue Lifting",
         searchLifts: "Search by supplier or lift number...",
         noLifts: "No lifting records found",
@@ -581,6 +590,7 @@ const translations = {
         draftTab: "ড্রাফট",
         editDraft: "ড্রাফট এডিট করুন",
         editLift: "লিফট এডিট করুন",
+        deleteLift: "মুছুন",
         continueDraft: "ড্রাফট চালিয়ে যান",
         searchLifts: "সরবরাহকারী বা লিফট নম্বর দিয়ে খুঁজুন...",
         noLifts: "কোন লিফটিং রেকর্ড পাওয়া যায়নি",
@@ -667,6 +677,11 @@ const tabbedLifts = computed(() =>
 
 function editLift(lift) {
     router.visit(lift.status === "draft" ? `/lifts?draft=${lift.id}` : `/lifts?edit=${lift.id}`);
+}
+
+function deleteLift(id) {
+    if (!confirm('Are you sure you want to delete this lift? This cannot be undone.')) return;
+    router.delete(route('lifts.destroy', { id }), { preserveScroll: true });
 }
 
 function printReport() {
