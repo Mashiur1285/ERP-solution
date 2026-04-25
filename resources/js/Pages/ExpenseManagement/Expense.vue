@@ -234,7 +234,7 @@
         <!-- Expense Modal -->
         <ExpenseModal
             v-if="showExpenseModal"
-            :expense="currentExpense"
+            :expense="currentExpense ?? undefined"
             :editMode="editMode"
             :existing-reasons="uniqueReasons"
             @close="closeExpenseModal"
@@ -296,7 +296,10 @@
                                             <p class="font-semibold text-gray-900 truncate" :title="group.reason">
                                                 {{ group.reason }}
                                             </p>
-                                            <span class="text-[10px] text-gray-400">{{ group.items.length }} {{ getTranslation('entries') }}</span>
+                                            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                                <span v-if="group.items[0]?.category" class="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-100 text-indigo-700">{{ group.items[0].category }}</span>
+                                                <span class="text-[10px] text-gray-400">{{ group.items.length }} {{ getTranslation('entries') }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -375,6 +378,7 @@ import DateRangePicker from "../../Components/DateRangePicker.vue";
 interface Expense {
     id: number;
     reason: string;
+    category: string | null;
     description: string | null;
     amount: number;
     created_at: string;
@@ -450,7 +454,7 @@ const translations = {
         total: "মোট",
         allReasons: "সব কারণ",
     },
-};
+} as const;
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
@@ -466,9 +470,10 @@ const dateStart = ref(_todayStrExp);
 const dateEnd = ref(_todayStrExp);
 
 const form = useForm({
-    reason: "",
-    description: null,
-    amount: null,
+    reason: "" as string,
+    category: null as string | null,
+    description: null as string | null,
+    amount: null as number | null,
 });
 
 // Filter expenses based on search query + date range
@@ -562,13 +567,14 @@ const uniqueReasons = computed(() => {
     );
 });
 
-const getTranslation = (key: string) => {
-    return translations[currentLanguage.value]?.[key] || key;
-};
+type TranslationKey = keyof typeof translations.en;
+type TranslationLang = keyof typeof translations;
 
-const getTranslationLabel = (key: string, lang: string) => {
-    return translations[lang]?.[key] || key;
-};
+const getTranslation = (key: TranslationKey) =>
+    translations[currentLanguage.value as TranslationLang]?.[key] ?? key;
+
+const getTranslationLabel = (key: TranslationKey, lang: TranslationLang) =>
+    translations[lang]?.[key] ?? key;
 
 const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -646,11 +652,13 @@ const closeExpenseModal = () => {
 
 const submitExpense = (expenseData: {
     reason: string;
+    category: string | null;
     description: string | null;
     amount: number | null;
 }) => {
     console.log("Submitting expense:", expenseData);
     form.reason = expenseData.reason;
+    form.category = expenseData.category;
     form.description = expenseData.description;
     form.amount = expenseData.amount;
 
@@ -690,6 +698,7 @@ const editExpense = (expense: Expense) => {
     editMode.value = true;
     showExpenseModal.value = true;
     form.reason = expense.reason;
+    form.category = expense.category;
     form.description = expense.description;
     form.amount = expense.amount;
 };

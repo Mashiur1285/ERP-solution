@@ -192,6 +192,26 @@
                             </p>
                         </div>
 
+                        <!-- Category -->
+                        <div>
+                            <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    {{ getTranslation("category") }} ({{ getTranslation("optional") }})
+                                </div>
+                            </label>
+                            <select
+                                v-model="expenseForm.category"
+                                id="category"
+                                class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
+                            >
+                                <option value="">{{ getTranslation("selectCategory") }}</option>
+                                <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+                            </select>
+                        </div>
+
                         <!-- Amount -->
                         <div>
                             <label
@@ -485,6 +505,7 @@ const props = defineProps<{
     expense?: {
         id: number;
         reason: string;
+        category?: string | null;
         description: string | null;
         amount: number;
     };
@@ -498,11 +519,21 @@ const emit = defineEmits<{
         e: "submit",
         expenseData: {
             reason: string;
+            category: string | null;
             description: string | null;
             amount: number | null;
         }
     ): void;
 }>();
+
+const categories = [
+    { value: "Transport",      label: "Transport / পরিবহন" },
+    { value: "Salary",         label: "Salary / বেতন" },
+    { value: "Rent",           label: "Rent / ভাড়া" },
+    { value: "Marketing",      label: "Marketing / মার্কেটিং" },
+    { value: "Utilities",      label: "Utilities / ইউটিলিটি" },
+    { value: "Miscellaneous",  label: "Miscellaneous / বিবিধ" },
+];
 
 const translations = {
     en: {
@@ -520,6 +551,8 @@ const translations = {
         descriptionHint: "Provide a brief description for this expense",
         expensePreview: "Expense Preview",
         noDescriptionPreview: "No description provided",
+        category: "Category",
+        selectCategory: "Select a category",
         cancel: "Cancel",
         updateExpense: "Update Expense",
         processing: "Processing...",
@@ -540,12 +573,14 @@ const translations = {
         descriptionHint: "এই ব্যয়ের জন্য একটি সংক্ষিপ্ত বিবরণ প্রদান করুন",
         expensePreview: "ব্যয় পূর্বরূপ",
         noDescriptionPreview: "কোনো বিবরণ প্রদান করা হয়নি",
+        category: "ক্যাটাগরি",
+        selectCategory: "ক্যাটাগরি বেছে নিন",
         cancel: "বাতিল",
         updateExpense: "ব্যয় আপডেট করুন",
         processing: "প্রক্রিয়াকরণ...",
         currency: "টাকা",
     },
-};
+} as const;
 
 const currentLanguage = ref(localStorage?.getItem("language") || "en");
 const isSubmitted = ref(false);
@@ -572,6 +607,7 @@ const hideSuggestions = () => {
 
 const expenseForm = ref({
     reason: props.expense?.reason || "",
+    category: props.expense?.category || null as string | null,
     description: props.expense?.description || null,
     amount: props.expense?.amount || null,
 });
@@ -581,6 +617,7 @@ watch(
     (newExpense) => {
         expenseForm.value = {
             reason: newExpense?.reason || "",
+            category: newExpense?.category || null,
             description: newExpense?.description || null,
             amount: newExpense?.amount || null,
         };
@@ -588,13 +625,11 @@ watch(
     { deep: true }
 );
 
-const getTranslation = (key: string) => {
-    return (
-        translations[currentLanguage.value]?.[key] ||
-        translations.en[key] ||
-        key
-    );
-};
+type ModalTranslationKey  = keyof typeof translations.en;
+type ModalTranslationLang = keyof typeof translations;
+
+const getTranslation = (key: ModalTranslationKey) =>
+    translations[currentLanguage.value as ModalTranslationLang]?.[key] ?? translations.en[key] ?? key;
 
 const toBengaliNumber = (num: number | string | null): string => {
     if (num === null || num === undefined || num === "") return "";
@@ -624,6 +659,7 @@ const submit = () => {
             if (!props.editMode) {
                 expenseForm.value = {
                     reason: "",
+                    category: null,
                     description: null,
                     amount: null,
                 };

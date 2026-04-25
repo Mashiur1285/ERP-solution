@@ -47,6 +47,8 @@ const pageTitleMap = {
     "LiftManagement/Lift": "Create Lift",
     "LiftManagement/LiftReport": "Lift Report",
     "ExpenseManagement/Expense": "Expense Management",
+    "ExpenseManagement/Report": "Expense Report",
+    "Reports/ProfitLoss": "Profit & Loss",
     "DepositManagement/Purchase": "Purchase",
     "DepositManagement/PurchaseReport": "Purchase Report",
     "DepositManagement/Deposit": "Deposit",

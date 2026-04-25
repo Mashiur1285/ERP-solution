@@ -1062,7 +1062,7 @@ const translations = {
         unitPrice: "Unit Price",
         totalValue: "Total Value",
         totalProducts: "Total Products",
-        totalQuantity: "Total Products and Variants",
+        totalQuantity: "Total Bottles (Available)",
         totalCases: "Total Cases",
         totalSold: "Total Sold",
         totalPurchaseValue: "Total Purchase Value",
@@ -1089,7 +1089,7 @@ const translations = {
         unitPrice: "ইউনিট মূল্য",
         totalValue: "মোট মূল্য",
         totalProducts: "মোট পণ্য",
-        totalQuantity: "মোট পণ্য এবং ভেরিয়েন্ট",
+        totalQuantity: "মোট বোতল (পাওয়া যাচ্ছে)",
         totalCases: "মোট কেস",
         totalSold: "মোট বিক্রি",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
@@ -1323,12 +1323,12 @@ function toggleVariants(index) {
 
 /* Reduce font size for very large numbers */
 .metric-value.large-number {
-    font-size: 1.5rem; /* Adjust for smaller screens */
+    font-size: 1rem;
 }
 
 @media (min-width: 1024px) {
     .metric-value.large-number {
-        font-size: 1.75rem; /* Slightly larger for desktop */
+        font-size: 1.1rem;
     }
 }
 

@@ -58,6 +58,12 @@
                         <span class="text-gray-500">{{ t("profit") }}</span>
                         <span class="font-semibold text-indigo-700">৳{{ toBengaliNumber(monthlySales?.profit || 0, 2) }}</span>
                     </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-500">{{ t("netProfit") }}</span>
+                        <span :class="['font-semibold', (monthlySales?.net_profit || 0) >= 0 ? 'text-emerald-700' : 'text-red-600']">
+                            ৳{{ toBengaliNumber(monthlySales?.net_profit || 0, 2) }}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -287,7 +293,8 @@ const translations = {
         paidAmount: "Amount Received",
         dueAmount: "Due Amount",
         profitAndLoss: "Profit & Loss",
-        profit: "Profit",
+        profit: "Gross Profit",
+        netProfit: "Net Profit",
         loss: "Loss",
         recentSupplier: "Recent Supplier",
         depositBalance: "Deposit Balance",
@@ -368,7 +375,8 @@ const translations = {
         paidAmount: "প্রাপ্ত অর্থ",
         dueAmount: "বাকি পরিমাণ",
         profitAndLoss: "লাভ ও ক্ষতি",
-        profit: "লাভ",
+        profit: "গ্রস লাভ",
+        netProfit: "নেট লাভ",
         loss: "ক্ষতি",
         recentSupplier: "সর্বশেষ সাপ্লায়ার",
         depositBalance: "ডিপোজিট ব্যালেন্স",

@@ -76,6 +76,7 @@ class DashboardController extends Controller
         $totalLoss = $monthlySales->flatMap->items->sum(function ($item) {
             return $item->profit < 0 ? abs($item->profit) : 0;
         });
+        $grossProfit = round($totalProfit - $totalLoss, 2);
 
         // Calculate monthly expense metrics
         $monthlyExpenses = $this->expenseRepository->query()
@@ -120,11 +121,13 @@ class DashboardController extends Controller
             'topSellingProducts' => $topSellingProducts,
             'lowStockProducts' => $lowStockProducts,
             'monthlySales' => [
-                'total_sales' => $totalSales,
-                'paid_amount' => $totalPaid,
-                'due_amount' => $totalDue,
-                'profit' => $totalProfit,
-                'loss' => $totalLoss,
+                'total_sales'   => $totalSales,
+                'paid_amount'   => $totalPaid,
+                'due_amount'    => $totalDue,
+                'profit'        => $totalProfit,
+                'loss'          => $totalLoss,
+                'gross_profit'  => $grossProfit,
+                'net_profit'    => round($grossProfit - $totalExpenseAmount, 2),
             ],
             'monthlyExpenses' => [
                 'total_expenses' => $totalExpenses,

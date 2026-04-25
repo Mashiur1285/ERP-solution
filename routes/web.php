@@ -14,6 +14,7 @@ use App\Http\Controllers\SalesController; // Fixed: Correct namespace
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\LiftController;
+use App\Http\Controllers\ProfitLossController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -97,6 +98,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('expenses', [ExpenseController::class, 'index'])->middleware('permission:expense.view')->name('expenses.index');
     Route::post('expenses/store', [ExpenseController::class, 'storeExpense'])->middleware('permission:expense.add')->name('expenses.store');
     Route::put('expenses/{id}/update', [ExpenseController::class, 'update'])->middleware('permission:expense.update')->name('expenses.update');
+    Route::get('expenses/report', [ExpenseController::class, 'report'])->middleware('permission:expense.view')->name('expenses.report');
+
+    // Profit & Loss Report
+    Route::get('profit-loss', [ProfitLossController::class, 'index'])->middleware('permission:sales.view')->name('profit-loss.index');
 
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:role.view')->name('roles.index');
     Route::get('roles/create', [RoleController::class, 'create'])->middleware('permission:role.add')->name('roles.create');

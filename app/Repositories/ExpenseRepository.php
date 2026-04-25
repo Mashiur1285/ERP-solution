@@ -4,9 +4,6 @@ namespace App\Repositories;
 
 use App\Contracts\ExpenseContract;
 use App\Models\Expense;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 
 class ExpenseRepository extends BaseRepository implements ExpenseContract
 {
@@ -15,31 +12,45 @@ class ExpenseRepository extends BaseRepository implements ExpenseContract
         parent::__construct($model);
     }
 
-    public function getExpenseReport(array $filters)
+    public function getExpenseReport(int $month, int $year): array
     {
-        $query = Expense::query();
+        $start = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $end   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $query->whereBetween('created_at', [
-                $filters['start_date'],
-                $filters['end_date'],
-            ]);
-        }
+        $expenses = Expense::whereBetween('created_at', [$start, $end])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        $summary = $query
-            ->select('reason', DB::raw('SUM(amount) as total_amount'))
-            ->groupBy('reason')
-            ->get()
-            ->pluck('total_amount', 'reason')
+        $summary = $expenses
+            ->groupBy(fn($e) => $e->category ?: $e->reason)
+            ->map(fn($group) => round($group->sum('amount'), 2))
+            ->sortDesc()
             ->toArray();
 
-        $total = array_sum($summary);
-        $detailed = $query->get();
+        return [
+            'summary'  => $summary,
+            'total'    => array_sum($summary),
+            'detailed' => $expenses,
+        ];
+    }
+
+    public function getProfitLossExpenses(string $startDate, string $endDate): array
+    {
+        $expenses = Expense::whereBetween('created_at', [$startDate, $endDate])->get();
+
+        $breakdown = $expenses
+            ->groupBy(fn($e) => $e->category ?: $e->reason)
+            ->map(fn($group, $key) => [
+                'name' => $key,
+                'amount' => round($group->sum('amount'), 2),
+                'count' => $group->count(),
+            ])
+            ->values()
+            ->toArray();
 
         return [
-            'summary' => $summary,
-            'total' => $total,
-            'detailed' => $detailed,
+            'breakdown' => $breakdown,
+            'total' => round($expenses->sum('amount'), 2),
         ];
     }
 

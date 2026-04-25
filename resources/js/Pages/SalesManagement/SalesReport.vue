@@ -3,32 +3,6 @@
         class="p-4 lg:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
-        <!-- Language Toggle -->
-        <div class="flex justify-end space-x-2 mb-4">
-            <button
-                @click="changeLanguage('en')"
-                :class="[
-                    'px-4 py-2 rounded-md font-medium transition-all duration-200',
-                    currentLanguage === 'en'
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                ]"
-            >
-                {{ getTranslationLabel("languageLabel", "en") }}
-            </button>
-            <button
-                @click="changeLanguage('bn')"
-                :class="[
-                    'px-4 py-2 rounded-md font-medium transition-all duration-200',
-                    currentLanguage === 'bn'
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                ]"
-            >
-                {{ getTranslationLabel("languageLabel", "bn") }}
-            </button>
-        </div>
-
         <!-- Title -->
         <div
             class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
@@ -116,6 +90,8 @@
                         <th>{{ getTranslation("shop") }}</th>
                         <th>{{ getTranslation("supplier") }}</th>
                         <th>{{ getTranslation("saleDate") }}</th>
+                        <th>{{ getTranslation("products") }}</th>
+                        <th>{{ getTranslation("totalCases") }}</th>
                         <th>{{ getTranslation("totalRevenue") }}</th>
                         <th>{{ getTranslation("totalCost") }}</th>
                         <th>{{ getTranslation("totalProfit") }}</th>
@@ -129,6 +105,8 @@
                         <td>{{ sale.shop_name }}</td>
                         <td>{{ sale.supplier_name || "-" }}</td>
                         <td>{{ formatDate(sale.sale_date) }}</td>
+                        <td>{{ getSaleProductNames(sale) }}</td>
+                        <td>{{ toBengaliNumber(getSaleTotalCases(sale)) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
@@ -138,6 +116,8 @@
                 <tfoot>
                     <tr>
                         <td colspan="5">{{ getTranslation("total") }}</td>
+                        <td>—</td>
+                        <td>{{ toBengaliNumber(filteredSales.reduce((s, sale) => s + getSaleTotalCases(sale), 0)) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
@@ -1885,6 +1865,7 @@ const translations = {
         productSummaryTitle: "Product Summary",
         totalQty: "Total Qty (Bottles)",
         totalCases: "Total Cases",
+        products: "Products",
         totalRevenue: "Revenue",
         totalCost: "Cost",
         noProducts: "No products found",
@@ -1946,6 +1927,7 @@ const translations = {
         productSummaryTitle: "পণ্য সারসংক্ষেপ",
         totalQty: "মোট পরিমাণ (বোতল)",
         totalCases: "মোট কেস",
+        products: "পণ্য",
         totalRevenue: "রাজস্ব",
         noProducts: "কোন পণ্য পাওয়া যায়নি",
         totalCost: "খরচ",
@@ -1955,16 +1937,16 @@ const translations = {
         generatedOn: "তৈরির সময়",
         viewModeLabel: "ভিউ",
     },
-};
+} as const;
+
+type SalesTranslationKey  = keyof typeof translations.en;
+type SalesTranslationLang = keyof typeof translations;
 
 // Methods
 function getTranslation(key: string): string {
-    return translations[currentLanguage.value]?.[key] || key;
+    return translations[currentLanguage.value as SalesTranslationLang]?.[key as SalesTranslationKey] ?? key;
 }
 
-function getTranslationLabel(key: string, lang: string): string {
-    return translations[lang]?.[key] || key;
-}
 
 function toBengaliNumber(numValue: number | string, decimals: number | null = null): string {
     if (numValue === null || numValue === undefined || numValue === "") return "";
@@ -2004,10 +1986,15 @@ function formatDate(dateString: string): string {
     }
 }
 
-function changeLanguage(lang: string): void {
-    currentLanguage.value = lang;
-    localStorage.setItem("language", lang);
-    document.documentElement.lang = lang;
+
+function getSaleProductNames(sale: Sale): string {
+    if (!sale.items?.length) return "—";
+    const names = [...new Set(sale.items.map(i => i.product_name).filter(Boolean))];
+    return names.join(", ");
+}
+
+function getSaleTotalCases(sale: Sale): number {
+    return sale.items?.reduce((s, i) => s + (i.cases_sold || 0), 0) ?? 0;
 }
 
 function getSaleCost(sale: Sale): number {

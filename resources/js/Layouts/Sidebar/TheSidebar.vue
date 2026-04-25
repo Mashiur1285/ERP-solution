@@ -87,6 +87,15 @@
                     @link-clicked="$emit('close')"
                 />
 
+                <!-- Reports -->
+                <SidebarMultiLevelMenu
+                    v-if="reportsMenu.length"
+                    label="Reports"
+                    icon="fa-solid fa-chart-pie"
+                    :submenu="reportsMenu"
+                    @link-clicked="$emit('close')"
+                />
+
                 <SidebarMultiLevelMenu
                     v-if="aclMenu.length"
                     label="ACL"
@@ -118,7 +127,7 @@
 import SidebarSingleLink from "@/Layouts/Sidebar/Partials/SidebarSingleLevelMenu.vue";
 import SidebarMultiLevelMenu from "@/Layouts/Sidebar/Partials/SidebarMultiLevelMenu.vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 const props = defineProps({
     isOpen: {
@@ -252,6 +261,22 @@ const inventoryMenu = computed(() => [
         href: "/inventory/report",
         icon: "fa-solid fa-file-alt",
         visible: hasPermission("inventory.view"),
+    },
+].filter((item) => item.visible));
+
+// Reports submenu
+const reportsMenu = computed(() => [
+    {
+        label: "Profit & Loss",
+        href: "/profit-loss",
+        icon: "fa-solid fa-chart-line",
+        visible: hasPermission("sales.view"),
+    },
+    {
+        label: "Expense Report",
+        href: "/expenses/report",
+        icon: "fa-solid fa-receipt",
+        visible: hasPermission("expense.view"),
     },
 ].filter((item) => item.visible));
 

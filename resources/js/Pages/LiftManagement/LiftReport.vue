@@ -3,32 +3,6 @@
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
-        <!-- Language Toggle -->
-        <div class="flex justify-end space-x-2 mb-4">
-            <button
-                @click="changeLanguage('en')"
-                :class="[
-                    'px-4 py-2 rounded-md font-medium transition-colors',
-                    currentLanguage === 'en'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                ]"
-            >
-                {{ getTranslationLabel("languageLabel", "en") }}
-            </button>
-            <button
-                @click="changeLanguage('bn')"
-                :class="[
-                    'px-4 py-2 rounded-md font-medium transition-colors',
-                    currentLanguage === 'bn'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                ]"
-            >
-                {{ getTranslationLabel("languageLabel", "bn") }}
-            </button>
-        </div>
-
         <!-- Title -->
         <div
             class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
@@ -316,7 +290,7 @@
             </div>
 
             <div
-                v-for="(lift, index) in filteredLifts"
+                v-for="lift in filteredLifts"
                 :key="lift.id"
                 class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
             >
@@ -649,9 +623,6 @@ function t(key) {
     return translations[currentLanguage.value]?.[key] || key;
 }
 
-function getTranslationLabel(key, lang) {
-    return translations[lang]?.[key] || key;
-}
 
 function toBn(num) {
     if (num === null || num === undefined || num === "") return "";
@@ -662,11 +633,6 @@ function toBn(num) {
         .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
 }
 
-function changeLanguage(lang) {
-    currentLanguage.value = lang;
-    localStorage.setItem("language", lang);
-    document.documentElement.lang = lang;
-}
 
 function formatDate(dateString) {
     if (!dateString) return "";
@@ -698,9 +664,6 @@ const tabbedLifts = computed(() =>
     )
 );
 
-function continueDraft(id) {
-    router.visit(`/lifts?draft=${id}`);
-}
 
 function editLift(lift) {
     router.visit(lift.status === "draft" ? `/lifts?draft=${lift.id}` : `/lifts?edit=${lift.id}`);
