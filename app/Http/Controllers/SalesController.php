@@ -598,7 +598,7 @@ class SalesController extends Controller
             $query->where('supplier_id', $request->supplier_id);
         }
 
-        $sales = $query->get()->map(function ($sale) {
+        $sales = $query->orderByDesc('sale_date')->orderByDesc('id')->get()->map(function ($sale) {
             return [
                 'id' => $sale->id,
                 'shop_id' => $sale->shop_id,
