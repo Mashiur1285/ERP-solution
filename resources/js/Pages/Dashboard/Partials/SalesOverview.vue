@@ -309,7 +309,7 @@
                     <p class="text-xl font-bold text-sky-600">{{ props.toBengaliNumber(availableStockTotals.totalBottles) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("suppliers") }}</p>
+                    <p class="text-xs text-gray-500 mb-1">{{ t("totalSuppliers") }}</p>
                     <p class="text-xl font-bold text-indigo-600">{{ props.toBengaliNumber(availableStockTotals.totalSuppliers) }}</p>
                 </div>
             </div>
@@ -488,7 +488,7 @@
 </template>
 
 <script setup>
-import { defineProps, ref, computed, onMounted } from "vue";
+import { defineProps, ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import ShopDuesChart from "./ShopDuesChart.vue";
 
@@ -532,12 +532,6 @@ const getInitialDate = (paramName) => {
 
 const dailySalesDate = ref(getInitialDate("daily_sales_date"));
 
-const navigateDailySales = () => {
-    router.visit(`/dashboard?daily_sales_date=${dailySalesDate.value}`, {
-        preserveScroll: true,
-        preserveState: true,
-    });
-};
 
 const goToSalesReport = (startDate, endDate) => {
     const params = {};
@@ -556,24 +550,6 @@ const goToDailySalesReport = () => {
     goToSalesReport(date, date);
 };
 
-const goToMonthlySalesReport = () => {
-    const today = new Date();
-    const year = props.year || today.getFullYear();
-    const monthIndex =
-        typeof props.month === "number" ? props.month - 1 : today.getMonth();
-
-    const start = localDate(new Date(year, monthIndex, 1));
-    const end = localDate(new Date(year, monthIndex + 1, 0));
-
-    goToSalesReport(start, end);
-};
-
-const goToExpensesPage = () => {
-    router.visit("/expenses", {
-        preserveState: true,
-        preserveScroll: true,
-    });
-};
 
 const goToLiftReport = () => {
     const today = new Date();
@@ -666,52 +642,7 @@ const availableStockTotals = computed(() => ({
     ).size,
 }));
 
-const monthlySalesTotal = computed(() => {
-    if (!props.monthlySales || typeof props.monthlySales.total_sales !== "number") {
-        return 0;
-    }
-    return props.monthlySales.total_sales;
-});
-
 const formattedSelectedMonthYear = computed(
     () => props.selectedMonthYear || ""
 );
-
-const todaysExpensesTotal = computed(
-    () => props.todaysExpensesAmount || 0
-);
-
-const topProductName = computed(() => {
-    if (!props.topSellingProducts || !props.topSellingProducts.length) {
-        return "-";
-    }
-    return props.topSellingProducts[0].name || "-";
-});
-
-const lowStockCount = computed(() => {
-    if (!props.lowStockProducts) return 0;
-    return props.lowStockProducts.length;
-});
-
-const todaysLifting = computed(() => props.todaysLiftingCount || 0);
-
-const fastMovingLowStock = computed(() => {
-    if (!props.lowStockProducts || !props.lowStockProducts.length) {
-        return "-";
-    }
-    // Show the first low stock product name
-    const product = props.lowStockProducts[0];
-    return product.product_name || product.name || "-";
-});
-
-const slowMovingHighStock = computed(() => {
-    if (!props.inventoryStock || !props.inventoryStock.length) {
-        return "-";
-    }
-    const sorted = [...props.inventoryStock].sort(
-        (a, b) => (b.total_available_bottles || 0) - (a.total_available_bottles || 0)
-    );
-    const product = sorted[0];
-    return product.product_name || product.name || "-";
-});
 </script>

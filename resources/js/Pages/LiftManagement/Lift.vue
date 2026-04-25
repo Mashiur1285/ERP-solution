@@ -317,6 +317,47 @@
                                     </p>
                                 </div>
                             </label>
+
+                            <!-- Custom variant tile -->
+                            <label :class="['flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none col-span-2',
+                                variantSelections['__custom__']?.checked
+                                    ? 'border-green-400 bg-green-50'
+                                    : 'border-dashed border-gray-300 bg-white hover:border-green-300 hover:bg-green-50/40'
+                            ]">
+                                <input type="checkbox"
+                                    v-model="variantSelections['__custom__'].checked"
+                                    class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer flex-shrink-0 mt-1" />
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800">+ Custom Variant</p>
+                                    <div v-if="variantSelections['__custom__']?.checked" class="mt-2 space-y-2" @click.stop>
+                                        <input
+                                            v-model="variantSelections['__custom__'].customName"
+                                            type="text"
+                                            placeholder="e.g. 330ml, 750ml, 5L"
+                                            class="w-full px-2.5 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
+                                        />
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <p class="text-xs text-gray-400 mb-1">Bottles/Case</p>
+                                                <input
+                                                    v-model.number="variantSelections['__custom__'].bottles_per_case"
+                                                    type="number" min="1"
+                                                    class="w-full px-2.5 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
+                                                />
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-xs text-gray-400 mb-1">Free/Case</p>
+                                                <input
+                                                    v-model.number="variantSelections['__custom__'].free_bottles_per_case"
+                                                    type="number" min="0"
+                                                    class="w-full px-2.5 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p v-else class="text-xs text-gray-400 mt-0.5">Type any variant name</p>
+                                </div>
+                            </label>
                         </div>
 
                         <div class="flex justify-end">
@@ -366,12 +407,28 @@
                                     <tr v-for="(v, vIdx) in item.variants" :key="vIdx"
                                         class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td class="px-2 py-2">
-                                            <select v-model="v.variant"
-                                                class="w-full min-w-[120px] pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
-                                                @change="onVariantSelect(itemIdx, vIdx)">
-                                                <option value="">{{ t('selectVariant') }}</option>
-                                                <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                                            </select>
+                                            <template v-if="isCustomVariant(v.variant)">
+                                                <div class="flex items-center gap-1">
+                                                    <input
+                                                        v-model="v.variant"
+                                                        type="text"
+                                                        placeholder="Variant name"
+                                                        class="w-full min-w-[100px] px-2 py-1.5 rounded-md border border-green-300 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-green-50"
+                                                    />
+                                                    <button @click="v.variant = ''" class="text-gray-400 hover:text-gray-600 flex-shrink-0" title="Switch to preset">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <select v-model="v.variant"
+                                                    class="w-full min-w-[120px] pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
+                                                    @change="onVariantSelect(itemIdx, vIdx)">
+                                                    <option value="">{{ t('selectVariant') }}</option>
+                                                    <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                                    <option value="__custom__">+ Custom</option>
+                                                </select>
+                                            </template>
                                         </td>
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.number_of_cases" type="number" min="0"
@@ -786,12 +843,15 @@ interface VariantCheckState {
     checked: boolean;
     bottles_per_case: number;
     free_bottles_per_case: number;
+    customName?: string;
 }
 const activeProduct = ref<CatalogProduct | null>(null);
 const variantSelections = ref<Record<string, VariantCheckState>>({});
-const hasCheckedVariants = computed(() =>
-    Object.values(variantSelections.value).some((v) => v.checked)
-);
+const hasCheckedVariants = computed(() => {
+    const fixed = variantOptions.some((opt) => variantSelections.value[opt.value]?.checked);
+    const custom = variantSelections.value['__custom__']?.checked && !!variantSelections.value['__custom__']?.customName?.trim();
+    return fixed || custom;
+});
 
 const selectProductForVariants = (p: CatalogProduct) => {
     activeProduct.value = p;
@@ -804,6 +864,7 @@ const selectProductForVariants = (p: CatalogProduct) => {
             free_bottles_per_case: defaultData?.free_bottles_per_case ?? 0,
         };
     }
+    selections['__custom__'] = { checked: false, bottles_per_case: 24, free_bottles_per_case: 0, customName: '' };
     variantSelections.value = selections;
 };
 
@@ -824,6 +885,19 @@ const addProductWithVariants = () => {
             bottles_per_case: variantSelections.value[opt.value].bottles_per_case,
             free_bottles_per_case: variantSelections.value[opt.value].free_bottles_per_case,
         }));
+
+    // custom variant
+    const customState = variantSelections.value['__custom__'];
+    if (customState?.checked && customState.customName?.trim()) {
+        selectedVariants.push({
+            variant: customState.customName.trim(),
+            number_of_cases: 0,
+            case_buying_price: 0,
+            bottles_per_case: customState.bottles_per_case,
+            free_bottles_per_case: customState.free_bottles_per_case,
+        });
+    }
+
     if (!selectedVariants.length) return;
 
     const existing = liftItems.value.find((i) => i.product_catalog_id === p.id);
@@ -869,8 +943,17 @@ const removeVariant = (itemIdx: number, vIdx: number) => {
     }
 };
 
+const fixedVariantValues = new Set(variantOptions.map((o) => o.value));
+
+const isCustomVariant = (value: string) =>
+    !!value && value !== '__custom__' && !fixedVariantValues.has(value);
+
 const onVariantSelect = (itemIdx: number, vIdx: number) => {
     const v = liftItems.value[itemIdx].variants[vIdx];
+    if (v.variant === '__custom__') {
+        v.variant = '';
+        return;
+    }
     const opt = variantOptions.find((o) => o.value === v.variant);
     if (opt) v.bottles_per_case = opt.bottles_per_case;
 };
