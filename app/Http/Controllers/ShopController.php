@@ -41,8 +41,16 @@ class ShopController extends Controller
      */
     public function store(StoreShopRequest $request)
     {
-        if ($this->shopRepository->create($request->validated())) {
+        $shop = $this->shopRepository->create($request->validated());
+        if ($shop) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'shop' => $shop, 'message' => 'Shop created successfully.']);
+            }
             return redirect()->route('shops.index')->with('success', 'Shop created successfully.');
+        }
+        
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => 'Failed to create shop.'], 400);
         }
         return redirect()->back()->with('error', 'Failed to create shop.');
     }

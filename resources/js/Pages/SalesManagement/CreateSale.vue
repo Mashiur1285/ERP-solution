@@ -24,6 +24,15 @@
             @confirm="confirmSale"
         />
 
+        <!-- Create Shop Modal -->
+        <CreateShopModal
+            :show="showCreateShopModal"
+            :initial-road="selectedRoad"
+            :t="t"
+            @close="showCreateShopModal = false"
+            @shop-created="onShopCreated"
+        />
+
         <!-- Header -->
         <div class="bg-gradient-to-r from-orange-500 to-orange-400 border-b border-orange-600 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
             <h1 class="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
@@ -280,14 +289,13 @@
 
                         <!-- Road -->
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('road') }}*</label>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('road') }}</label>
                             <div class="relative">
                                 <input
                                     v-model="roadSearchQuery"
                                     type="text"
                                     :placeholder="t('selectRoad')"
                                     class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
-                                    :class="{ 'border-red-300': isSubmitted && !selectedRoad }"
                                     @focus="showRoadOptions = true"
                                     @input="handleRoadInput"
                                     @blur="hideRoadOptions"
@@ -317,21 +325,25 @@
 
                         <!-- Shop -->
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ t('shopName') }}*</label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-medium text-gray-500">{{ t('shopName') }}*</label>
+                                <button type="button" @click="showCreateShopModal = true" class="text-orange-500 hover:bg-orange-50 p-0.5 rounded transition-colors" :title="t('addShop', { default: 'Add Shop' })">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
                             <div class="relative">
                                 <input
                                     v-model="shopSearchQuery"
                                     type="text"
-                                    :placeholder="selectedRoad ? t('selectShop') : t('selectRoadFirst')"
+                                    :placeholder="t('selectShop')"
                                     class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
-                                    :class="{ 'border-red-300': isSubmitted && (!selectedRoad || !shopId) }"
-                                    :disabled="!selectedRoad"
+                                    :class="{ 'border-red-300': isSubmitted && !shopId }"
                                     @focus="showShopOptions = true"
                                     @input="handleShopInput"
                                     @blur="hideShopOptions"
                                 />
                                 <div
-                                    v-if="showShopOptions && selectedRoad"
+                                    v-if="showShopOptions"
                                     class="absolute z-20 mt-1 w-full max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
                                 >
                                     <button
@@ -477,6 +489,7 @@ import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import ToastNotification from "./partials/salesPartials/ToastNotification.vue";
 import SalesConfirmationModal from "./partials/salesPartials/SalesConfirmationModal.vue";
+import CreateShopModal from "./partials/salesPartials/CreateShopModal.vue";
 
 interface Shop {
     id: number;
@@ -737,6 +750,21 @@ const includeFreeBottles = ref(true);
 const cartItems = ref<CartItem[]>([]);
 const showRoadOptions = ref(false);
 const showShopOptions = ref(false);
+const showCreateShopModal = ref(false);
+
+const onShopCreated = (newShop: Shop) => {
+    router.reload({
+        only: ['shops'],
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedRoad.value = newShop.road || "__UNASSIGNED__";
+            shopId.value = newShop.id;
+            shopSearchQuery.value = newShop.shop_name;
+            showToastMessage('shopCreatedSuccess', 'success');
+        }
+    });
+};
 
 const normalizeRoadValue = (road: string | null | undefined) =>
     road && road.trim() ? road.trim() : "__UNASSIGNED__";
@@ -774,21 +802,24 @@ const filteredRoadOptions = computed(() => {
 });
 
 const filteredShops = computed(() => {
-    if (!selectedRoad.value) return [];
-
     const query = shopSearchQuery.value.trim().toLowerCase();
 
     return props.shops.filter((shop) => {
-        if (normalizeRoadValue(shop.road) !== selectedRoad.value) return false;
+        if (selectedRoad.value && normalizeRoadValue(shop.road) !== selectedRoad.value) return false;
         if (!query) return true;
 
         return shop.shop_name.toLowerCase().includes(query);
     });
 });
 
-watch(selectedRoad, () => {
-    shopId.value = "";
-    shopSearchQuery.value = "";
+watch(selectedRoad, (newVal) => {
+    if (shopId.value) {
+        const currentShop = props.shops.find(s => s.id === shopId.value);
+        if (currentShop && newVal && normalizeRoadValue(currentShop.road) !== newVal) {
+            shopId.value = "";
+            shopSearchQuery.value = "";
+        }
+    }
 });
 
 const handleRoadInput = () => {
@@ -821,6 +852,12 @@ const selectShopOption = (shop: Shop) => {
     shopId.value = shop.id;
     shopSearchQuery.value = shop.shop_name;
     showShopOptions.value = false;
+
+    if (!selectedRoad.value && shop.road) {
+        const roadVal = normalizeRoadValue(shop.road);
+        selectedRoad.value = roadVal;
+        roadSearchQuery.value = roadVal === "__UNASSIGNED__" ? (currentLanguage.value === "bn" ? "রোড সেট করা হয়নি" : "Unassigned Road") : roadVal;
+    }
 };
 
 const hideShopOptions = () => {
@@ -1109,7 +1146,7 @@ const resetForm = () => {
 const openModal = () => {
     isSubmitted.value = true;
 
-    if (!selectedRoad.value || !shopId.value || !saleDate.value || cartItems.value.length === 0) {
+    if (!shopId.value || !saleDate.value || cartItems.value.length === 0) {
         showToastMessage("saleError", "error");
         return;
     }
@@ -1180,7 +1217,7 @@ const confirmSale = () => {
 const saveDraft = () => {
     isSubmitted.value = true;
 
-    if (!selectedRoad.value || !shopId.value || !saleDate.value || cartItems.value.length === 0) {
+    if (!shopId.value || !saleDate.value || cartItems.value.length === 0) {
         showToastMessage("saleError", "error");
         return;
     }

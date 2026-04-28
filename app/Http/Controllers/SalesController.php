@@ -378,6 +378,7 @@ class SalesController extends Controller
             DB::table('payments')->insert($paymentData);
 
             $shop = $this->shopRepository->find($sale->shop_id);
+            $sale->load('items.product');
 
             return Inertia::render('SalesManagement/CashMemo', [
                 'sale' => [
@@ -388,6 +389,17 @@ class SalesController extends Controller
                     'due_amount' => max(0, $newDueAmount),
                     'shop_name' => $shop ? $shop->shop_name : 'Unknown',
                     'status' => $data['status'],
+                    'items' => $sale->items->map(function ($item) {
+                        return [
+                            'product_name' => $item->product ? $item->product->name : 'Unknown',
+                            'variant' => $item->variant,
+                            'cases_sold' => $item->cases_sold,
+                            'total_bottles_sold' => $item->total_bottles_sold,
+                            'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
+                            'unit_price' => $item->unit_price ?? $item->selling_price_per_bottle,
+                            'total_price' => $item->total_price,
+                        ];
+                    }),
                 ],
                 'payment' => $paymentData,
             ]);
@@ -402,6 +414,7 @@ class SalesController extends Controller
         }
 
         $shop = $this->shopRepository->find($sale->shop_id);
+        $sale->load('items.product');
         $latestPayment = DB::table('payments')
             ->where('sale_id', $sale->id)
             ->orderBy('payment_date', 'desc')
@@ -416,6 +429,17 @@ class SalesController extends Controller
                 'due_amount' => $sale->due_amount,
                 'shop_name' => $shop ? $shop->shop_name : 'Unknown',
                 'status' => $sale->status,
+                'items' => $sale->items->map(function ($item) {
+                    return [
+                        'product_name' => $item->product ? $item->product->name : 'Unknown',
+                        'variant' => $item->variant,
+                        'cases_sold' => $item->cases_sold,
+                        'total_bottles_sold' => $item->total_bottles_sold,
+                        'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
+                        'unit_price' => $item->unit_price ?? $item->selling_price_per_bottle,
+                        'total_price' => $item->total_price,
+                    ];
+                }),
             ],
             'payment' => $latestPayment ? [
                 'amount' => $latestPayment->amount,

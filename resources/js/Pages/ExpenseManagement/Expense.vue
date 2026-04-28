@@ -316,14 +316,14 @@
                                 <!-- Actions -->
                                 <td class="px-2 lg:px-3 py-3 text-center whitespace-nowrap">
                                     <span class="text-[10px] lg:text-xs font-medium text-indigo-500 uppercase tracking-wider">
-                                        {{ expandedGroups[group.reason] ? getTranslation('collapse') : getTranslation('expand') }}
+                                        {{ expandedGroups[group.key] ? getTranslation('collapse') : getTranslation('expand') }}
                                     </span>
                                 </td>
                             </tr>
 
                             <!-- Expanded group details -->
                             <tr
-                                v-if="expandedGroups[group.reason]"
+                                v-if="expandedGroups[group.key]"
                                 class="bg-gray-50 border-t border-b border-gray-100"
                             >
                                 <td :colspan="4" class="px-2 py-3">
