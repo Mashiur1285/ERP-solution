@@ -296,6 +296,7 @@
                                     type="text"
                                     :placeholder="t('selectRoad')"
                                     class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
+                                    autocomplete="off"
                                     @focus="showRoadOptions = true"
                                     @input="handleRoadInput"
                                     @blur="hideRoadOptions"
@@ -338,6 +339,7 @@
                                     :placeholder="t('selectShop')"
                                     class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none bg-white"
                                     :class="{ 'border-red-300': isSubmitted && !shopId }"
+                                    autocomplete="off"
                                     @focus="showShopOptions = true"
                                     @input="handleShopInput"
                                     @blur="hideShopOptions"
@@ -755,8 +757,6 @@ const showCreateShopModal = ref(false);
 const onShopCreated = (newShop: Shop) => {
     router.reload({
         only: ['shops'],
-        preserveState: true,
-        preserveScroll: true,
         onSuccess: () => {
             selectedRoad.value = newShop.road || "__UNASSIGNED__";
             shopId.value = newShop.id;
@@ -838,9 +838,17 @@ const hideRoadOptions = () => {
         showRoadOptions.value = false;
 
         if (!selectedRoad.value) {
+            const query = roadSearchQuery.value.trim().toLowerCase();
+            if (query) {
+                const exact = filteredRoadOptions.value.find(r => r.label.toLowerCase() === query);
+                if (exact) {
+                    selectRoadOption(exact);
+                    return;
+                }
+            }
             roadSearchQuery.value = "";
         }
-    }, 150);
+    }, 300);
 };
 
 const handleShopInput = () => {
@@ -865,9 +873,17 @@ const hideShopOptions = () => {
         showShopOptions.value = false;
 
         if (!shopId.value) {
+            const query = shopSearchQuery.value.trim().toLowerCase();
+            if (query) {
+                const exact = filteredShops.value.find(s => s.shop_name.toLowerCase() === query);
+                if (exact) {
+                    selectShopOption(exact);
+                    return;
+                }
+            }
             shopSearchQuery.value = "";
         }
-    }, 150);
+    }, 300);
 };
 
 // Search / product list state
