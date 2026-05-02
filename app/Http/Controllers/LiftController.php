@@ -239,8 +239,8 @@ class LiftController extends Controller
 
     public function report(Request $request)
     {
-        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate = $request->query('end_date', Carbon::now()->endOfMonth()->toDateString());
+        $startDate = $request->query('start_date', Carbon::now()->toDateString());
+        $endDate = $request->query('end_date', Carbon::now()->toDateString());
 
         return Inertia::render('LiftManagement/LiftReport', [
             'liftHistory' => $this->liftRepository->liftHistory(),

@@ -1755,15 +1755,26 @@ const hasAnyCases = computed(() => {
 });
 
 const filteredSales = computed(() => {
-    if (!searchQuery.value) return tabbedSales.value;
+    return tabbedSales.value.filter((sale) => {
+        // Date range filter (client-side, instant — no server round-trip needed)
+        if (filters.value.start_date || filters.value.end_date) {
+            if (!sale.sale_date) return false;
+            if (filters.value.start_date && sale.sale_date < filters.value.start_date) return false;
+            if (filters.value.end_date && sale.sale_date > filters.value.end_date) return false;
+        }
 
-    const query = searchQuery.value.toLowerCase();
-    return tabbedSales.value.filter(
-        (sale) =>
-            sale.invoice_number.toLowerCase().includes(query) ||
-            sale.shop_name.toLowerCase().includes(query) ||
-            sale.supplier_name.toLowerCase().includes(query)
-    );
+        // Search filter
+        if (searchQuery.value) {
+            const query = searchQuery.value.toLowerCase();
+            return (
+                sale.invoice_number.toLowerCase().includes(query) ||
+                sale.shop_name.toLowerCase().includes(query) ||
+                sale.supplier_name.toLowerCase().includes(query)
+            );
+        }
+
+        return true;
+    });
 });
 
 const productSummary = computed(() => {

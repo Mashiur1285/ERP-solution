@@ -145,6 +145,53 @@
             </div>
         </div>
 
+        <!-- Quick Create Supplier Modal -->
+        <div v-if="showQuickSupplierModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 p-4 print:hidden">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">{{ t('createNewSupplier') }}</h3>
+                    <button class="p-2 rounded-full hover:bg-gray-100" @click="showQuickSupplierModal = false">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('companyName') }}*</label>
+                        <input v-model="newSupplier.company_name" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200" :placeholder="t('companyName')" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('phoneNumber') }}*</label>
+                        <input v-model="newSupplier.phone_number" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200" :placeholder="t('phoneNumber')" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('address') }}*</label>
+                        <input v-model="newSupplier.address" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200" :placeholder="t('address')" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ t('initialDeposit') }}
+                            <span class="text-gray-400 font-normal text-xs ml-1">({{ t('optional') }})</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">৳</span>
+                            <input v-model.number="newSupplier.initial_deposit" type="number" min="0" step="0.01" class="w-full rounded-lg border-2 border-gray-200 pl-7 pr-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200" :placeholder="t('initialDepositPlaceholder')" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button @click="showQuickSupplierModal = false" class="flex-1 py-2 border-2 border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors">{{ t('cancel') }}</button>
+                    <button @click="quickStoreSupplier" :disabled="isQuickSupplierLoading || !newSupplier.company_name || !newSupplier.phone_number || !newSupplier.address" class="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2">
+                        <svg v-if="isQuickSupplierLoading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {{ isQuickSupplierLoading ? t('processing') : t('createSupplier') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Confirmation Modal -->
         <div v-if="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
             <div class="bg-white rounded-xl p-5 max-w-md w-full mx-4 shadow-xl">
@@ -187,9 +234,16 @@
             <div class="flex-1 min-w-0 space-y-4 print:hidden">
                 <!-- Step 1: Supplier Selection -->
                 <div class="bg-white rounded-xl shadow-sm p-5">
-                    <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</span>
-                        {{ t('selectSupplier') }}
+                    <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</span>
+                            {{ t('selectSupplier') }}
+                        </span>
+                        <button @click="showQuickSupplierModal = true" class="w-7 h-7 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition-colors" :title="t('createNewSupplier')">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
                     </h2>
                     <div class="relative" ref="supplierDDRef">
                         <input v-model="supplierSearch" @focus="showSupplierDD = true" @input="showSupplierDD = true"
@@ -211,7 +265,7 @@
                     <!-- Supplier Tiles -->
                     <div class="flex flex-wrap gap-2 mt-3">
                         <button
-                            v-for="s in props.suppliers"
+                            v-for="s in localSuppliers"
                             :key="s.id"
                             type="button"
                             @click="selectSupplier(s); showSupplierDD = false"
@@ -759,12 +813,73 @@ const showToast = (message: string, type: "success" | "error" = "success") => {
 const supplierSearch = ref("");
 const showSupplierDD = ref(false);
 const selectedSupplier = ref<Supplier | null>(null);
+const localSuppliers = ref<Supplier[]>([...props.suppliers]);
+const showQuickSupplierModal = ref(false);
+const isQuickSupplierLoading = ref(false);
+const newSupplier = ref({ company_name: "", phone_number: "", address: "", initial_deposit: null as number | null });
 
 const filteredSuppliers = computed(() =>
-    props.suppliers.filter((s) =>
+    localSuppliers.value.filter((s) =>
         s.company_name.toLowerCase().includes(supplierSearch.value.toLowerCase())
     )
 );
+
+const quickStoreSupplier = async () => {
+    if (!newSupplier.value.company_name || !newSupplier.value.phone_number || !newSupplier.value.address) return;
+    isQuickSupplierLoading.value = true;
+    try {
+        const res = await fetch("/suppliers/quick-store", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": csrfToken,
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({
+                company_name: newSupplier.value.company_name,
+                phone_number: newSupplier.value.phone_number,
+                address: newSupplier.value.address,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            const messages = data.errors ? Object.values(data.errors).flat().join(", ") : (data.message || t("error"));
+            showToast(messages as string, "error");
+        } else {
+            const created: Supplier = { ...data.supplier, remaining_deposit: 0 };
+
+            if (newSupplier.value.initial_deposit && newSupplier.value.initial_deposit > 0) {
+                const depositRes = await fetch("/api/deposits/quick-store", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                    body: JSON.stringify({
+                        supplier_id: created.id,
+                        balance_deposited: newSupplier.value.initial_deposit,
+                    }),
+                });
+                if (depositRes.ok) {
+                    created.remaining_deposit = newSupplier.value.initial_deposit;
+                }
+            }
+
+            localSuppliers.value.push(created);
+            selectSupplier(created);
+            showQuickSupplierModal.value = false;
+            newSupplier.value = { company_name: "", phone_number: "", address: "", initial_deposit: null };
+            showToast(t("supplierCreated"), "success");
+        }
+    } catch {
+        showToast(t("error"), "error");
+    } finally {
+        isQuickSupplierLoading.value = false;
+    }
+};
 
 const selectSupplier = (s: Supplier) => {
     selectedSupplier.value = s;
@@ -1294,6 +1409,15 @@ const translations: Record<string, Record<string, string>> = {
         addMissingDeposit: "Add Deposit",
         depositAndLift: "Deposit & Lift",
         depositSuccess: "Deposit added successfully!",
+        createNewSupplier: "Create New Supplier",
+        companyName: "Company Name",
+        phoneNumber: "Phone Number",
+        address: "Address",
+        createSupplier: "Create Supplier",
+        supplierCreated: "Supplier created successfully!",
+        initialDeposit: "Initial Deposit",
+        optional: "optional",
+        initialDepositPlaceholder: "Enter amount...",
     },
     bn: {
         liftManagement: "লিফট ব্যবস্থাপনা",
@@ -1361,6 +1485,15 @@ const translations: Record<string, Record<string, string>> = {
         addMissingDeposit: "ডিপোজিট যোগ করুন",
         depositAndLift: "ডিপোজিট ও লিফট",
         depositSuccess: "ডিপোজিট সফলভাবে যোগ হয়েছে!",
+        createNewSupplier: "নতুন সরবরাহকারী তৈরি করুন",
+        companyName: "কোম্পানির নাম",
+        phoneNumber: "ফোন নম্বর",
+        address: "ঠিকানা",
+        createSupplier: "সরবরাহকারী তৈরি করুন",
+        supplierCreated: "সরবরাহকারী সফলভাবে তৈরি হয়েছে!",
+        initialDeposit: "প্রাথমিক আমানত",
+        optional: "ঐচ্ছিক",
+        initialDepositPlaceholder: "পরিমাণ লিখুন...",
     },
 };
 
