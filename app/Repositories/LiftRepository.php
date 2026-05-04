@@ -44,17 +44,17 @@ class LiftRepository extends BaseRepository implements LiftContract
                     $bottlesPerCase = $variant['bottles_per_case'];
                     $freeBottlesPerCase = $variant['free_bottles_per_case'] ?? 0;
 
-                    $purchasedBottles = $numberOfCases * $bottlesPerCase;
-                    $totalFreeBottles = $numberOfCases * $freeBottlesPerCase;
-                    $totalBottles = $purchasedBottles + $totalFreeBottles;
+                    $purchasedBottles = (int) round($numberOfCases * $bottlesPerCase);
+                    $totalFreeBottles = round($numberOfCases * $freeBottlesPerCase, 4);
+                    $totalBottles = $purchasedBottles + (int) round($totalFreeBottles);
                     $totalCost = $numberOfCases * $caseBuyingPrice;
                     $actualRatePerBottle = $totalBottles > 0 ? $totalCost / $totalBottles : 0;
 
                     $casesWithFreeBottles = $bottlesPerCase > 0
                         ? floor($totalFreeBottles / $bottlesPerCase)
                         : 0;
-                    $extraFreeBottles = $totalFreeBottles - ($casesWithFreeBottles * $bottlesPerCase);
-                    $casesWithoutFreeBottles = $numberOfCases - $casesWithFreeBottles;
+                    $extraFreeBottles = (int) round($totalFreeBottles - ($casesWithFreeBottles * $bottlesPerCase));
+                    $casesWithoutFreeBottles = (int) round($numberOfCases - $casesWithFreeBottles);
 
                     $product = null;
 

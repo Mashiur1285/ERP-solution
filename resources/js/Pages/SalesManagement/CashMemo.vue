@@ -95,7 +95,12 @@
                         <tr v-for="(item, idx) in sale.items" :key="idx" class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.product_name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.variant }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ toBengaliNumber(item.target_bottles_to_sell) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                {{ toBengaliNumber(item.cases_sold) }} {{ getTranslation("case") }}
+                                <span v-if="item.extra_bottles > 0" class="text-xs text-gray-500">
+                                    + {{ toBengaliNumber(item.extra_bottles) }} {{ getTranslation("extraBottles") }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">৳{{ toBengaliNumber(item.unit_price) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">৳{{ toBengaliNumber(item.total_price) }}</td>
                         </tr>
@@ -283,6 +288,7 @@ const props = defineProps<{
             product_name: string;
             variant: string;
             cases_sold: number;
+            extra_bottles: number | null;
             total_bottles_sold: number;
             target_bottles_to_sell: number;
             unit_price: number;
@@ -321,6 +327,8 @@ const translations = {
         contactUs: "Contact us: support@company.com | +123-456-7890",
         printReceipt: "Print Receipt",
         backToSales: "Back to Sales",
+        case: "cases",
+        extraBottles: "extra",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -344,6 +352,8 @@ const translations = {
         contactUs: "যোগাযোগ করুন: support@company.com | +123-456-7890",
         printReceipt: "রসিদ প্রিন্ট করুন",
         backToSales: "বিক্রয়ে ফিরে যান",
+        case: "কেস",
+        extraBottles: "অতিরিক্ত",
     },
 };
 

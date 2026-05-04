@@ -70,6 +70,7 @@ class SalesController extends Controller
                             'supplier_name' => $item->product?->supplier?->company_name ?? 'Unknown',
                             'variant' => $item->variant,
                             'cases' => $item->cases_sold,
+                            'extra_bottles' => $item->extra_bottles,
                             'price_per_case' => $item->selling_price_per_case,
                             'bottles_per_case' => $item->bottles_per_case,
                             'free_bottles_per_case' => (int) round(($item->free_bottles_sold ?? 0) / max($item->cases_sold, 1)),
@@ -143,6 +144,8 @@ class SalesController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.variant' => 'required|string',
+            'items.*.cases_sold' => 'required|integer|min:0',
+            'items.*.extra_bottles' => 'nullable|integer|min:0',
             'items.*.total_bottles_to_sell' => 'required|integer|min:1',
             'items.*.selling_price_per_bottle' => 'required|numeric|min:0',
             'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
@@ -219,17 +222,19 @@ class SalesController extends Controller
                 $targetBottlesToSell       = $item['total_bottles_to_sell'];
                 $actualSellingPricePerBottle = $item['selling_price_per_bottle'];
                 $freeBottlesPerCase        = $item['free_bottles_per_case'] ?? 0;
+                $casesSoldFrontend         = $item['cases_sold'];
+                $extraBottlesFrontend      = $item['extra_bottles'] ?? 0;
 
                 if ($request->include_free_bottles) {
                     $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
-                    $casesSold               = ceil($targetBottlesToSell / $effectiveBottlesPerCase);
-                    $purchasedBottlesSold    = $casesSold * $bottlesPerCase;
+                    $casesSold               = $casesSoldFrontend;
+                    $purchasedBottlesSold    = ($casesSold * $bottlesPerCase) + $extraBottlesFrontend;
                     $freeBottlesSold         = $casesSold * $freeBottlesPerCase;
                     $actualTotalBottlesSold  = $purchasedBottlesSold + $freeBottlesSold;
                     $sellingPricePerCase     = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
                 } else {
-                    $casesSold               = ceil($targetBottlesToSell / $bottlesPerCase);
-                    $purchasedBottlesSold    = $targetBottlesToSell;
+                    $casesSold               = $casesSoldFrontend;
+                    $purchasedBottlesSold    = ($casesSold * $bottlesPerCase) + $extraBottlesFrontend;
                     $freeBottlesSold         = 0;
                     $actualTotalBottlesSold  = $purchasedBottlesSold;
                     $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
@@ -254,6 +259,7 @@ class SalesController extends Controller
                     'supplier_id'            => $request->supplier_id,
                     'variant'                => $item['variant'],
                     'cases_sold'             => $casesSold,
+                    'extra_bottles'          => $extraBottlesFrontend,
                     'bottles_per_case'       => $bottlesPerCase,
                     'purchased_bottles_sold' => $purchasedBottlesSold,
                     'free_bottles_sold'      => $freeBottlesSold,
@@ -394,6 +400,7 @@ class SalesController extends Controller
                             'product_name' => $item->product ? $item->product->name : 'Unknown',
                             'variant' => $item->variant,
                             'cases_sold' => $item->cases_sold,
+                            'extra_bottles' => $item->extra_bottles,
                             'total_bottles_sold' => $item->total_bottles_sold,
                             'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
                             'unit_price' => $item->unit_price ?? $item->selling_price_per_bottle,
@@ -434,6 +441,7 @@ class SalesController extends Controller
                         'product_name' => $item->product ? $item->product->name : 'Unknown',
                         'variant' => $item->variant,
                         'cases_sold' => $item->cases_sold,
+                        'extra_bottles' => $item->extra_bottles,
                         'total_bottles_sold' => $item->total_bottles_sold,
                         'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
                         'unit_price' => $item->unit_price ?? $item->selling_price_per_bottle,
@@ -457,97 +465,246 @@ class SalesController extends Controller
         ]);
     }
 
-    public function editSale($id)
+        public function editSale($id)
     {
-        $sale = $this->salesRepository->find($id);
+        $sale = $this->salesRepository->query()
+            ->with(['items.product.supplier', 'shop'])
+            ->find($id);
+
         if (!$sale) {
             return redirect()->route('sales.report')->with('error', 'Sale not found');
         }
 
-        $shop = $this->shopRepository->find($sale->shop_id);
-        $items = $sale->items->map(function ($item) {
+        $shops = $this->shopRepository->all()->map(function ($shop) {
             return [
-                'id'                       => $item->id,
-                'product_name'             => $item->product ? $item->product->name : 'Unknown',
-                'variant'                  => $item->variant,
-                'cases_sold'               => $item->cases_sold,
-                'bottles_per_case'         => $item->bottles_per_case,
-                'free_bottles_sold'        => $item->free_bottles_sold,
-                'total_bottles_sold'       => $item->total_bottles_sold,
-                'target_bottles_to_sell'   => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
-                'selling_price_per_bottle' => $item->selling_price_per_bottle,
-                'selling_price_per_case'   => $item->selling_price_per_case,
-                'total_price'              => $item->total_price,
-                'purchase_unit_price'      => $item->purchase_unit_price,
-                'profit'                   => $item->profit,
+                'id' => $shop->id,
+                'road' => $shop->road,
+                'shop_name' => $shop->shop_name,
             ];
         });
 
-        $payment = DB::table('payments')->where('sale_id', $sale->id)->orderBy('payment_date', 'desc')->first();
+        $suppliers = $this->supplierRepository->all()->map(function ($supplier) {
+            return [
+                'id' => $supplier->id,
+                'company_name' => $supplier->company_name,
+            ];
+        });
 
-        return Inertia::render('SalesManagement/EditSale', [
-            'sale' => [
-                'id'             => $sale->id,
-                'invoice_number' => $sale->invoice_number,
-                'sale_date'      => $sale->sale_date->format('Y-m-d'),
-                'total_amount'   => $sale->total_amount,
-                'paid_amount'    => $sale->paid_amount,
-                'due_amount'     => $sale->due_amount,
-                'shop_name'      => $shop ? $shop->shop_name : 'Unknown',
-            ],
-            'items'   => $items,
-            'payment' => $payment ? [
-                'id'             => $payment->id,
-                'amount'         => $payment->amount,
-                'payment_method' => $payment->payment_method,
-                'status'         => $payment->status,
+        $latestPayment = DB::table('payments')->where('sale_id', $sale->id)->orderBy('payment_date', 'desc')->first();
+
+        $editSaleData = [
+            'id' => $sale->id,
+            'shop_id' => $sale->shop_id,
+            'supplier_id' => $sale->supplier_id,
+            'sale_date' => optional($sale->sale_date)->format('Y-m-d'),
+            'invoice_number' => $sale->invoice_number,
+            'paid_amount' => $sale->paid_amount,
+            'discount' => 0, // Not explicitly tracked in DB right now, infer if needed or default 0
+            'payment' => $latestPayment ? [
+                'amount' => $latestPayment->amount,
+                'payment_method' => $latestPayment->payment_method,
+                'advance_balance' => $latestPayment->advance_balance,
+                'payment_date' => $latestPayment->payment_date,
+                'status' => $latestPayment->status,
             ] : null,
+            'items' => $sale->items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product?->name ?? 'Unknown',
+                    'supplier_id' => $item->supplier_id,
+                    'supplier_name' => $item->product?->supplier?->company_name ?? 'Unknown',
+                    'variant' => $item->variant,
+                    'cases_sold' => $item->cases_sold,
+                    'extra_bottles' => $item->extra_bottles,
+                    'bottles_per_case' => $item->bottles_per_case,
+                    'free_bottles_sold' => $item->free_bottles_sold,
+                    'total_bottles_sold' => $item->total_bottles_sold,
+                    'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
+                    'selling_price_per_bottle' => $item->selling_price_per_bottle,
+                    'selling_price_per_case' => $item->selling_price_per_case,
+                    'total_price' => $item->total_price,
+                    'purchase_unit_price' => $item->purchase_unit_price,
+                    'profit' => $item->profit,
+                    // Calculated fields for CreateSale frontend
+                    'cases' => $item->cases_sold,
+                    'price_per_case' => $item->selling_price_per_case,
+                    'free_bottles_per_case' => (int) round(($item->free_bottles_sold ?? 0) / max($item->cases_sold, 1)),
+                ];
+            })->values(),
+        ];
+
+        return Inertia::render('SalesManagement/CreateSale', [
+            'shops' => $shops,
+            'suppliers' => $suppliers,
+            'editSale' => $editSaleData,
         ]);
     }
 
     public function updateSale(Request $request, $id)
     {
         $request->validate([
-            'items'                          => 'required|array|min:1',
-            'items.*.id'                     => 'required|exists:sale_items,id',
-            'items.*.selling_price_per_case' => 'required|numeric|min:0',
-            'payment_amount'                 => 'nullable|numeric|min:0',
-            'payment_method'                 => 'nullable|string',
+            'shop_id' => 'required|exists:shops,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'sale_date' => 'required|date',
+            'include_free_bottles' => 'required|boolean',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant' => 'required|string',
+            'items.*.cases_sold' => 'required|integer|min:0',
+            'items.*.extra_bottles' => 'nullable|integer|min:0',
+            'items.*.total_bottles_to_sell' => 'required|integer|min:1',
+            'items.*.selling_price_per_bottle' => 'required|numeric|min:0',
+            'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
+            'payment_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
-            $sale = $this->salesRepository->find($id);
+            $sale = $this->salesRepository->query()->with('items.product')->find($id);
             if (!$sale) {
                 return redirect()->route('sales.report')->with('error', 'Sale not found');
             }
 
-            $totalAmount = 0;
-
-            foreach ($request->items as $itemData) {
-                $saleItem = $sale->items->firstWhere('id', $itemData['id']);
-                if (!$saleItem) continue;
-
-                $bpc               = (int) $saleItem->bottles_per_case;
-                $freeSold          = (int) $saleItem->free_bottles_sold;
-                $newPricePerCase   = floatval($itemData['selling_price_per_case']);
-                $effectiveBPC      = $bpc + ($freeSold > 0 ? round($freeSold / max($saleItem->cases_sold, 1)) : 0);
-                $newPricePerBottle = $effectiveBPC > 0 ? $newPricePerCase / $effectiveBPC : 0;
-                $targetBottles     = $saleItem->target_bottles_to_sell ?? $saleItem->total_bottles_sold;
-                $newTotalPrice     = round($targetBottles * $newPricePerBottle, 2);
-                $newProfit         = round($newTotalPrice - ($saleItem->total_bottles_sold * $saleItem->purchase_unit_price), 2);
-
-                $saleItem->update([
-                    'selling_price_per_bottle' => $newPricePerBottle,
-                    'selling_price_per_case'   => $newPricePerCase,
-                    'unit_price'               => $newPricePerBottle,
-                    'total_price'              => $newTotalPrice,
-                    'profit'                   => $newProfit,
-                ]);
-
-                $totalAmount += $newTotalPrice;
+            // 1. Restore previous inventory
+            foreach ($sale->items as $item) {
+                if ($item->product) {
+                    $this->productPurchaseRepository->updateInventory(
+                        $item->product,
+                        $item->variant,
+                        -abs((int)$item->purchased_bottles_sold),
+                        -abs((int)$item->free_bottles_sold)
+                    );
+                }
             }
 
-            // Update payment if provided
+            // 2. Delete old items
+            $sale->items()->delete();
+
+            // 3. Process new items and deduct stock
+            $totalAmount = 0;
+            $totalProfit = 0;
+
+            foreach ($request->items as $item) {
+                $referenceProduct = $this->productPurchaseRepository->find($item['product_id']);
+
+                $batches = \App\Models\Product::where('name', $referenceProduct->name)
+                    ->where('supplier_id', $referenceProduct->supplier_id)
+                    ->whereNotNull('metadata')
+                    ->orderBy('date', 'asc')
+                    ->get()
+                    ->map(function ($p) use ($item) {
+                        $variantData = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $item['variant']);
+                        if (!$variantData) return null;
+                        $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
+                        $bpc = $variantData['bottles_per_case'] ?? 0;
+                        $initialPurchased = $purchasedCases * $bpc;
+                        $initialFree = $variantData['total_free_bottles'] ?? 0;
+                        return [
+                            'product'       => $p,
+                            'purchased'     => $variantData['current_purchased_quantity'] ?? $initialPurchased,
+                            'free'          => $variantData['current_free_quantity'] ?? $initialFree,
+                            'bottles_per_case' => $bpc,
+                            'purchase_rate' => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                        ];
+                    })
+                    ->filter()
+                    ->values();
+
+                if ($batches->isEmpty()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'inventory' => "Variant {$item['variant']} not found for this product",
+                    ]);
+                }
+
+                $bottlesPerCase        = $batches->first()['bottles_per_case'];
+                $purchaseRatePerBottle = $batches->avg('purchase_rate');
+                $totalPurchasedAvailable = $batches->sum('purchased');
+                $totalFreeAvailable      = $batches->sum('free');
+
+                $targetBottlesToSell       = $item['total_bottles_to_sell'];
+                $actualSellingPricePerBottle = $item['selling_price_per_bottle'];
+                $freeBottlesPerCase        = $item['free_bottles_per_case'] ?? 0;
+                $casesSoldFrontend         = $item['cases_sold'];
+                $extraBottlesFrontend      = $item['extra_bottles'] ?? 0;
+
+                if ($request->include_free_bottles) {
+                    $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
+                    $casesSold               = $casesSoldFrontend;
+                    $purchasedBottlesSold    = ($casesSold * $bottlesPerCase) + $extraBottlesFrontend;
+                    $freeBottlesSold         = $casesSold * $freeBottlesPerCase;
+                    $actualTotalBottlesSold  = $purchasedBottlesSold + $freeBottlesSold;
+                    $sellingPricePerCase     = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
+                } else {
+                    $casesSold               = $casesSoldFrontend;
+                    $purchasedBottlesSold    = ($casesSold * $bottlesPerCase) + $extraBottlesFrontend;
+                    $freeBottlesSold         = 0;
+                    $actualTotalBottlesSold  = $purchasedBottlesSold;
+                    $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
+                }
+
+                $totalAvailable  = $totalPurchasedAvailable + $totalFreeAvailable;
+                $totalToDeduct   = $purchasedBottlesSold + $freeBottlesSold;
+
+                if ($totalToDeduct > $totalAvailable) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'inventory' => "Insufficient stock for {$item['variant']}. Available: {$totalAvailable}, Required: {$totalToDeduct}",
+                    ]);
+                }
+
+                $totalSalePrice = $targetBottlesToSell * $actualSellingPricePerBottle;
+                $purchaseCost   = $actualTotalBottlesSold * $purchaseRatePerBottle;
+                $profit         = $totalSalePrice - $purchaseCost;
+
+                $itemsData = [
+                    'sale_id'                => $sale->id,
+                    'product_id'             => $item['product_id'],
+                    'supplier_id'            => $request->supplier_id,
+                    'variant'                => $item['variant'],
+                    'cases_sold'             => $casesSold,
+                    'extra_bottles'          => $extraBottlesFrontend,
+                    'bottles_per_case'       => $bottlesPerCase,
+                    'purchased_bottles_sold' => $purchasedBottlesSold,
+                    'free_bottles_sold'      => $freeBottlesSold,
+                    'total_bottles_sold'     => $actualTotalBottlesSold,
+                    'target_bottles_to_sell' => $targetBottlesToSell,
+                    'purchase_unit_price'    => $purchaseRatePerBottle,
+                    'selling_price_per_case' => $sellingPricePerCase,
+                    'selling_price_per_bottle' => $actualSellingPricePerBottle,
+                    'unit_price'             => $actualSellingPricePerBottle,
+                    'total_price'            => $totalSalePrice,
+                    'profit'                 => $profit,
+                    'delivery_date'          => $request->sale_date,
+                    'invoice_number'         => $sale->invoice_number,
+                    'status'                 => \App\Enums\SalesItemsStatus::IN_PROGRESS->value,
+                ];
+
+                $this->salesItemRepository->create($itemsData);
+
+                $remainingToDeduct = (int) $totalToDeduct;
+                foreach ($batches as $batch) {
+                    if ($remainingToDeduct <= 0) break;
+                    $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
+                    if ($batchTotal <= 0) continue;
+
+                    $deductFromBatch = min($remainingToDeduct, $batchTotal);
+                    $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
+                    $deductFree      = $deductFromBatch - $deductPurchased;
+
+                    $this->productPurchaseRepository->updateInventory(
+                        $batch['product'],
+                        $item['variant'],
+                        $deductPurchased,
+                        $deductFree
+                    );
+                    $remainingToDeduct -= $deductFromBatch;
+                }
+
+                $totalAmount += $totalSalePrice;
+                $totalProfit += $profit;
+            }
+
+            // 4. Update payment details
             $newPaidAmount = $sale->paid_amount;
             if ($request->has('payment_amount') && $request->payment_amount !== null) {
                 $newPaidAmount = floatval($request->payment_amount);
@@ -557,7 +714,7 @@ class SalesController extends Controller
                     DB::table('payments')->where('id', $existingPayment->id)->update([
                         'amount'         => $newPaidAmount,
                         'payment_method' => $request->payment_method ?? $existingPayment->payment_method,
-                        'status'         => $newPaidAmount >= $totalAmount ? PaymentStatus::PAID->value : PaymentStatus::PENDING->value,
+                        'status'         => $newPaidAmount >= $totalAmount ? \App\Enums\PaymentStatus::PAID->value : \App\Enums\PaymentStatus::PENDING->value,
                         'updated_at'     => now(),
                     ]);
                 } else {
@@ -567,7 +724,7 @@ class SalesController extends Controller
                         'amount'         => $newPaidAmount,
                         'payment_method' => $request->payment_method ?? 'cash',
                         'advance_balance'=> 0,
-                        'status'         => $newPaidAmount >= $totalAmount ? PaymentStatus::PAID->value : PaymentStatus::PENDING->value,
+                        'status'         => $newPaidAmount >= $totalAmount ? \App\Enums\PaymentStatus::PAID->value : \App\Enums\PaymentStatus::PENDING->value,
                         'payment_date'   => now(),
                         'created_at'     => now(),
                         'updated_at'     => now(),
@@ -576,13 +733,17 @@ class SalesController extends Controller
             }
 
             $newDue = max(0, $totalAmount - $newPaidAmount);
+            
             $this->salesRepository->updateSales([
+                'shop_id'      => $request->shop_id,
+                'supplier_id'  => $request->supplier_id,
+                'sale_date'    => $request->sale_date,
                 'total_amount' => $totalAmount,
                 'subtotal'     => $totalAmount,
                 'paid_amount'  => $newPaidAmount,
                 'due_amount'   => $newDue,
                 'is_paid'      => $newDue <= 0,
-                'status'       => $newDue <= 0 ? SalesStatus::COMPLETED->value : SalesStatus::IN_PROGRESS->value,
+                'status'       => $newDue <= 0 ? \App\Enums\SalesStatus::COMPLETED->value : \App\Enums\SalesStatus::IN_PROGRESS->value,
             ], $id);
 
             return redirect()->route('sales.report')->with('success', 'Sale updated successfully');
@@ -597,7 +758,7 @@ class SalesController extends Controller
 
     public function report(Request $request)
     {
-        return $this->renderReport($request, 'product');
+        return $this->renderReport($request, 'invoice');
     }
 
     public function summaryReport(Request $request)
@@ -646,6 +807,7 @@ class SalesController extends Controller
                         'product_name' => $item->product ? $item->product->name : 'Unknown',
                         'variant' => $item->variant,
                         'cases_sold' => $item->cases_sold,
+                        'extra_bottles' => $item->extra_bottles,
                         'total_bottles_sold' => $item->total_bottles_sold,
                         'target_bottles_to_sell' => $item->target_bottles_to_sell ?? $item->total_bottles_sold,
                         'purchased_bottles_sold' => $item->purchased_bottles_sold,

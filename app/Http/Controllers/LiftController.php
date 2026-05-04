@@ -96,7 +96,7 @@ class LiftController extends Controller
             'items.*.product_name' => 'required|string',
             'items.*.variants' => 'required|array|min:1',
             'items.*.variants.*.variant' => 'required|string',
-            'items.*.variants.*.number_of_cases' => 'required|integer|min:1',
+            'items.*.variants.*.number_of_cases' => 'required|numeric|min:0.0001',
             'items.*.variants.*.case_buying_price' => 'required|numeric|min:0.01',
             'items.*.variants.*.bottles_per_case' => 'required|integer|min:1',
             'items.*.variants.*.free_bottles_per_case' => 'required|numeric|min:0',

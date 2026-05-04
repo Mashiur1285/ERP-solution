@@ -465,6 +465,7 @@
                                     <tr class="bg-gray-50 border-b border-gray-200">
                                         <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('variantName') }}</th>
                                         <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('numberOfCases') }}</th>
+                                        <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('extraBottles') }}</th>
                                         <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('caseBuyingPrice') }} (৳)</th>
                                         <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('bottlesPerCase') }}</th>
                                         <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('freeBottlesPerCase') }}</th>
@@ -502,6 +503,10 @@
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.number_of_cases" type="number" min="0"
                                                 class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                        </td>
+                                        <td class="px-2 py-2">
+                                            <input v-model.number="v.extra_bottles" type="number" min="0" :max="(v.bottles_per_case || 1) - 1" :placeholder="t('optional')"
+                                                class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 placeholder:text-gray-300" />
                                         </td>
                                         <td class="px-2 py-2">
                                             <input v-model.number="v.case_buying_price" type="number" step="0.01" min="0"
@@ -582,7 +587,7 @@
                                 <div v-for="(v, vi) in item.validVariants" :key="vi" class="flex justify-between py-1.5 border-b border-dashed border-gray-100 last:border-0 text-sm">
                                     <div>
                                         <span class="text-gray-800">{{ v.variant || 'Variant' }}</span>
-                                        <span class="text-gray-400 text-xs ml-1">x{{ v.number_of_cases }} {{ t('case') }}</span>
+                                        <span class="text-gray-400 text-xs ml-1">x{{ toBengaliNumber(effectiveCases(v), null) }} {{ t('case') }}</span>
                                         <span v-if="calcFreeBottles(v) > 0" class="text-green-500 text-xs block">+{{ calcFreeBottles(v) }} {{ t('free') }}</span>
                                     </div>
                                     <span class="font-semibold text-gray-800">৳{{ toBengaliNumber(calcVariantCost(v), 2) }}</span>
@@ -728,6 +733,7 @@ interface DefaultVariant {
 interface LiftVariant {
     variant: string;
     number_of_cases: number;
+    extra_bottles: number | null;
     case_buying_price: number;
     bottles_per_case: number;
     free_bottles_per_case: number;
@@ -911,7 +917,8 @@ const fillDraft = (draft: DraftLift) => {
         const existing = groupedItems.get(item.product_catalog_id);
         const variantData: LiftVariant = {
             variant: item.variant,
-            number_of_cases: item.number_of_cases,
+            number_of_cases: Math.floor(item.number_of_cases),
+            extra_bottles: null,
             case_buying_price: Number(item.case_buying_price),
             bottles_per_case: item.bottles_per_case,
             free_bottles_per_case: item.free_bottles_per_case,
@@ -1011,6 +1018,7 @@ const addProductWithVariants = () => {
         .map((opt) => ({
             variant: opt.value,
             number_of_cases: 0,
+            extra_bottles: null,
             case_buying_price: 0,
             bottles_per_case: variantSelections.value[opt.value].bottles_per_case,
             free_bottles_per_case: variantSelections.value[opt.value].free_bottles_per_case,
@@ -1022,6 +1030,7 @@ const addProductWithVariants = () => {
         selectedVariants.push({
             variant: customState.customName.trim(),
             number_of_cases: 0,
+            extra_bottles: null,
             case_buying_price: 0,
             bottles_per_case: customState.bottles_per_case,
             free_bottles_per_case: customState.free_bottles_per_case,
@@ -1061,6 +1070,7 @@ const addVariant = (itemIdx: number) => {
     liftItems.value[itemIdx].variants.push({
         variant: "",
         number_of_cases: 0,
+        extra_bottles: null,
         case_buying_price: 0,
         bottles_per_case: 0,
         free_bottles_per_case: 0,
@@ -1149,10 +1159,17 @@ const createProduct = async () => {
 };
 
 // Calculations
-const calcVariantCost = (v: LiftVariant) => (v.number_of_cases || 0) * (v.case_buying_price || 0);
-const calcFreeBottles = (v: LiftVariant) => (v.number_of_cases || 0) * (v.free_bottles_per_case || 0);
+const effectiveCases = (v: LiftVariant): number => {
+    const whole = v.number_of_cases || 0;
+    const extra = v.extra_bottles || 0;
+    const bpc = v.bottles_per_case || 1;
+    return extra > 0 ? whole + extra / bpc : whole;
+};
+
+const calcVariantCost = (v: LiftVariant) => effectiveCases(v) * (v.case_buying_price || 0);
+const calcFreeBottles = (v: LiftVariant) => effectiveCases(v) * (v.free_bottles_per_case || 0);
 const calcTotalBottles = (v: LiftVariant) => {
-    const purchased = (v.number_of_cases || 0) * (v.bottles_per_case || 0);
+    const purchased = (v.number_of_cases || 0) * (v.bottles_per_case || 0) + (v.extra_bottles || 0);
     return purchased + calcFreeBottles(v);
 };
 
@@ -1160,7 +1177,7 @@ const validItems = computed(() =>
     liftItems.value
         .map((item) => ({
             ...item,
-            validVariants: item.variants.filter((v) => v.number_of_cases > 0 && v.case_buying_price > 0),
+            validVariants: item.variants.filter((v) => effectiveCases(v) > 0 && v.case_buying_price > 0),
         }))
         .filter((item) => item.validVariants.length > 0)
 );
@@ -1170,7 +1187,7 @@ const grandTotal = computed(() =>
 );
 
 const totalCases = computed(() =>
-    validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + (v.number_of_cases || 0), 0), 0)
+    validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + effectiveCases(v), 0), 0)
 );
 
 const totalBottles = computed(() =>
@@ -1241,7 +1258,7 @@ const submitLift = () => {
         brand_id: item.brand_id,
         variants: item.validVariants.map((v) => ({
             variant: v.variant,
-            number_of_cases: v.number_of_cases,
+            number_of_cases: effectiveCases(v),
             case_buying_price: v.case_buying_price,
             bottles_per_case: v.bottles_per_case,
             free_bottles_per_case: v.free_bottles_per_case,
@@ -1285,7 +1302,7 @@ const saveDraft = () => {
         brand_id: item.brand_id,
         variants: item.validVariants.map((v) => ({
             variant: v.variant,
-            number_of_cases: v.number_of_cases,
+            number_of_cases: effectiveCases(v),
             case_buying_price: v.case_buying_price,
             bottles_per_case: v.bottles_per_case,
             free_bottles_per_case: v.free_bottles_per_case,
@@ -1364,6 +1381,7 @@ const translations: Record<string, Record<string, string>> = {
         variantName: "Variant Size",
         selectVariant: "Select size",
         numberOfCases: "Cases",
+        extraBottles: "Extra Bottles",
         caseBuyingPrice: "Price/Case",
         bottlesPerCase: "Bottles/Case",
         freeBottlesPerCase: "Free/Case",
@@ -1440,6 +1458,7 @@ const translations: Record<string, Record<string, string>> = {
         variantName: "ভেরিয়েন্টের আকার",
         selectVariant: "আকার নির্বাচন",
         numberOfCases: "কেস",
+        extraBottles: "অতিরিক্ত বোতল",
         caseBuyingPrice: "মূল্য/কেস",
         bottlesPerCase: "বোতল/কেস",
         freeBottlesPerCase: "ফ্রি/কেস",
