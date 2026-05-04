@@ -86,7 +86,6 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>{{ getTranslation("invoiceNumber") }}</th>
                         <th>{{ getTranslation("shop") }}</th>
                         <th>{{ getTranslation("supplier") }}</th>
                         <th>{{ getTranslation("saleDate") }}</th>
@@ -101,8 +100,10 @@
                 <tbody>
                     <tr v-for="(sale, index) in filteredSales" :key="`print-${sale.id}`">
                         <td>{{ toBengaliNumber(index + 1) }}</td>
-                        <td>{{ sale.invoice_number }}</td>
-                        <td>{{ sale.shop_name }}</td>
+                        <td>
+                            <div>{{ sale.shop_name }}</div>
+                            <div style="font-size: 0.8em; color: #666;">#{{ sale.invoice_number }}</div>
+                        </td>
                         <td>{{ sale.supplier_name || "-" }}</td>
                         <td>{{ formatDate(sale.sale_date) }}</td>
                         <td>{{ getSaleProductNames(sale) }}</td>
@@ -115,7 +116,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5">{{ getTranslation("total") }}</td>
+                        <td colspan="4">{{ getTranslation("total") }}</td>
                         <td>—</td>
                         <td>{{ toBengaliNumber(filteredSales.reduce((s, sale) => s + getSaleTotalCases(sale), 0)) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
@@ -630,7 +631,6 @@
                     <thead class="bg-slate-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">#</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("invoiceNumber") }}</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("shop") }}</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("supplier") }}</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("saleDate") }}</th>
@@ -643,8 +643,12 @@
                     <tbody class="divide-y divide-slate-100 bg-white">
                         <tr v-for="(sale, index) in filteredSales" :key="`summary-${sale.id}`" class="hover:bg-slate-50">
                             <td class="px-4 py-3 text-sm text-slate-500">{{ toBengaliNumber(index + 1) }}</td>
-                            <td class="px-4 py-3 text-sm font-medium text-slate-800">{{ sale.invoice_number }}</td>
-                            <td class="px-4 py-3 text-sm text-slate-700">{{ sale.shop_name }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium text-slate-800">{{ sale.shop_name }}</span>
+                                    <span class="text-xs text-slate-500 mt-0.5">#{{ sale.invoice_number }}</span>
+                                </div>
+                            </td>
                             <td class="px-4 py-3 text-sm text-slate-600">{{ sale.supplier_name || "-" }}</td>
                             <td class="px-4 py-3 text-sm text-slate-600">{{ formatDate(sale.sale_date) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
@@ -655,7 +659,7 @@
                     </tbody>
                     <tfoot class="bg-slate-50">
                         <tr>
-                            <td colspan="5" class="px-4 py-3 text-sm font-semibold text-slate-700">{{ getTranslation("total") }}</td>
+                            <td colspan="4" class="px-4 py-3 text-sm font-semibold text-slate-700">{{ getTranslation("total") }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
@@ -711,11 +715,6 @@
                             <th
                                 class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
-                                {{ getTranslation("invoiceNumber") }}
-                            </th>
-                            <th
-                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
-                            >
                                 {{ getTranslation("shop") }}
                             </th>
                             <th
@@ -759,10 +758,10 @@
                                 <td
                                     class="px-3 py-4 text-sm font-medium text-gray-900"
                                 >
-                                    <div class="flex items-center">
+                                    <div class="flex items-start">
                                         <svg
                                             :class="[
-                                                'w-4 h-4 mr-2 transition-transform flex-shrink-0',
+                                                'w-4 h-4 mr-2 mt-0.5 transition-transform flex-shrink-0',
                                                 expandedSale === sale.id
                                                     ? 'rotate-90'
                                                     : '',
@@ -778,21 +777,19 @@
                                                 d="M9 5l7 7-7 7"
                                             />
                                         </svg>
-                                        <span
-                                            class="break-all"
-                                            :title="sale.invoice_number"
-                                            >{{ sale.invoice_number }}</span
-                                        >
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="font-semibold text-gray-800 break-all"
+                                                :title="sale.shop_name"
+                                                >{{ sale.shop_name }}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 mt-0.5"
+                                                :title="sale.invoice_number"
+                                                >#{{ sale.invoice_number }}</span
+                                            >
+                                        </div>
                                     </div>
-                                </td>
-                                <td
-                                    class="px-3 py-4 text-sm text-gray-500 hidden lg:table-cell"
-                                >
-                                    <span
-                                        class="truncate max-w-32"
-                                        :title="sale.shop_name"
-                                        >{{ sale.shop_name }}</span
-                                    >
                                 </td>
                                 <td
                                     class="px-3 py-4 text-sm text-gray-500 hidden xl:table-cell"
@@ -1229,6 +1226,31 @@
                                                                 }}
                                                             </p>
                                                         </div>
+                                                        <div
+                                                            v-if="
+                                                                item.extra_bottles
+                                                            "
+                                                            class="text-center"
+                                                        >
+                                                            <p
+                                                                class="text-xs text-gray-500 font-medium"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "extraBottles"
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                            <p
+                                                                class="text-sm font-bold text-blue-600"
+                                                            >
+                                                                {{
+                                                                    toBengaliNumber(
+                                                                        item.extra_bottles
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1297,6 +1319,15 @@
                                                                 {{
                                                                     getTranslation(
                                                                         "cases"
+                                                                    )
+                                                                }}
+                                                            </th>
+                                                            <th
+                                                                class="w-1/12 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                            >
+                                                                {{
+                                                                    getTranslation(
+                                                                        "extraBottles"
                                                                     )
                                                                 }}
                                                             </th>
@@ -1412,6 +1443,27 @@
                                                                     {{
                                                                         toBengaliNumber(
                                                                             item.cases_sold
+                                                                        )
+                                                                    }}
+                                                                </span>
+                                                                <span
+                                                                    v-else
+                                                                    class="text-gray-400"
+                                                                    >-</span
+                                                                >
+                                                            </td>
+                                                            <td
+                                                                class="px-4 py-4 text-center border-r border-gray-200"
+                                                            >
+                                                                <span
+                                                                    v-if="
+                                                                        item.extra_bottles
+                                                                    "
+                                                                    class="inline-flex items-center justify-center w-12 h-8 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-sm"
+                                                                >
+                                                                    {{
+                                                                        toBengaliNumber(
+                                                                            item.extra_bottles
                                                                         )
                                                                     }}
                                                                 </span>
@@ -1697,7 +1749,7 @@ const searchQuery = ref("");
 const expandedSale = ref<number | null>(null);
 const isLoading = ref(false);
 const activeTab = ref<"completed" | "draft">("completed");
-const viewMode = ref<"invoice" | "product" | "summary">(props.defaultView || "product");
+const viewMode = ref<"invoice" | "product" | "summary">(props.defaultView || "invoice");
 const summaryDisplayMode = ref<"invoice" | "product">("invoice");
 const printViewMode = computed(() =>
     viewMode.value === "summary" ? summaryDisplayMode.value : viewMode.value
@@ -1843,6 +1895,7 @@ const translations = {
         items: "Items",
         totalItems: "Total Items",
         cases: "Cases",
+        extraBottles: "Extra",
         totalSales: "Total Sales",
         total: "Total",
         totalPrice: "Total",
@@ -1905,6 +1958,7 @@ const translations = {
         items: "আইটেম",
         totalItems: "মোট আইটেম",
         cases: "কেস",
+        extraBottles: "অতিরিক্ত",
         totalSales: "মোট বিক্রয়",
         total: "মোট",
         totalPrice: "মোট",

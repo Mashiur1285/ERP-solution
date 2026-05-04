@@ -20,6 +20,9 @@
             :current-language="currentLanguage"
             :t="t"
             :to-bengali-number="toBengaliNumber"
+            :is-edit-mode="isEditMode"
+            v-model:payment-amount="editPaymentAmount"
+            v-model:payment-method="editPaymentMethod"
             @close="showModal = false"
             @confirm="confirmSale"
         />
@@ -42,7 +45,7 @@
                             d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                 </div>
-                {{ t('salesManagement') }}
+                {{ isEditMode ? 'Edit Sale: ' + props.editSale?.invoice_number : t('salesManagement') }}
             </h1>
             <div class="flex gap-2 self-start sm:self-auto">
                 <button
@@ -172,6 +175,7 @@
                                     <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('product') }}</th>
                                     <th class="px-2 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('variant') }}</th>
                                     <th class="px-2 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-20">{{ t('cases') }}</th>
+                                    <th class="px-2 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-20">{{ t('extraBottles') }}</th>
                                     <th class="px-3 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-16">{{ t('bpc') }}</th>
                                     <th class="px-3 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-14">{{ t('free') }}</th>
                                     <th class="px-2 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">{{ t('pricePerCase') }} (৳)</th>
@@ -209,12 +213,12 @@
                                         <input
                                             v-model.number="item.cases"
                                             type="number"
-                                            min="1"
+                                            min="0"
                                             :max="getMaxCases(item)"
                                             :placeholder="t('cases')"
                                             class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
                                             :class="{
-                                                'border-red-300 bg-red-50': (isSubmitted && !(item.cases > 0)) || itemExceedsStock(item),
+                                                'border-red-300 bg-red-50': (isSubmitted && !(item.cases > 0 || item.extra_bottles > 0)) || itemExceedsStock(item),
                                                 'border-orange-300': !itemExceedsStock(item) && item.cases > 0
                                             }"
                                         />
@@ -222,6 +226,22 @@
                                             :class="itemExceedsStock(item) ? 'text-red-500 font-medium' : 'text-gray-400'">
                                             {{ itemExceedsStock(item) ? t('exceedsStock') : `${getMaxCases(item)} ${t('casesAvailable')}` }}
                                         </p>
+                                    </td>
+
+                                    <!-- Extra Bottles -->
+                                    <td class="px-2 py-2">
+                                        <input
+                                            v-model.number="item.extra_bottles"
+                                            type="number"
+                                            min="0"
+                                            :max="(item.bottles_per_case || 1) - 1"
+                                            :placeholder="t('optional')"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
+                                            :class="{
+                                                'border-red-300 bg-red-50': itemExceedsStock(item),
+                                                'border-orange-300': !itemExceedsStock(item) && item.extra_bottles > 0
+                                            }"
+                                        />
                                     </td>
 
                                     <!-- Btl/Case -->
@@ -506,6 +526,7 @@ interface DraftSaleItem {
     supplier_name: string;
     variant: string;
     cases: number;
+    extra_bottles: number | null;
     price_per_case: number;
     bottles_per_case: number;
     free_bottles_per_case: number;
@@ -516,6 +537,26 @@ interface DraftSale {
     shop_id: number;
     sale_date: string | null;
     items: DraftSaleItem[];
+}
+
+interface EditSaleItem extends DraftSaleItem {
+    id: number;
+    selling_price_per_bottle: number;
+}
+
+interface EditSale {
+    id: number;
+    shop_id: number;
+    supplier_id: number;
+    sale_date: string | null;
+    invoice_number: string;
+    paid_amount: number;
+    discount: number;
+    payment: {
+        amount: number;
+        payment_method: string;
+    } | null;
+    items: EditSaleItem[];
 }
 
 interface Supplier {
@@ -555,6 +596,7 @@ interface CartItem {
     free_bottles_per_case: number;
     purchase_rate: number;
     cases: number;
+    extra_bottles: number | null;
     price_per_case: number;
 }
 
@@ -562,6 +604,7 @@ const props = defineProps<{
     shops: Shop[];
     suppliers: Supplier[];
     draftSale?: DraftSale | null;
+    editSale?: EditSale | null;
 }>();
 
 defineOptions({ layout: Layout });
@@ -633,6 +676,8 @@ const translations: Record<string, Record<string, string>> = {
         addToCart: "Add to Cart",
         casesAvailable: "cases available",
         exceedsStock: "Exceeds available stock",
+        extraBottles: "Extra Bottles",
+        optional: "optional",
     },
     bn: {
         salesManagement: "বিক্রয় ব্যবস্থাপনা",
@@ -697,6 +742,8 @@ const translations: Record<string, Record<string, string>> = {
         addToCart: "কার্টে যোগ করুন",
         casesAvailable: "কেস উপলব্ধ",
         exceedsStock: "উপলব্ধ স্টকের বেশি",
+        extraBottles: "অতিরিক্ত বোতল",
+        optional: "ঐচ্ছিক",
     },
 };
 
@@ -910,6 +957,11 @@ const primarySupplierId = computed(() =>
     cartItems.value.length > 0 ? cartItems.value[0].supplier_id : null
 );
 
+// Edit mode
+const isEditMode = computed(() => !!props.editSale);
+const editPaymentAmount = ref(props.editSale?.payment?.amount ?? 0);
+const editPaymentMethod = ref(props.editSale?.payment?.payment_method ?? 'cash');
+
 // UI state
 const isSubmitted = ref(false);
 const isLoading = ref(false);
@@ -918,11 +970,73 @@ const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref<"success" | "error">("success");
 
+const loadEditSale = async (editSale: EditSale) => {
+    shopId.value = editSale.shop_id;
+    saleDate.value = editSale.sale_date || localDateString();
+
+    const selectedShop = props.shops.find((shop) => shop.id === editSale.shop_id);
+    if (selectedShop) {
+        selectedRoad.value = normalizeRoadValue(selectedShop.road);
+        roadSearchQuery.value =
+            selectedRoad.value === "__UNASSIGNED__"
+                ? currentLanguage.value === "bn"
+                    ? "রোড সেট করা হয়নি"
+                    : "Unassigned Road"
+                : selectedRoad.value;
+        shopSearchQuery.value = selectedShop.shop_name;
+    }
+
+    cartItems.value = await Promise.all(
+        editSale.items.map(async (item) => {
+            let variantInventory: ProductVariant | null = null;
+
+            try {
+                const response = await fetch(
+                    `/api/variant-inventory?product_id=${item.product_id}&variant=${encodeURIComponent(item.variant)}`
+                );
+                if (response.ok) {
+                    variantInventory = await response.json();
+                }
+            } catch {}
+
+            return {
+                product_id: item.product_id,
+                product_name: item.product_name,
+                supplier_id: item.supplier_id,
+                supplier_name: item.supplier_name,
+                available_variants: variantInventory
+                    ? [variantInventory]
+                    : [{
+                        variant: item.variant,
+                        purchased_bottles_available: 0,
+                        free_bottles_available: 0,
+                        total_bottles_available: item.total_bottles_sold, // Treat existing sold bottles as available for max cases limit bypass if needed
+                        bottles_per_case: item.bottles_per_case,
+                        purchase_rate: 0,
+                        cases_available: 0,
+                        variant_metadata: {
+                            free_bottles_per_case: item.free_bottles_per_case,
+                        },
+                    }],
+                selected_variant: item.variant,
+                bottles_per_case: item.bottles_per_case,
+                free_bottles_per_case: item.free_bottles_per_case,
+                purchase_rate: variantInventory?.purchase_rate ?? 0,
+                cases: item.cases,
+                extra_bottles: item.extra_bottles ?? null,
+                price_per_case: item.price_per_case,
+            };
+        })
+    );
+};
+
 onMounted(() => {
     document.documentElement.lang = currentLanguage.value;
     fetchProducts();
     if (props.draftSale) {
         loadDraftSale(props.draftSale);
+    } else if (props.editSale) {
+        loadEditSale(props.editSale);
     }
 });
 
@@ -999,6 +1113,7 @@ const loadDraftSale = async (draftSale: DraftSale) => {
                 free_bottles_per_case: item.free_bottles_per_case,
                 purchase_rate: variantInventory?.purchase_rate ?? 0,
                 cases: item.cases,
+                extra_bottles: item.extra_bottles ?? null,
                 price_per_case: item.price_per_case,
             };
         })
@@ -1045,6 +1160,7 @@ const addVariantsToCart = () => {
             free_bottles_per_case: safeNumber(v.variant_metadata?.free_bottles_per_case ?? 0),
             purchase_rate: safeNumber(v.purchase_rate),
             cases: 0,
+            extra_bottles: null,
             price_per_case: 0,
         });
     }
@@ -1077,7 +1193,25 @@ const getMaxCases = (item: CartItem): number => {
 const itemExceedsStock = (item: CartItem): boolean => {
     const vd = getVariantData(item);
     if (!vd) return false;
-    return safeNumber(item.cases) > getMaxCases(item);
+    const cases = safeNumber(item.cases);
+    const extra = safeNumber(item.extra_bottles);
+    const bpc = safeNumber(item.bottles_per_case);
+    const fbpc = safeNumber(item.free_bottles_per_case);
+    const effectiveBPC = bpc + fbpc;
+    const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
+    
+    // In edit mode, the item.total_bottles_available might already include the currently sold bottles since we don't dynamically add them back to the frontend variant object. 
+    // Wait, the API returns current inventory (without the sold bottles). We need to allow them to keep the same number of cases if they aren't increasing it.
+    // For a cleaner UX in edit mode, we can compute available as current_inventory + sold_in_this_sale.
+    let available = vd.total_bottles_available;
+    if (isEditMode.value && props.editSale) {
+        const originalItem = props.editSale.items.find(i => i.product_id === item.product_id && i.variant === item.selected_variant);
+        if (originalItem) {
+            available += originalItem.total_bottles_sold;
+        }
+    }
+    
+    return targetBottles > available;
 };
 
 const anyItemExceedsStock = computed(() =>
@@ -1087,15 +1221,16 @@ const anyItemExceedsStock = computed(() =>
 // Subtotal per item (what customer pays for this item)
 const getItemSubtotal = (item: CartItem): number => {
     const cases = safeNumber(item.cases);
+    const extra = safeNumber(item.extra_bottles);
     const pricePerCase = safeNumber(item.price_per_case);
     const bottlesPerCase = safeNumber(item.bottles_per_case);
     const freePerCase = safeNumber(item.free_bottles_per_case);
 
-    if (!cases || !pricePerCase || !bottlesPerCase) return 0;
+    if (!(cases || extra) || !pricePerCase || !bottlesPerCase) return 0;
 
     const effectiveBPC = bottlesPerCase + freePerCase;
     const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
-    const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bottlesPerCase;
+    const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bottlesPerCase) + extra;
     return Math.round(targetBottles * pricePerBottle * 100) / 100;
 };
 
@@ -1108,16 +1243,17 @@ const saleSummary = computed(() => {
 
     for (const item of cartItems.value) {
         const cases = safeNumber(item.cases);
+        const extra = safeNumber(item.extra_bottles);
         const pricePerCase = safeNumber(item.price_per_case);
         const bpc = safeNumber(item.bottles_per_case);
         const freePerCase = safeNumber(item.free_bottles_per_case);
         const purchaseRate = safeNumber(item.purchase_rate);
 
-        if (!cases || !bpc) continue;
+        if (!(cases || extra) || !bpc) continue;
 
         const effectiveBPC = bpc + freePerCase;
         const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
-        const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bpc;
+        const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
         const subtotal = Math.round(targetBottles * pricePerBottle * 100) / 100;
         const cost = Math.round(targetBottles * purchaseRate * 100) / 100;
 
@@ -1170,7 +1306,7 @@ const openModal = () => {
     const allItemsValid = cartItems.value.every(
         item =>
             item.selected_variant &&
-            safeNumber(item.cases) > 0 &&
+            (safeNumber(item.cases) > 0 || safeNumber(item.extra_bottles) > 0) &&
             safeNumber(item.price_per_case) > 0
     );
 
@@ -1187,16 +1323,19 @@ const confirmSale = () => {
 
     const items = cartItems.value.map(item => {
         const cases = safeNumber(item.cases);
+        const extra = safeNumber(item.extra_bottles);
         const pricePerCase = safeNumber(item.price_per_case);
         const bpc = safeNumber(item.bottles_per_case);
         const freePerCase = safeNumber(item.free_bottles_per_case);
         const effectiveBPC = bpc + freePerCase;
         const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
-        const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bpc;
+        const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
 
         return {
             product_id: item.product_id,
             variant: item.selected_variant,
+            cases_sold: cases,
+            extra_bottles: extra,
             total_bottles_to_sell: targetBottles,
             selling_price_per_bottle: pricePerBottle,
             free_bottles_per_case: freePerCase,
@@ -1210,24 +1349,40 @@ const confirmSale = () => {
         sale_date: saleDate.value,
         include_free_bottles: includeFreeBottles.value,
         items,
+        ...(isEditMode.value ? {
+            payment_amount: editPaymentAmount.value,
+            payment_method: editPaymentMethod.value
+        } : {})
     };
 
-    router.post("/sales/store", payload, {
-        onSuccess: () => {
-            showModal.value = false;
-            isLoading.value = false;
-            resetForm();
-        },
-        onError: (errors: Record<string, string>) => {
-            showModal.value = false;
-            isLoading.value = false;
-            const messages = Object.values(errors);
-            // Show first backend validation error directly in toast.
-            // t() returns the raw string as-is when the key is not in translations,
-            // so Laravel validation messages display correctly.
-            showToastMessage(messages.length > 0 ? messages[0] : "saleError", "error");
-        },
-    });
+    if (isEditMode.value && props.editSale) {
+        router.put(`/sales/${props.editSale.id}`, payload, {
+            onSuccess: () => {
+                showModal.value = false;
+                isLoading.value = false;
+            },
+            onError: (errors: Record<string, string>) => {
+                showModal.value = false;
+                isLoading.value = false;
+                const messages = Object.values(errors);
+                showToastMessage(messages.length > 0 ? messages[0] : "saleError", "error");
+            },
+        });
+    } else {
+        router.post("/sales/store", payload, {
+            onSuccess: () => {
+                showModal.value = false;
+                isLoading.value = false;
+                resetForm();
+            },
+            onError: (errors: Record<string, string>) => {
+                showModal.value = false;
+                isLoading.value = false;
+                const messages = Object.values(errors);
+                showToastMessage(messages.length > 0 ? messages[0] : "saleError", "error");
+            },
+        });
+    }
 };
 
 const saveDraft = () => {
@@ -1241,7 +1396,7 @@ const saveDraft = () => {
     const allItemsValid = cartItems.value.every(
         item =>
             item.selected_variant &&
-            safeNumber(item.cases) > 0 &&
+            (safeNumber(item.cases) > 0 || safeNumber(item.extra_bottles) > 0) &&
             safeNumber(item.price_per_case) > 0
     );
 
@@ -1254,16 +1409,19 @@ const saveDraft = () => {
 
     const items = cartItems.value.map(item => {
         const cases = safeNumber(item.cases);
+        const extra = safeNumber(item.extra_bottles);
         const pricePerCase = safeNumber(item.price_per_case);
         const bpc = safeNumber(item.bottles_per_case);
         const freePerCase = safeNumber(item.free_bottles_per_case);
         const effectiveBPC = bpc + freePerCase;
         const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
-        const targetBottles = includeFreeBottles.value ? cases * effectiveBPC : cases * bpc;
+        const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
 
         return {
             product_id: item.product_id,
             variant: item.selected_variant,
+            cases_sold: cases,
+            extra_bottles: extra,
             total_bottles_to_sell: targetBottles,
             selling_price_per_bottle: pricePerBottle,
             free_bottles_per_case: freePerCase,
