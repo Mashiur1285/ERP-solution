@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Models\Supplier;
+use App\Models\SaleItem;
 use App\Contracts\SupplierContract;
 
 use Inertia\Inertia;
@@ -101,9 +102,22 @@ class SupplierController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        $hasSales = SaleItem::where('supplier_id', $id)->exists();
+        if ($hasSales) {
+            $message = 'This supplier cannot be deleted because they have associated sale records.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
         $this->supplierRepository->delete((int) $id);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Supplier deleted.']);
+        }
         return back()->with('success', 'Supplier deleted.');
     }
 }

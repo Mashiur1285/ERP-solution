@@ -112,8 +112,18 @@ class ShopController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Shop $shop)
+    public function destroy(Request $request, string $id)
     {
-        //
+        if ($this->shopRepository->delete((int) $id)) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Shop deleted successfully.']);
+            }
+            return redirect()->route('shops.index')->with('success', 'Shop deleted successfully.');
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete shop.'], 400);
+        }
+        return redirect()->back()->with('error', 'Failed to delete shop.');
     }
 }

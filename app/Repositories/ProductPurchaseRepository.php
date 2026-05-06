@@ -105,10 +105,9 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         $rawData = collect(DB::select($query))->map(function ($item) use ($salesByBatchAndVariant) {
             $variant = json_decode($item->variant_data, true) ?: [];
 
-            // CORRECTED: Calculate initial purchased bottles correctly
-            $purchasedCases = $variant['cases_without_free_bottles'] ?? 0;
-            $bottlesPerCase = $variant['bottles_per_case'] ?? 0;
-            $initialPurchasedBottles = $purchasedCases * $bottlesPerCase;
+            $bottlesPerCase      = $variant['bottles_per_case'] ?? 0;
+            $numberOfCases       = $variant['number_of_cases'] ?? 0;
+            $initialPurchasedBottles = (int) round($numberOfCases * $bottlesPerCase);
 
             $initialFreeBottles = $variant['total_free_bottles'] ?? 0;
 

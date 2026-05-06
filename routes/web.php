@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('shops/store', [ShopController::class, 'store'])->middleware('permission:shop.add')->name('shops.store');
     Route::get('shops/{id}/edit', [ShopController::class, 'edit'])->middleware('permission:shop.update')->name('shops.edit');
     Route::put('shops/{id}', [ShopController::class, 'update'])->middleware('permission:shop.update')->name('shops.update');
+    Route::delete('shops/{id}', [ShopController::class, 'destroy'])->middleware('permission:shop.delete')->name('shops.destroy');
 
     // Sales
     Route::get('sales', [SalesController::class, 'index'])->middleware('permission:sales.add')->name('sales.index');
