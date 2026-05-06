@@ -16,7 +16,7 @@ class PermissionSeeder extends Seeder
             'category' => ['view', 'add', 'update', 'delete'],
             'brand' => ['view', 'add', 'update', 'delete'],
             'lift' => ['view', 'add', 'update'],
-            'shop' => ['view', 'add', 'update'],
+            'shop' => ['view', 'add', 'update', 'delete'],
             'sales' => ['view', 'add', 'update'],
             'expense' => ['view', 'add', 'update'],
             'inventory' => ['view'],
