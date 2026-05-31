@@ -12,6 +12,7 @@ use App\Http\Requests\storeProductPurchaseRequest;
 use Inertia\Inertia;
 use App\Models\Supplier;
 use App\Models\ProductCatalog;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -168,6 +169,8 @@ class ProductPurchaseController extends Controller
     public function productList(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
+        $showOutOfStock = $request->boolean('show_out_of_stock', false);
+
         $categories = $this->categoryRepository->all()->map(fn ($category) => [
             'id' => $category->id,
             'name' => $category->name,
@@ -180,6 +183,7 @@ class ProductPurchaseController extends Controller
 
         $products = ProductCatalog::query()
             ->with(['supplier', 'category', 'brand', 'products:id,product_catalog_id,metadata'])
+            ->when(!$showOutOfStock, fn ($q) => $q->whereHas('products', fn ($q2) => $q2->whereNull('deleted_at')))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($builder) use ($search) {
                     $builder
@@ -197,6 +201,7 @@ class ProductPurchaseController extends Controller
 
         $purchaseAggregates = collect();
         $inventoryAggregates = collect();
+        $variantInventoryAggregates = collect();
 
         if (!empty($productIds)) {
             $purchaseAggregates = DB::table('products')
@@ -230,12 +235,11 @@ class ProductPurchaseController extends Controller
                     SUM(
                         GREATEST(
                             0,
-                            (
+                            COALESCE((variant_data->>'current_purchased_quantity')::int,
                                 (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
-                                - COALESCE(sa.sold_purchased_bottles, 0)
-                            ) + (
+                            )
+                            + COALESCE((variant_data->>'current_free_quantity')::int,
                                 COALESCE((variant_data->>'total_free_bottles')::int, 0)
-                                - COALESCE(sa.sold_free_bottles, 0)
                             )
                         )
                     ) as total_available_bottles,
@@ -245,12 +249,11 @@ class ProductPurchaseController extends Controller
                                 FLOOR(
                                     GREATEST(
                                         0,
-                                        (
+                                        COALESCE((variant_data->>'current_purchased_quantity')::int,
                                             (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
-                                            - COALESCE(sa.sold_purchased_bottles, 0)
-                                        ) + (
+                                        )
+                                        + COALESCE((variant_data->>'current_free_quantity')::int,
                                             COALESCE((variant_data->>'total_free_bottles')::int, 0)
-                                            - COALESCE(sa.sold_free_bottles, 0)
                                         )
                                     ) / COALESCE(NULLIF((variant_data->>'bottles_per_case')::int, 0), 1)
                                 )
@@ -259,26 +262,57 @@ class ProductPurchaseController extends Controller
                     ) as total_available_cases
                 FROM products p
                 LEFT JOIN LATERAL jsonb_array_elements(COALESCE(p.metadata->'variants', '[]'::jsonb)) AS variant_data ON true
-                LEFT JOIN (
-                    SELECT
-                        sale_items.product_id,
-                        sale_items.variant,
-                        SUM(sale_items.purchased_bottles_sold) as sold_purchased_bottles,
-                        SUM(sale_items.free_bottles_sold) as sold_free_bottles
-                    FROM sale_items
-                    INNER JOIN sales ON sale_items.sale_id = sales.id
-                    WHERE sales.status != 'draft'
-                    GROUP BY sale_items.product_id, sale_items.variant
-                ) sa ON sa.product_id = p.id AND sa.variant = COALESCE(variant_data->>'variant', 'N/A')
                 WHERE p.deleted_at IS NULL
                     AND p.product_catalog_id IN ($idsList)
                 GROUP BY p.product_catalog_id
             "))->keyBy('product_catalog_id');
+
+            $variantInventoryAggregates = collect(DB::select("
+                SELECT
+                    p.product_catalog_id,
+                    COALESCE(variant_data->>'variant', 'N/A') as variant,
+                    SUM(
+                        GREATEST(
+                            0,
+                            COALESCE((variant_data->>'current_purchased_quantity')::int,
+                                (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
+                            )
+                            + COALESCE((variant_data->>'current_free_quantity')::int,
+                                COALESCE((variant_data->>'total_free_bottles')::int, 0)
+                            )
+                        )
+                    ) as available_bottles,
+                    SUM(
+                        CASE
+                            WHEN COALESCE((variant_data->>'bottles_per_case')::int, 0) > 0 THEN
+                                FLOOR(
+                                    GREATEST(
+                                        0,
+                                        COALESCE((variant_data->>'current_purchased_quantity')::int,
+                                            (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
+                                        )
+                                        + COALESCE((variant_data->>'current_free_quantity')::int,
+                                            COALESCE((variant_data->>'total_free_bottles')::int, 0)
+                                        )
+                                    ) / COALESCE(NULLIF((variant_data->>'bottles_per_case')::int, 0), 1)
+                                )
+                            ELSE 0
+                        END
+                    ) as available_cases
+                FROM products p
+                LEFT JOIN LATERAL jsonb_array_elements(COALESCE(p.metadata->'variants', '[]'::jsonb)) AS variant_data ON true
+                WHERE p.deleted_at IS NULL
+                    AND p.product_catalog_id IN ($idsList)
+                GROUP BY p.product_catalog_id, COALESCE(variant_data->>'variant', 'N/A')
+            "))
+                ->groupBy('product_catalog_id')
+                ->map(fn ($rows) => collect($rows)->keyBy('variant'));
         }
 
-        $products->setCollection($products->getCollection()->map(function ($product) use ($purchaseAggregates, $inventoryAggregates) {
+        $products->setCollection($products->getCollection()->map(function ($product) use ($purchaseAggregates, $inventoryAggregates, $variantInventoryAggregates) {
             $purchaseSummary = $purchaseAggregates->get($product->id);
             $inventorySummary = $inventoryAggregates->get($product->id);
+            $variantStockMap = $variantInventoryAggregates->get($product->id, collect());
             $catalogVariants = collect($product->default_variants ?? []);
             $purchaseVariants = $product->products
                 ->flatMap(function ($purchase) {
@@ -297,8 +331,9 @@ class ProductPurchaseController extends Controller
                 ->concat($purchaseVariants)
                 ->filter(fn ($variant) => !empty($variant['variant']))
                 ->groupBy('variant')
-                ->map(function ($variants, $variantName) {
+                ->map(function ($variants, $variantName) use ($variantStockMap) {
                     $first = $variants->first();
+                    $stock = $variantStockMap->get($variantName);
 
                     return [
                         'variant' => $variantName,
@@ -307,6 +342,8 @@ class ProductPurchaseController extends Controller
                         'total_purchase_amount' => round((float) $variants->sum(function ($variant) {
                             return (float) ($variant['total_purchase_amount'] ?? 0);
                         }), 2),
+                        'stock_cases' => (int) ($stock->available_cases ?? 0),
+                        'stock_bottles' => (int) ($stock->available_bottles ?? 0),
                     ];
                 })
                 ->values()
@@ -338,6 +375,7 @@ class ProductPurchaseController extends Controller
             'brands' => $brands,
             'filters' => [
                 'search' => $search,
+                'show_out_of_stock' => $showOutOfStock,
             ],
         ]);
     }
@@ -380,5 +418,73 @@ class ProductPurchaseController extends Controller
         return redirect()
             ->route('products.index', $request->only('search', 'page'))
             ->with('success', 'Product catalog updated successfully');
+    }
+
+    public function adjustVariantStock(Request $request)
+    {
+        $request->validate([
+            'product_catalog_id' => 'required|integer|exists:product_catalog,id',
+            'variant'            => 'required|string|max:255',
+            'total_bottles'      => 'required|integer|min:0',
+        ]);
+
+        $productCatalogId = (int) $request->product_catalog_id;
+        $variantName      = (string) $request->variant;
+        $newTotal         = (int) $request->total_bottles;
+
+        $products = Product::where('product_catalog_id', $productCatalogId)
+            ->whereNull('deleted_at')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->filter(function ($product) use ($variantName) {
+                foreach ($product->metadata['variants'] ?? [] as $v) {
+                    if (($v['variant'] ?? '') === $variantName) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            ->values();
+
+        if ($products->isEmpty()) {
+            return back()->withErrors(['error' => 'No inventory found for this variant.']);
+        }
+
+        DB::transaction(function () use ($products, $variantName, $newTotal) {
+            // Zero out older batches for this variant
+            foreach ($products->slice(0, -1) as $product) {
+                $metadata = $product->metadata;
+                $variants = $metadata['variants'] ?? [];
+                foreach ($variants as &$v) {
+                    if (($v['variant'] ?? '') === $variantName) {
+                        $v['current_purchased_quantity'] = 0;
+                        $v['current_free_quantity']      = 0;
+                        break;
+                    }
+                }
+                unset($v);
+                $metadata['variants'] = $variants;
+                $product->metadata    = $metadata;
+                $product->save();
+            }
+
+            // Set new total on latest batch
+            $latest   = $products->last();
+            $metadata = $latest->metadata;
+            $variants = $metadata['variants'] ?? [];
+            foreach ($variants as &$v) {
+                if (($v['variant'] ?? '') === $variantName) {
+                    $v['current_purchased_quantity'] = $newTotal;
+                    $v['current_free_quantity']      = 0;
+                    break;
+                }
+            }
+            unset($v);
+            $metadata['variants'] = $variants;
+            $latest->metadata     = $metadata;
+            $latest->save();
+        });
+
+        return back()->with('success', 'Inventory adjusted successfully.');
     }
 }

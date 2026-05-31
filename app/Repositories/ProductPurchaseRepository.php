@@ -88,6 +88,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         $query = "
         SELECT
             products.id,
+            products.product_catalog_id,
             products.name as product_name,
             products.supplier_id,
             products.date as purchase_date,
@@ -117,11 +118,17 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             $soldFree = (int) round($soldData->sold_free_bottles ?? 0);
             $soldTotal = (int) round($soldData->sold_total_bottles ?? ($soldPurchased + $soldFree));
 
-            $currentPurchased = max(0, $initialPurchasedBottles - $soldPurchased);
-            $currentFree = max(0, $initialFreeBottles - $soldFree);
+            // Use FIFO-maintained metadata values when available (accurate for multi-batch sales)
+            $currentPurchased = isset($variant['current_purchased_quantity'])
+                ? max(0, (int) $variant['current_purchased_quantity'])
+                : max(0, $initialPurchasedBottles - $soldPurchased);
+            $currentFree = isset($variant['current_free_quantity'])
+                ? max(0, (int) $variant['current_free_quantity'])
+                : max(0, $initialFreeBottles - $soldFree);
 
             return [
                 'product_id' => $item->id,
+                'product_catalog_id' => $item->product_catalog_id,
                 'product_name' => $item->product_name,
                 'image_url' => $item->image_path ? '/storage/' . ltrim($item->image_path, '/') : null,
                 'supplier_id' => $item->supplier_id,
@@ -177,6 +184,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
                 return [
                     'product_id' => $variantGroup->first()['product_id'],
+                    'product_catalog_id' => $variantGroup->first()['product_catalog_id'],
                     'product_name' => $variantGroup->first()['product_name'],
                     'image_url' => $variantGroup->first()['image_url'],
                     'supplier_id' => $variantGroup->first()['supplier_id'],
@@ -200,6 +208,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             return [
                 'product_name' => $productName,
                 'product_id' => $productGroup->first()['product_id'],
+                'product_catalog_id' => $productGroup->first()['product_catalog_id'],
                 'image_url' => $productGroup->first()['image_url'],
                 'supplier_id' => $productGroup->first()['supplier_id'],
                 'supplier_name' => $productGroup->first()['supplier_name'],

@@ -312,11 +312,6 @@
                                 {{ getTranslation("stockStatus") }}
                             </th>
                             <th
-                                class="hidden w-32 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider lg:table-cell"
-                            >
-                                {{ getTranslation("unitPrice") }}
-                            </th>
-                            <th
                                 class="w-36 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("totalValue") }}
@@ -441,19 +436,6 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="hidden w-32 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:table-cell lg:text-sm"
-                                >
-                                    <div class="text-right font-medium">
-                                        ৳{{
-                                            toBengaliNumber(
-                                                item.variants[0]?.unit_price ||
-                                                    0,
-                                                2
-                                            )
-                                        }}
-                                    </div>
-                                </td>
-                                <td
                                     class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-right font-medium">
@@ -565,16 +547,8 @@
                                                             }}</span
                                                         >
                                                         <span
-                                                            class="text-gray-800 font-medium"
-                                                            >৳{{
-                                                                toBengaliNumber(
-                                                                    item
-                                                                        .variants[0]
-                                                                        ?.unit_price ||
-                                                                        0,
-                                                                    2
-                                                                )
-                                                            }}</span
+                                                            class="text-gray-400"
+                                                            >-</span
                                                         >
                                                     </div>
                                                 </div>
@@ -739,8 +713,7 @@
                                                         >
                                                             ৳{{
                                                                 toBengaliNumber(
-                                                                    variant.total_bottles_available *
-                                                                        variant.unit_price,
+                                                                    Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
                                                                     2
                                                                 )
                                                             }}
@@ -1016,8 +989,7 @@
                                                                 class="font-bold text-lg text-green-600"
                                                                 >৳{{
                                                                     toBengaliNumber(
-                                                                        variant.total_bottles_available *
-                                                                            variant.unit_price,
+                                                                        Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
                                                                         2
                                                                     )
                                                                 }}</span
@@ -1145,11 +1117,11 @@ const processedInventory = computed(() => {
             (sum, variant) => sum + (variant.total_bottles_sold || 0),
             0
         );
-        const total_value = item.variants.reduce(
-            (sum, variant) =>
-                sum + variant.total_bottles_available * variant.unit_price,
-            0
-        );
+        const total_value = item.variants.reduce((sum, variant) => {
+            const casePrice = Number(variant.variant_metadata?.case_buying_price ?? 0);
+            const cases = Number(variant.cases_available ?? 0);
+            return sum + cases * casePrice;
+        }, 0);
 
         return {
             ...item,

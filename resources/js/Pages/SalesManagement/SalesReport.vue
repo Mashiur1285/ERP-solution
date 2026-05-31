@@ -637,6 +637,7 @@
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalRevenue") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCost") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCases") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("items") }}</th>
                         </tr>
                     </thead>
@@ -654,7 +655,8 @@
                             <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.length || 0) }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.reduce((s, item) => s + (item.cases_sold || 0), 0) || 0) }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.reduce((s, item) => s + (item.total_bottles_sold || item.quantity || 0), 0) || 0) }}</td>
                         </tr>
                     </tbody>
                     <tfoot class="bg-slate-50">
@@ -663,6 +665,7 @@
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(printTotals.cases) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(printTotals.items) }}</td>
                         </tr>
                     </tfoot>
@@ -1691,6 +1694,7 @@ interface SaleItem {
     total_bottles_sold?: number;
     purchased_bottles_sold?: number;
     free_bottles_sold?: number;
+    extra_bottles?: number;
     quantity?: number;
     total_price: string | number;
     profit: string | number;
@@ -2139,11 +2143,17 @@ const printTotals = computed(() => {
             ) || 0),
         0
     );
+    const cases = filteredSales.value.reduce(
+        (sum, sale) =>
+            sum + (sale.items?.reduce((s, item) => s + (item.cases_sold || 0), 0) || 0),
+        0
+    );
 
     return {
         revenue,
         profit,
         items,
+        cases,
         cost: revenue - profit,
     };
 });
