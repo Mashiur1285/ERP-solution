@@ -1,7 +1,7 @@
 
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-4 bg-gray-100 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Toast Notification -->
@@ -94,13 +94,13 @@
 
                 <div class="flex justify-end mt-6 space-x-3">
                     <button
-                        class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        class="px-4 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap"
                         @click="showSupplierModal = false"
                     >
                         {{ t("cancel") }}
                     </button>
                     <button
-                        class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow"
+                        class="px-4 py-1.5 rounded-lg bg-indigo-600 text-sm text-white hover:bg-indigo-700 shadow whitespace-nowrap"
                         @click="handleSupplierCreate"
                     >
                         {{ t("save") }}
@@ -138,52 +138,20 @@
             @change-language="changeLanguage"
         />
 
-        <!-- Main Form Container -->
-        <div
-            class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl relative overflow-hidden"
-        >
-            <!-- Background Pattern -->
-            <svg
-                class="absolute inset-0 w-full h-full opacity-5 pointer-events-none"
-                viewBox="0 0 1440 320"
-                preserveAspectRatio="none"
-            >
-                <path
-                    fill="#4f46e5"
-                    fill-opacity="0.1"
-                    d="M0,160L48,138.7C96,117,192,75,288,80C384,85,480,139,576,149.3C672,160,768,128,864,106.7C960,85,1056,75,1152,90.7C1248,107,1344,149,1392,170.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-                />
-            </svg>
-
-            <div class="relative z-10">
-                <!-- Form Header -->
-                <div class="flex items-center justify-between mb-8">
-                    <h2
-                        class="text-2xl font-semibold text-gray-800 flex items-center"
-                    >
-                        <div
-                            class="p-2 mr-3 bg-indigo-200 rounded-full flex items-center justify-center"
-                        >
-                            <svg
-                                class="w-6 h-6 text-indigo-700"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                />
+        <!-- POS Style Two-Column Layout -->
+        <div class="flex flex-col lg:flex-row gap-4 lg:items-start">
+            <!-- LEFT SIDE: Form Area -->
+            <div class="flex-1 min-w-0 space-y-4">
+                <!-- Product Information Section -->
+                <div class="bg-white rounded-xl shadow-sm p-5">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 mr-3 bg-indigo-100 rounded-lg">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                         </div>
-                        {{ t("addNewPurchase") }}
-                    </h2>
-                </div>
-
-                <!-- Product Information Section -->
-                <div class="mb-8">
+                        <h2 class="text-lg font-semibold text-gray-800">{{ t("addNewPurchase") }}</h2>
+                    </div>
                     <ProductInformation
                         :product-form="productForm"
                         :suppliers="suppliersList"
@@ -200,7 +168,7 @@
                 </div>
 
                 <!-- Variants Section -->
-                <div class="mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-5">
                     <VariantsSection
                         :product-form="productForm"
                         :is-submitted="isSubmitted"
@@ -208,16 +176,12 @@
                         :t="t"
                         :to-bengali-number="toBengaliNumber"
                         :get-variant-total-bottles="getVariantTotalBottles"
-                        :get-variant-total-free-bottles="
-                            getVariantTotalFreeBottles
-                        "
+                        :get-variant-total-free-bottles="getVariantTotalFreeBottles"
                         :get-variant-total-cost="getVariantTotalCost"
                         :get-actual-rate-per-bottle="getActualRatePerBottle"
                         :get-actual-rate-per-case="getActualRatePerCase"
                         :get-cases-with-free-bottles="getCasesWithFreeBottles"
-                        :get-cases-without-free-bottles="
-                            getCasesWithoutFreeBottles
-                        "
+                        :get-cases-without-free-bottles="getCasesWithoutFreeBottles"
                         :get-extra-free-bottles="getExtraFreeBottles"
                         :variant-remaining-deposit="variantRemainingDeposit"
                         :variant-options="variantOptions"
@@ -226,89 +190,168 @@
                         @variant-change="handleVariantChange"
                     />
                 </div>
+            </div>
 
-                <!-- Total Summary -->
-                <div class="mb-8">
-                    <TotalSummary
-                        :product-form="productForm"
-                        :total-bottles="totalBottles"
-                        :total-variants="productForm.variants.length"
-                        :total-cases="totalCases"
-                        :total-purchased-cases="totalPurchasedCases"
-                        :total-purchased-bottles="totalPurchasedBottles"
-                        :total-free-bottles="totalFreeBottles"
-                        :total-cases-from-free="totalCasesFromFree"
-                        :total-extra-free-bottles="totalExtraFreeBottles"
-                        :total-cost="totalCost"
-                        :remaining-deposit-after-purchase="
-                            remainingDepositAfterPurchase
-                        "
-                        :current-language="currentLanguage"
-                        :t="t"
-                        :to-bengali-number="toBengaliNumber"
-                    />
-                </div>
+            <!-- RIGHT SIDE: Invoice Panel -->
+            <div class="w-full lg:w-[400px] lg:flex-shrink-0 lg:sticky lg:top-24">
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                    <!-- Invoice Header -->
+                    <div class="bg-indigo-600 text-white px-5 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <h3 class="text-lg font-bold">{{ t("purchaseSummary") }}</h3>
+                            </div>
+                            <span class="text-xs bg-indigo-500 px-2 py-1 rounded-full">{{ currentDate }}</span>
+                        </div>
+                        <p v-if="productForm.product_name" class="text-indigo-200 text-sm mt-1">{{ productForm.product_name }}</p>
+                    </div>
 
-                <!-- Action Buttons -->
-                <div
-                    class="flex justify-end space-x-4 pt-6 border-t border-gray-200"
-                >
-                    <button
-                        @click="resetForm"
-                        class="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center space-x-2"
-                    >
-                        <svg
-                            class="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                    <!-- Invoice Body -->
+                    <div class="px-5 py-4 max-h-[calc(100vh-280px)] overflow-y-auto">
+                        <!-- Empty State -->
+                        <div v-if="productForm.variants.every(v => !v.number_of_cases || !v.case_buying_price)" class="text-center py-8 text-gray-400">
+                            <svg class="w-16 h-16 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p class="text-sm">{{ t("emptyInvoice") }}</p>
+                        </div>
+
+                        <!-- Variant Line Items -->
+                        <div v-else>
+                            <!-- Table Header -->
+                            <div class="grid grid-cols-12 gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wider pb-2 border-b border-gray-200 mb-2">
+                                <div class="col-span-4">{{ t("variant") }}</div>
+                                <div class="col-span-2 text-center">{{ t("numberOfCases") }}</div>
+                                <div class="col-span-3 text-center">{{ t("bottlesPerCase") }}</div>
+                                <div class="col-span-3 text-right">{{ t("totalCost") }}</div>
+                            </div>
+
+                            <!-- Line Items -->
+                            <div
+                                v-for="(variant, index) in productForm.variants"
+                                :key="index"
+                                class="py-2 border-b border-dashed border-gray-100 last:border-0"
+                            >
+                                <div v-if="variant.number_of_cases && variant.case_buying_price" class="grid grid-cols-12 gap-1 text-sm">
+                                    <div class="col-span-4">
+                                        <p class="font-medium text-gray-800">{{ variant.variant || t("variant") + ' ' + (index + 1) }}</p>
+                                        <p class="text-xs text-gray-400">৳{{ currentLanguage === 'bn' ? toBengaliNumber(variant.case_buying_price) : variant.case_buying_price }}/{{ t("case") }}</p>
+                                    </div>
+                                    <div class="col-span-2 text-center text-gray-700">
+                                        {{ currentLanguage === 'bn' ? toBengaliNumber(variant.number_of_cases) : variant.number_of_cases }}
+                                    </div>
+                                    <div class="col-span-3 text-center text-gray-700">
+                                        {{ currentLanguage === 'bn' ? toBengaliNumber(getVariantTotalBottles(variant)) : getVariantTotalBottles(variant) }}
+                                        <span v-if="getVariantTotalFreeBottles(variant) > 0" class="text-xs text-green-500 block">
+                                            +{{ currentLanguage === 'bn' ? toBengaliNumber(getVariantTotalFreeBottles(variant)) : getVariantTotalFreeBottles(variant) }} {{ t("free") }}
+                                        </span>
+                                    </div>
+                                    <div class="col-span-3 text-right font-semibold text-gray-800">
+                                        ৳{{ currentLanguage === 'bn' ? toBengaliNumber(getVariantTotalCost(variant).toFixed(2)) : getVariantTotalCost(variant).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dotted Separator -->
+                            <div class="border-t-2 border-dotted border-gray-300 my-3"></div>
+
+                            <!-- Summary Rows -->
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("totalVariants") }}</span>
+                                    <span class="font-medium">{{ currentLanguage === 'bn' ? toBengaliNumber(productForm.variants.filter(v => v.number_of_cases && v.case_buying_price).length) : productForm.variants.filter(v => v.number_of_cases && v.case_buying_price).length }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("purchasedCases") }}</span>
+                                    <span class="font-medium">{{ currentLanguage === 'bn' ? toBengaliNumber(totalPurchasedCases) : totalPurchasedCases.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("casesFromFree") }}</span>
+                                    <span class="font-medium text-green-600">+{{ currentLanguage === 'bn' ? toBengaliNumber(totalCasesFromFree) : totalCasesFromFree.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("totalNumberOfCases") }}</span>
+                                    <span class="font-bold text-gray-800">{{ currentLanguage === 'bn' ? toBengaliNumber(totalCases) : totalCases.toLocaleString() }}</span>
+                                </div>
+
+                                <div class="border-t border-gray-200 pt-2"></div>
+
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("purchasedBottles") }}</span>
+                                    <span class="font-medium">{{ currentLanguage === 'bn' ? toBengaliNumber(totalPurchasedBottles) : totalPurchasedBottles.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("freeBottles") }}</span>
+                                    <span class="font-medium text-green-600">+{{ currentLanguage === 'bn' ? toBengaliNumber(totalFreeBottles) : totalFreeBottles.toLocaleString() }}</span>
+                                </div>
+                                <div v-if="totalExtraFreeBottles > 0" class="flex justify-between text-gray-600">
+                                    <span>{{ t("extraFreeBottles") }}</span>
+                                    <span class="font-medium text-teal-600">+{{ currentLanguage === 'bn' ? toBengaliNumber(totalExtraFreeBottles) : totalExtraFreeBottles.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>{{ t("totalBottles") }}</span>
+                                    <span class="font-bold text-gray-800">{{ currentLanguage === 'bn' ? toBengaliNumber(totalBottles) : totalBottles.toLocaleString() }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Grand Total -->
+                            <div class="border-t-2 border-dotted border-gray-300 mt-3 pt-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-base font-bold text-gray-800">{{ t("totalCost") }}</span>
+                                    <span class="text-xl font-bold text-indigo-600">
+                                        ৳{{ currentLanguage === 'bn' ? toBengaliNumber(totalCost.toFixed(2)) : totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Remaining Deposit -->
+                            <div v-if="productForm.supplier_id" class="mt-3 p-3 rounded-lg" :class="remainingDepositAfterPurchase >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-xs text-gray-500">{{ t("remainingDeposit") }}</p>
+                                        <p class="text-xs text-gray-400">{{ t("afterPurchase") }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold" :class="remainingDepositAfterPurchase >= 0 ? 'text-green-600' : 'text-red-600'">
+                                            ৳{{ currentLanguage === 'bn' ? toBengaliNumber(remainingDepositAfterPurchase.toFixed(2)) : remainingDepositAfterPurchase.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                                        </p>
+                                        <p class="text-xs" :class="remainingDepositAfterPurchase >= 0 ? 'text-green-500' : 'text-red-500'">
+                                            {{ remainingDepositAfterPurchase >= 0 ? t("sufficient") : t("insufficient") }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Footer: Action Buttons -->
+                    <div class="px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-2">
+                        <button
+                            @click="openModal"
+                            class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-md"
+                            :disabled="isLoading"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                        </svg>
-                        <span>{{ t("resetForm") }}</span>
-                    </button>
-                    <button
-                        @click="openModal"
-                        class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-                        :disabled="isLoading"
-                    >
-                        <svg
-                            v-if="isLoading"
-                            class="w-5 h-5 animate-spin"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                            <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            <span>{{ isLoading ? t("processing") : t("addPurchase") }}</span>
+                        </button>
+                        <button
+                            @click="resetForm"
+                            class="w-full py-2.5 border-2 border-gray-300 rounded-lg text-gray-600 font-medium hover:bg-gray-100 hover:border-gray-400 transition-all duration-300 flex items-center justify-center space-x-2 text-sm"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                        </svg>
-                        <svg
-                            v-else
-                            class="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                            />
-                        </svg>
-                        <span>{{
-                            isLoading ? t("processing") : t("addPurchase")
-                        }}</span>
-                    </button>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>{{ t("resetForm") }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -324,7 +367,6 @@ import ConfirmationModal from "./Partials/PurchasePartials/ConfirmationModal.vue
 import Header from "./Partials/PurchasePartials/Header.vue";
 import ProductInformation from "./Partials/PurchasePartials/ProductInformation.vue";
 import VariantsSection from "./Partials/PurchasePartials/VariantsSection.vue";
-import TotalSummary from "./Partials/PurchasePartials/TotalSummary.vue";
 import CategoryModal from "../Category/Partials/CategoryModal.vue";
 import BrandModal from "../Brand/Partials/BrandModal.vue";
 
@@ -370,6 +412,7 @@ defineOptions({
 
 // Language handling
 const currentLanguage = ref(localStorage.getItem("language") || "en");
+const currentDate = new Date().toLocaleDateString(currentLanguage.value === 'bn' ? 'bn-BD' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 const csrfToken =
     (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
         ?.content || "";
@@ -399,6 +442,10 @@ const translations = {
         productName: "Product Name",
         enterProductName: "Enter product name",
         productNameRequired: "Product name is required",
+        productImage: "Product Image",
+        uploadProductImage: "Upload product image",
+        changeProductImage: "Change image",
+        removeImage: "Remove image",
         category: "Category",
         selectCategory: "Select a category",
         categoryRequired: "Please select a category",
@@ -484,6 +531,9 @@ const translations = {
         emergencyPhoneNumber: "Emergency Phone",
         cancel: "Cancel",
         save: "Save",
+        emptyInvoice: "Add variants to see invoice",
+        free: "free",
+        case: "case",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -493,6 +543,10 @@ const translations = {
         productName: "পণ্যের নাম",
         enterProductName: "পণ্যের নাম লিখুন",
         productNameRequired: "পণ্যের নাম প্রয়োজন",
+        productImage: "পণ্যের ছবি",
+        uploadProductImage: "পণ্যের ছবি আপলোড করুন",
+        changeProductImage: "ছবি পরিবর্তন করুন",
+        removeImage: "ছবি মুছুন",
         category: "বিভাগ",
         selectCategory: "একটি বিভাগ নির্বাচন করুন",
         categoryRequired: "অনুগ্রহ করে একটি বিভাগ নির্বাচন করুন",
@@ -577,11 +631,15 @@ const translations = {
         emergencyPhoneNumber: "জরুরি ফোন",
         cancel: "বাতিল",
         save: "সংরক্ষণ",
+        emptyInvoice: "ইনভয়েস দেখতে ভেরিয়েন্ট যোগ করুন",
+        free: "ফ্রি",
+        case: "কেস",
     },
 };
 
 const productForm = ref({
     product_name: "",
+    product_image: null as File | null,
     category_id: "",
     brand_id: "",
     supplier_id: "",
@@ -856,14 +914,18 @@ const t = (key: string, params: Record<string, any> = {}) => {
 
 // Utility function to convert numbers to Bengali digits
 const toBengaliNumber = (num: number | string): string => {
-    if (currentLanguage.value === "en") {
-        return String(num);
+    if (num === null || num === undefined || num === "") return "";
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
     }
+
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return String(num).replace(
-        /[0-9]/g,
-        (digit) => bengaliDigits[parseInt(digit)]
-    );
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 // Language change handler
@@ -888,6 +950,7 @@ const handleVariantChange = (index: number, variantValue: string) => {
 const resetForm = () => {
     productForm.value = {
         product_name: "",
+        product_image: null,
         category_id: "",
         brand_id: "",
         supplier_id: "",
@@ -993,6 +1056,7 @@ const confirmPurchase = () => {
     isLoading.value = true;
     const purchaseData = {
         product_name: productForm.value.product_name,
+        product_image: productForm.value.product_image,
         category_id: productForm.value.category_id,
         brand_id: productForm.value.brand_id,
         supplier_id: productForm.value.supplier_id,
@@ -1023,6 +1087,7 @@ const confirmPurchase = () => {
     };
 
     router.post("/products-store", purchaseData, {
+        forceFormData: true,
         onSuccess: () => {
             showModal.value = false;
             isLoading.value = false;

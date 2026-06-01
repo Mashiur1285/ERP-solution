@@ -1,14 +1,13 @@
-```vue
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-4 sm:p-6 space-y-6 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
     >
         <!-- Header -->
         <div
-            class="flex justify-between items-center mb-8 border-b border-indigo-100 pb-4"
+            class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8 border-b border-indigo-100 pb-4"
         >
             <h1
-                class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-2xl sm:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-50 rounded-full flex items-center justify-center"
@@ -29,10 +28,9 @@
                 </div>
                 Supplier List
             </h1>
-            <div class="flex items-center space-x-4">
-                <a
+            <a
                     href="/suppliers/create"
-                    class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                    class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
                 >
                     <svg
                         class="w-5 h-5"
@@ -49,7 +47,6 @@
                     </svg>
                     <span>Add Supplier</span>
                 </a>
-            </div>
         </div>
 
         <!-- Main Container -->
@@ -69,11 +66,11 @@
                 />
             </svg>
 
-            <div class="relative z-10 p-8">
+            <div class="relative z-10 p-4 sm:p-8">
                 <!-- Section Header -->
-                <div class="flex items-center justify-between mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2">
                     <h2
-                        class="text-2xl font-semibold text-gray-800 flex items-center"
+                        class="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center"
                     >
                         <div
                             class="p-2 mr-3 bg-indigo-50 rounded-full flex items-center justify-center"
@@ -107,36 +104,36 @@
                 <div
                     class="bg-white rounded-xl border border-indigo-50 overflow-hidden"
                 >
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto -mx-4 sm:mx-0">
                         <table class="min-w-full divide-y divide-indigo-100">
                             <thead class="bg-indigo-50">
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                    class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
                                 >
                                     Company
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                    class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider hidden sm:table-cell"
                                 >
                                     Branch
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                    class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
                                 >
                                     Contact
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                    class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider hidden md:table-cell"
                                 >
                                     Website
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
+                                    class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider"
                                 >
                                     Actions
                                 </th>
@@ -148,21 +145,21 @@
                                     class="hover:bg-indigo-100 transition-all duration-200"
                                     :class="{ 'bg-indigo-50': index % 2 === 1 }"
                                 >
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                         <div
                                             class="text-sm font-semibold text-gray-900"
                                         >
                                             {{ supplier.company_name ?? "-" }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                                         <div
                                             class="text-sm font-medium text-gray-900"
                                         >
                                             {{ supplier.branch_name ?? "-" }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                         <div
                                             class="text-sm font-medium text-gray-900"
                                         >
@@ -175,7 +172,7 @@
                                             {{ supplier.email }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                                         <a
                                             v-if="supplier.website"
                                             :href="
@@ -215,6 +212,15 @@
                                         <div
                                             class="flex items-center space-x-2"
                                         >
+                                            <button
+                                                @click="deleteSupplier(supplier.id)"
+                                                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                <span>Delete</span>
+                                            </button>
                                             <a
                                                 :href="`/suppliers/${supplier.id}/edit`"
                                                 class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 group"
@@ -312,6 +318,7 @@
 
 <script setup lang="ts">
 import Layout from "../../Layout.vue";
+import { router } from "@inertiajs/vue3";
 
 interface Supplier {
     id: number;
@@ -337,7 +344,10 @@ defineOptions({
     layout: Layout,
 });
 
-console.log("Index.vue component loaded");
+const deleteSupplier = (id: number) => {
+    if (!confirm('Are you sure you want to delete this supplier?')) return;
+    router.delete(route('suppliers.destroy', { id }), { preserveScroll: true });
+};
 </script>
 
 <style scoped>

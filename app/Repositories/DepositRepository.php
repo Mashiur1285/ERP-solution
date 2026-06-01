@@ -21,6 +21,8 @@ class DepositRepository extends BaseRepository implements DepositContract
     {
         return $this->model
             ->select(
+                'deposits.id',
+                'deposits.supplier_id',
                 'suppliers.company_name as name',
                 'suppliers.phone_number as phone_number',
                 'deposits.balance_deposited as deposit_amount',
@@ -65,5 +67,81 @@ class DepositRepository extends BaseRepository implements DepositContract
             ->groupBy('suppliers.company_name')
             ->orderBy(\DB::raw('SUM(deposits.balance_remaining)'), 'desc') // Order by total_remaining_deposit descending
             ->get();
+    }
+
+    public function applyAmountAgainstSupplierDeposits(int $supplierId, float $amount): void
+    {
+        $remainingAmount = round($amount, 2);
+
+        if ($remainingAmount <= 0) {
+            return;
+        }
+
+        $deposits = $this->model
+            ->where('supplier_id', $supplierId)
+            ->where('balance_remaining', '>', 0)
+            ->orderBy('deposit_date', 'desc')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($deposits as $deposit) {
+            if ($remainingAmount <= 0) {
+                break;
+            }
+
+            $available = (float) $deposit->balance_remaining;
+            $usedNow = min($available, $remainingAmount);
+
+            $deposit->balance_remaining = round($available - $usedNow, 2);
+            $deposit->balance_used = round(((float) ($deposit->balance_used ?? 0)) + $usedNow, 2);
+            $deposit->is_used = $deposit->balance_remaining <= 0;
+            $deposit->save();
+
+            $remainingAmount = round($remainingAmount - $usedNow, 2);
+        }
+
+        if ($remainingAmount > 0) {
+            throw new \RuntimeException('Insufficient deposit balance for this supplier.');
+        }
+    }
+
+    public function creditAmountBackToSupplierDeposits(int $supplierId, float $amount): void
+    {
+        $remainingAmount = round($amount, 2);
+
+        if ($remainingAmount <= 0) {
+            return;
+        }
+
+        $deposits = $this->model
+            ->where('supplier_id', $supplierId)
+            ->where('balance_used', '>', 0)
+            ->orderBy('deposit_date', 'desc')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($deposits as $deposit) {
+            if ($remainingAmount <= 0) {
+                break;
+            }
+
+            $usedAmount = (float) ($deposit->balance_used ?? 0);
+            if ($usedAmount <= 0) {
+                continue;
+            }
+
+            $creditNow = min($usedAmount, $remainingAmount);
+
+            $deposit->balance_used = round($usedAmount - $creditNow, 2);
+            $deposit->balance_remaining = round(((float) $deposit->balance_remaining) + $creditNow, 2);
+            $deposit->is_used = $deposit->balance_remaining <= 0;
+            $deposit->save();
+
+            $remainingAmount = round($remainingAmount - $creditNow, 2);
+        }
+
+        if ($remainingAmount > 0) {
+            throw new \RuntimeException('Unable to restore previous deposit usage for this supplier.');
+        }
     }
 }

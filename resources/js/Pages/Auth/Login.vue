@@ -1,3 +1,4 @@
+```vue
 <template>
     <div
         class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8"
@@ -99,31 +100,31 @@
                 <!-- Form -->
                 <form class="mt-8 space-y-6" @submit.prevent="submit">
                     <div class="space-y-4">
-                        <!-- Email Field -->
+                        <!-- Login Field -->
                         <div>
                             <label
-                                for="email"
+                                for="login"
                                 class="block text-sm font-medium text-gray-700"
                             >
-                                {{ t("email") }}
+                                {{ t("login") }}
                             </label>
                             <div class="mt-1 relative">
                                 <input
-                                    id="email"
-                                    v-model="form.email"
-                                    type="email"
-                                    autocomplete="email"
+                                    id="login"
+                                    v-model="form.login"
+                                    type="text"
+                                    autocomplete="username"
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        safeErrors.email
+                                        form.errors.login
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
-                                    :placeholder="t('emailPlaceholder')"
+                                    :placeholder="t('loginPlaceholder')"
                                 />
                                 <div
-                                    v-if="safeErrors.email"
+                                    v-if="form.errors.login"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
@@ -140,10 +141,10 @@
                                 </div>
                             </div>
                             <p
-                                v-if="safeErrors.email"
+                                v-if="form.errors.login"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ safeErrors.email }}
+                                {{ form.errors.login }}
                             </p>
                         </div>
 
@@ -164,14 +165,14 @@
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        safeErrors.password
+                                        form.errors.password
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
                                     :placeholder="t('passwordPlaceholder')"
                                 />
                                 <div
-                                    v-if="safeErrors.password"
+                                    v-if="form.errors.password"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
@@ -188,38 +189,11 @@
                                 </div>
                             </div>
                             <p
-                                v-if="safeErrors.password"
+                                v-if="form.errors.password"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ safeErrors.password }}
+                                {{ form.errors.password }}
                             </p>
-                        </div>
-                    </div>
-
-                    <!-- Remember Me and Forgot Password -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input
-                                id="remember-me"
-                                v-model="form.remember"
-                                type="checkbox"
-                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            />
-                            <label
-                                for="remember-me"
-                                class="ml-2 block text-sm text-gray-900"
-                            >
-                                {{ t("rememberMe") }}
-                            </label>
-                        </div>
-
-                        <div class="text-sm">
-                            <Link
-                                :href="safeRoute('password.request', '/forgot-password')"
-                                class="font-medium text-indigo-600 hover:text-indigo-500"
-                            >
-                                {{ t("forgotPassword") }}
-                            </Link>
                         </div>
                     </div>
 
@@ -235,24 +209,14 @@
                     </div>
                 </form>
 
-                <!-- Register Link -->
-                <p class="mt-6 text-center text-sm text-gray-600">
-                    {{ t("noAccount") }}
-                    <Link
-                        :href="safeRoute('register', '/register')"
-                        class="font-medium text-indigo-600 hover:text-indigo-500"
-                    >
-                        {{ t("signUp") }}
-                    </Link>
-                </p>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onErrorCaptured } from "vue";
-import { useForm, Link } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { useForm } from "@inertiajs/vue3";
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 
@@ -262,22 +226,23 @@ const translations = {
         languageLabel: "English",
         loginTitle: "Sign in to your account",
         loginSubtitle: "Enter your email and password to access the dashboard",
-        email: "Email address",
-        emailPlaceholder: "Enter your email",
+        login: "Username or Email",
+        loginPlaceholder: "Enter your username or email",
         password: "Password",
         passwordPlaceholder: "Enter your password",
         rememberMe: "Remember me",
         forgotPassword: "Forgot your password?",
         signIn: "Sign in",
-        noAccount: "Don't have an account?",
+        noAccount: "Don’t have an account?",
         signUp: "Sign up",
     },
     bn: {
         languageLabel: "বাংলা",
         loginTitle: "আপনার অ্যাকাউন্টে সাইন ইন করুন",
-        loginSubtitle: "ড্যাশবোর্ড অ্যাক্সেস করতে আপনার ইমেল এবং পাসওয়ার্ড লিখুন",
-        email: "ইমেল ঠিকানা",
-        emailPlaceholder: "আপনার ইমেল লিখুন",
+        loginSubtitle:
+            "ড্যাশবোর্ড অ্যাক্সেস করতে আপনার ইমেল এবং পাসওয়ার্ড লিখুন",
+        login: "ইউজারনেম বা ইমেল",
+        loginPlaceholder: "ইউজারনেম বা ইমেল লিখুন",
         password: "পাসওয়ার্ড",
         passwordPlaceholder: "আপনার পাসওয়ার্ড লিখুন",
         rememberMe: "আমাকে মনে রাখুন",
@@ -298,62 +263,18 @@ const changeLanguage = (lang) => {
     document.documentElement.lang = lang;
 };
 
-// Form handling with safe initialization
+// Form handling
 const form = useForm({
-    email: "",
+    login: "",
     password: "",
     remember: false,
 });
 
-// Safe error access - THIS IS THE KEY FIX
-const safeErrors = computed(() => {
-    try {
-        // Safely access form errors with fallbacks
-        return {
-            email: form.errors?.email || null,
-            password: form.errors?.password || null,
-            general: form.errors?.general || null,
-        };
-    } catch (error) {
-        console.warn('Error accessing form errors:', error);
-        return { email: null, password: null, general: null };
-    }
-});
-
-// Safe route helper
-const safeRoute = (routeName, fallback = '#') => {
-    try {
-        if (typeof route === 'function') {
-            return route(routeName);
-        }
-        return fallback;
-    } catch (error) {
-        console.warn(`Route ${routeName} not found:`, error);
-        return fallback;
-    }
-};
-
 const submit = () => {
-    try {
-        form.post(safeRoute("login", "/login"), {
-            onFinish: () => form.reset("password"),
-            onError: (errors) => {
-                console.log('Login errors received:', errors);
-            },
-            onSuccess: () => {
-                console.log('Login successful');
-            }
-        });
-    } catch (error) {
-        console.error('Login submission error:', error);
-    }
+    form.post(route("login"), {
+        onFinish: () => form.reset("password"),
+    });
 };
-
-// Error boundary
-onErrorCaptured((error, instance, info) => {
-    console.error('Login component error:', error, info);
-    return false; // Prevent error from propagating
-});
 </script>
 
 <style scoped>
@@ -423,3 +344,4 @@ onErrorCaptured((error, instance, info) => {
         0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 </style>
+```

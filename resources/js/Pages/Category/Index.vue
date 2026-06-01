@@ -723,15 +723,21 @@ const getTranslationLabel = (key: string, lang: string) => {
     return translations[lang]?.[key] || key;
 };
 
-const toBengaliNumber = (num: number | string) => {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num.toString();
+const toBengaliNumber = (numValue: number | string): string => {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    // Return as string if not Bengali (rounding still applied for consistency)
+    let n = Number(numValue);
+    if (!isNaN(n) && n % 1 !== 0) {
+        numValue = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        numValue = n.toString();
+    }
+
+    if (currentLanguage.value !== "bn") return String(numValue);
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return String(numValue).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 const changeLanguage = (lang: string) => {

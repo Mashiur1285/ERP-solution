@@ -111,6 +111,28 @@
                                     {{ getTranslation("reason") }}*
                                 </div>
                             </label>
+
+                            <!-- Existing reason chips -->
+                            <div
+                                v-if="existingReasons && existingReasons.length > 0"
+                                class="flex flex-wrap gap-2 mb-3 max-h-[100px] overflow-y-auto pr-1"
+                            >
+                                <button
+                                    v-for="r in existingReasons"
+                                    :key="r"
+                                    type="button"
+                                    @click="expenseForm.reason = r"
+                                    :class="[
+                                        'px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200',
+                                        expenseForm.reason.toLowerCase() === r.toLowerCase()
+                                            ? 'bg-indigo-600 text-white border-indigo-600'
+                                            : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-400'
+                                    ]"
+                                >
+                                    {{ r }}
+                                </button>
+                            </div>
+
                             <div class="relative">
                                 <div
                                     class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -133,6 +155,7 @@
                                     v-model="expenseForm.reason"
                                     id="reason"
                                     type="text"
+                                    autocomplete="off"
                                     class="w-full pl-10 pr-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
@@ -140,7 +163,26 @@
                                     }"
                                     :placeholder="getTranslation('enterReason')"
                                     required
+                                    @focus="showSuggestions = true"
+                                    @blur="hideSuggestions"
                                 />
+                                <!-- Autocomplete dropdown -->
+                                <ul
+                                    v-if="showSuggestions && filteredSuggestions.length > 0"
+                                    class="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-indigo-100 rounded-xl shadow-lg overflow-hidden"
+                                >
+                                    <li
+                                        v-for="suggestion in filteredSuggestions"
+                                        :key="suggestion"
+                                        @mousedown.prevent="selectSuggestion(suggestion)"
+                                        class="px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2"
+                                    >
+                                        <svg class="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {{ suggestion }}
+                                    </li>
+                                </ul>
                             </div>
                             <p
                                 v-if="isSubmitted && !expenseForm.reason"
@@ -148,6 +190,26 @@
                             >
                                 {{ getTranslation("reasonRequired") }}
                             </p>
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    {{ getTranslation("category") }} ({{ getTranslation("optional") }})
+                                </div>
+                            </label>
+                            <select
+                                v-model="expenseForm.category"
+                                id="category"
+                                class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
+                            >
+                                <option value="">{{ getTranslation("selectCategory") }}</option>
+                                <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+                            </select>
                         </div>
 
                         <!-- Amount -->
@@ -437,16 +499,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 
 const props = defineProps<{
     expense?: {
         id: number;
         reason: string;
+        category?: string | null;
         description: string | null;
         amount: number;
     };
     editMode?: boolean;
+    existingReasons?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -455,11 +519,21 @@ const emit = defineEmits<{
         e: "submit",
         expenseData: {
             reason: string;
+            category: string | null;
             description: string | null;
             amount: number | null;
         }
     ): void;
 }>();
+
+const categories = [
+    { value: "Transport",      label: "Transport / পরিবহন" },
+    { value: "Salary",         label: "Salary / বেতন" },
+    { value: "Rent",           label: "Rent / ভাড়া" },
+    { value: "Marketing",      label: "Marketing / মার্কেটিং" },
+    { value: "Utilities",      label: "Utilities / ইউটিলিটি" },
+    { value: "Miscellaneous",  label: "Miscellaneous / বিবিধ" },
+];
 
 const translations = {
     en: {
@@ -477,6 +551,8 @@ const translations = {
         descriptionHint: "Provide a brief description for this expense",
         expensePreview: "Expense Preview",
         noDescriptionPreview: "No description provided",
+        category: "Category",
+        selectCategory: "Select a category",
         cancel: "Cancel",
         updateExpense: "Update Expense",
         processing: "Processing...",
@@ -497,19 +573,41 @@ const translations = {
         descriptionHint: "এই ব্যয়ের জন্য একটি সংক্ষিপ্ত বিবরণ প্রদান করুন",
         expensePreview: "ব্যয় পূর্বরূপ",
         noDescriptionPreview: "কোনো বিবরণ প্রদান করা হয়নি",
+        category: "ক্যাটাগরি",
+        selectCategory: "ক্যাটাগরি বেছে নিন",
         cancel: "বাতিল",
         updateExpense: "ব্যয় আপডেট করুন",
         processing: "প্রক্রিয়াকরণ...",
         currency: "টাকা",
     },
-};
+} as const;
 
 const currentLanguage = ref(localStorage?.getItem("language") || "en");
 const isSubmitted = ref(false);
 const isLoading = ref(false);
+const showSuggestions = ref(false);
+
+const filteredSuggestions = computed(() => {
+    if (!props.existingReasons || props.existingReasons.length === 0) return [];
+    const query = expenseForm.value.reason.toLowerCase().trim();
+    if (!query) return props.existingReasons;
+    return props.existingReasons.filter(r =>
+        r.toLowerCase().includes(query) && r.toLowerCase() !== query
+    );
+});
+
+const selectSuggestion = (value: string) => {
+    expenseForm.value.reason = value;
+    showSuggestions.value = false;
+};
+
+const hideSuggestions = () => {
+    setTimeout(() => { showSuggestions.value = false; }, 150);
+};
 
 const expenseForm = ref({
     reason: props.expense?.reason || "",
+    category: props.expense?.category || null as string | null,
     description: props.expense?.description || null,
     amount: props.expense?.amount || null,
 });
@@ -519,6 +617,7 @@ watch(
     (newExpense) => {
         expenseForm.value = {
             reason: newExpense?.reason || "",
+            category: newExpense?.category || null,
             description: newExpense?.description || null,
             amount: newExpense?.amount || null,
         };
@@ -526,23 +625,25 @@ watch(
     { deep: true }
 );
 
-const getTranslation = (key: string) => {
-    return (
-        translations[currentLanguage.value]?.[key] ||
-        translations.en[key] ||
-        key
-    );
-};
+type ModalTranslationKey  = keyof typeof translations.en;
+type ModalTranslationLang = keyof typeof translations;
 
-const toBengaliNumber = (num: number | string | null) => {
+const getTranslation = (key: ModalTranslationKey) =>
+    translations[currentLanguage.value as ModalTranslationLang]?.[key] ?? translations.en[key] ?? key;
+
+const toBengaliNumber = (num: number | string | null): string => {
     if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num.toString();
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
+    }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 const submit = () => {
@@ -558,6 +659,7 @@ const submit = () => {
             if (!props.editMode) {
                 expenseForm.value = {
                     reason: "",
+                    category: null,
                     description: null,
                     amount: null,
                 };

@@ -1,47 +1,47 @@
 <template>
     <li>
-        <div class="flex flex-col space-y-2">
+        <div class="flex flex-col space-y-1">
+            <!-- Menu Header (clickable to expand/collapse) -->
             <div
-                class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group cursor-pointer"
-                :class="{ 'bg-gray-100': active }"
+                class="flex items-center p-2.5 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 group cursor-pointer transition-colors duration-150"
+                :class="{ 'bg-indigo-50 text-indigo-700 font-medium': active }"
                 @click="states.rotate = !states.rotate"
             >
                 <!-- Icon -->
-                <div
-                    class="flex-shrink-0 w-6 h-6 flex items-center justify-center"
-                >
+                <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                     <font-awesome-icon
                         :icon="['fas', getIconName(icon)]"
-                        class="w-5 h-5 text-gray-700"
+                        class="w-[15px] h-[15px]"
+                        :class="active ? 'text-indigo-600' : 'text-gray-500 group-hover:text-indigo-600'"
                     />
                 </div>
                 <!-- Label -->
-                <span class="ml-3 text-sm tracking-wide truncate flex-1">{{
-                    label
-                }}</span>
-                <!-- Down Arrow -->
-                <div
-                    class="flex-shrink-0 w-6 h-6 flex items-center justify-center"
-                >
+                <span class="ml-3 text-sm tracking-wide truncate flex-1">{{ label }}</span>
+                <!-- Chevron -->
+                <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center">
                     <font-awesome-icon
                         :icon="['fas', 'chevron-down']"
-                        class="w-[12px] h-4 text-gray-700 transition-transform duration-200 ease-in-out"
-                        :class="{ 'rotate-180': states.rotate }"
+                        class="w-3 h-3 transition-transform duration-200 ease-in-out"
+                        :class="[states.rotate ? 'rotate-180 text-indigo-500' : 'text-gray-400']"
                     />
                 </div>
             </div>
 
-            <!-- Submenu -->
-            <div v-if="states.rotate" class="ml-6 space-y-1">
-                <SidebarSingleLevelMenu
-                    v-for="menu in submenu"
-                    :key="menu.href"
-                    :label="menu.label"
-                    :href="menu.href"
-                    :icon="menu.icon"
-                    :active="$page.url === menu.href"
-                />
-            </div>
+            <!-- Submenu with smooth animation -->
+            <Transition name="submenu">
+                <div v-if="states.rotate" class="ml-5 space-y-0.5 border-l-2 border-indigo-100 pl-3">
+                    <SidebarSingleLevelMenu
+                        v-for="menu in submenu"
+                        :key="menu.href"
+                        :label="menu.label"
+                        :href="menu.href"
+                        :icon="menu.icon"
+                        :color="menu.color || 'indigo'"
+                        :active="$page.url === menu.href"
+                        @link-clicked="$emit('link-clicked')"
+                    />
+                </div>
+            </Transition>
         </div>
     </li>
 </template>
@@ -66,6 +66,8 @@ const props = defineProps({
     },
 });
 
+defineEmits(['link-clicked']);
+
 const states = reactive({
     rotate: false,
 });
@@ -84,19 +86,19 @@ const getIconName = (iconClass) => {
 </script>
 
 <style scoped>
-.group {
-    transition: background-color 0.2s ease;
+.submenu-enter-active,
+.submenu-leave-active {
+    transition: all 0.2s ease;
+    overflow: hidden;
 }
-
-.w-6 {
-    min-width: 1.5rem; /* 24px */
+.submenu-enter-from,
+.submenu-leave-to {
+    opacity: 0;
+    max-height: 0;
 }
-
-.text-gray-700 {
-    color: #374151; /* Tailwind gray-700 */
-}
-
-.group:hover .text-gray-700 {
-    color: #374151; /* Maintain color on hover */
+.submenu-enter-to,
+.submenu-leave-from {
+    opacity: 1;
+    max-height: 300px;
 }
 </style>

@@ -75,6 +75,40 @@
             </div>
         </div>
 
+        <!-- Purchased Items Section -->
+        <div v-if="sale.items && sale.items.length > 0" class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 animate-fade-in">
+                {{ getTranslation("purchasedItems") }}
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("productName") }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("variant") }}</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("qty") }}</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("unitPrice") }}</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("total") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr v-for="(item, idx) in sale.items" :key="idx" class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.product_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.variant }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                {{ toBengaliNumber(item.cases_sold) }} {{ getTranslation("case") }}
+                                <span v-if="item.extra_bottles > 0" class="text-xs text-gray-500">
+                                    + {{ toBengaliNumber(item.extra_bottles) }} {{ getTranslation("extraBottles") }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">৳{{ toBengaliNumber(item.unit_price) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">৳{{ toBengaliNumber(item.total_price) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Payment Details Section -->
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
             <h2
@@ -250,6 +284,16 @@ const props = defineProps<{
         due_amount: number;
         shop_name: string;
         status: string;
+        items?: {
+            product_name: string;
+            variant: string;
+            cases_sold: number;
+            extra_bottles: number | null;
+            total_bottles_sold: number;
+            target_bottles_to_sell: number;
+            unit_price: number;
+            total_price: number;
+        }[];
     };
     payment: {
         amount: number;
@@ -266,6 +310,12 @@ const translations = {
         cashMemo: "Cash Memo",
         invoice: "Invoice",
         date: "Date",
+        purchasedItems: "Purchased Items",
+        productName: "Product Name",
+        variant: "Variant",
+        qty: "Qty",
+        unitPrice: "Unit Price",
+        total: "Total",
         paymentDetails: "Payment Details",
         totalAmount: "Total Amount",
         paymentAmount: "Payment Amount",
@@ -277,12 +327,20 @@ const translations = {
         contactUs: "Contact us: support@company.com | +123-456-7890",
         printReceipt: "Print Receipt",
         backToSales: "Back to Sales",
+        case: "cases",
+        extraBottles: "extra",
     },
     bn: {
         languageLabel: "বাংলা",
         cashMemo: "ক্যাশ মেমো",
         invoice: "চালান",
         date: "তারিখ",
+        purchasedItems: "ক্রয়কৃত পণ্য",
+        productName: "পণ্যের নাম",
+        variant: "ভেরিয়েন্ট",
+        qty: "পরিমাণ",
+        unitPrice: "একক মূল্য",
+        total: "মোট",
         paymentDetails: "পেমেন্ট বিবরণ",
         totalAmount: "মোট পরিমাণ",
         paymentAmount: "পেমেন্ট পরিমাণ",
@@ -294,6 +352,8 @@ const translations = {
         contactUs: "যোগাযোগ করুন: support@company.com | +123-456-7890",
         printReceipt: "রসিদ প্রিন্ট করুন",
         backToSales: "বিক্রয়ে ফিরে যান",
+        case: "কেস",
+        extraBottles: "অতিরিক্ত",
     },
 };
 
@@ -309,15 +369,19 @@ const formatDate = (date: string) => {
     });
 };
 
-const toBengaliNumber = (num: number | string) => {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+const toBengaliNumber = (numValue: number | string): string => {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(numValue);
+    if (!isNaN(n) && n % 1 !== 0) {
+        numValue = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        numValue = n.toString();
+    }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return String(numValue).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 const getTranslation = (key: string) => {
