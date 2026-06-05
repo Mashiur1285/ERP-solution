@@ -132,6 +132,57 @@
             </div>
         </div>
 
+        <!-- Stock Adjust Modal -->
+        <div
+            v-if="stockEditModal.open"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        >
+            <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                    <h3 class="text-base font-semibold text-gray-900">{{ getTranslation("adjustInventory") }}</h3>
+                    <button class="rounded-full p-2 text-gray-400 hover:bg-gray-100" @click="closeStockEditModal">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4 px-6 py-5">
+                    <div class="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                        <p class="font-semibold">{{ stockEditModal.productName }}</p>
+                        <p class="text-gray-500 mt-0.5">{{ stockEditModal.variantName }}</p>
+                    </div>
+                    <div class="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3">
+                        <span class="text-sm text-gray-500">{{ getTranslation("currentBottles") }}</span>
+                        <span class="font-semibold text-gray-800">{{ toBengaliNumber(stockEditModal.currentBottles) }}</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ getTranslation("newTotalBottles") }}</label>
+                        <input
+                            v-model.number="stockEditModal.newTotalBottles"
+                            type="number"
+                            min="0"
+                            class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                    <button
+                        class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                        @click="closeStockEditModal"
+                    >
+                        {{ getTranslation("cancel") }}
+                    </button>
+                    <button
+                        class="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-60"
+                        :disabled="isSubmittingStockEdit || stockEditModal.newTotalBottles < 0"
+                        @click="submitStockEdit"
+                    >
+                        {{ isSubmittingStockEdit ? getTranslation("adjusting") : getTranslation("adjustStock") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="flex justify-end space-x-2 mb-4">
             <button
                 @click="changeLanguage('en')"
@@ -225,6 +276,19 @@
                     class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
                 />
             </div>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none shrink-0">
+                <div
+                    class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
+                    :class="showOutOfStock ? 'bg-indigo-600' : 'bg-gray-300'"
+                    @click="showOutOfStock = !showOutOfStock"
+                >
+                    <span
+                        class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
+                        :class="showOutOfStock ? 'translate-x-4' : 'translate-x-1'"
+                    />
+                </div>
+                <span class="text-sm font-medium text-gray-600">{{ getTranslation('showOutOfStock') }}</span>
+            </label>
         </div>
 
         <div v-if="!products.data.length" class="bg-white rounded-xl shadow-sm border border-gray-200 py-12 text-center text-gray-500">
@@ -276,6 +340,13 @@
                                     {{ getTranslation("edit") }}
                                 </button>
                                 <span
+                                    v-if="product.stock_cases === 0 && product.stock_bottles === 0"
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600"
+                                >
+                                    {{ getTranslation("outOfStock") }}
+                                </span>
+                                <span
+                                    v-else
                                     class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
                                     :class="product.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
                                 >
@@ -320,16 +391,38 @@
                                 <p class="text-xs font-medium uppercase tracking-wide text-gray-400">
                                     {{ getTranslation("variantPurchaseDetails") }}
                                 </p>
-                                <div v-if="product.default_variants.length" class="mt-1 flex flex-wrap gap-2">
-                                    <span
+                                <div v-if="product.default_variants.length" class="mt-2 flex flex-col gap-2">
+                                    <div
                                         v-for="variant in getVisibleVariants(product)"
                                         :key="`${product.id}-${variant.variant}`"
-                                        class="inline-flex max-w-full items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200"
+                                        class="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200"
                                     >
-                                        <span class="truncate">{{ variant.variant }}</span>
-                                        <span class="text-gray-400">•</span>
-                                        <span class="whitespace-nowrap">৳{{ toBengaliNumber(variant.total_purchase_amount || 0) }}</span>
-                                    </span>
+                                        <span class="text-xs font-semibold text-gray-700">{{ variant.variant }}</span>
+                                        <div class="flex items-center gap-3 text-xs text-gray-500">
+                                            <span class="flex items-center gap-1">
+                                                <span class="font-medium text-indigo-600">{{ toBengaliNumber(variant.stock_cases || 0) }}</span>
+                                                <span>{{ getTranslation("casesLabel") }}</span>
+                                            </span>
+                                            <span class="text-gray-300">|</span>
+                                            <span class="flex items-center gap-1">
+                                                <span class="font-medium text-purple-600">{{ toBengaliNumber(variant.stock_bottles || 0) }}</span>
+                                                <span>{{ getTranslation("bottlesLabel") }}</span>
+                                            </span>
+                                            <span class="text-gray-300">|</span>
+                                            <span class="font-medium text-gray-700 whitespace-nowrap">৳{{ toBengaliNumber(variant.total_purchase_amount || 0) }}</span>
+                                            <button
+                                                v-if="canEditProducts"
+                                                type="button"
+                                                class="ml-1 rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600"
+                                                :title="getTranslation('editStock')"
+                                                @click.stop="openStockEditModal(product, variant)"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <p v-else class="mt-1 text-sm text-gray-400">
                                     {{ getTranslation("noVariants") }}
@@ -420,7 +513,7 @@ const props = defineProps({
     },
     filters: {
         type: Object,
-        default: () => ({ search: "" }),
+        default: () => ({ search: "", show_out_of_stock: false }),
     },
     categories: {
         type: Array,
@@ -475,10 +568,18 @@ const translations = {
         casesLabel: "cases",
         bottlesLabel: "bottles",
         liveStock: "Live Stock",
+        showOutOfStock: "Show out of stock",
+        outOfStock: "Out of Stock",
         showing: "Showing",
         of: "of",
         previous: "Previous",
         next: "Next",
+        editStock: "Edit Stock",
+        adjustInventory: "Adjust Inventory",
+        currentBottles: "Current Bottles",
+        newTotalBottles: "New Total Bottles",
+        adjusting: "Saving...",
+        adjustStock: "Save",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -520,8 +621,16 @@ const translations = {
         casesLabel: "কেস",
         bottlesLabel: "বোতল",
         liveStock: "বর্তমান স্টক",
+        showOutOfStock: "স্টক শেষ পণ্য দেখান",
+        outOfStock: "স্টক শেষ",
         showing: "দেখানো হচ্ছে",
         of: "মোট",
+        editStock: "স্টক এডিট",
+        adjustInventory: "ইনভেন্টরি সংশোধন",
+        currentBottles: "বর্তমান বোতল",
+        newTotalBottles: "নতুন মোট বোতল",
+        adjusting: "সংরক্ষণ হচ্ছে...",
+        adjustStock: "সংরক্ষণ",
         previous: "পূর্বের",
         next: "পরের",
     },
@@ -529,6 +638,7 @@ const translations = {
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref(props.filters.search || "");
+const showOutOfStock = ref(!!props.filters.show_out_of_stock);
 let searchTimer;
 const editModalOpen = ref(false);
 const isSubmittingEdit = ref(false);
@@ -549,6 +659,44 @@ const canEditProducts = computed(() =>
     (page.props.userPermissions || []).includes("lift.add")
 );
 
+const stockEditModal = ref({
+    open: false,
+    productCatalogId: null,
+    productName: "",
+    variantName: "",
+    currentBottles: 0,
+    newTotalBottles: 0,
+});
+const isSubmittingStockEdit = ref(false);
+
+const openStockEditModal = (product, variant) => {
+    stockEditModal.value = {
+        open: true,
+        productCatalogId: product.id,
+        productName: product.name,
+        variantName: variant.variant,
+        currentBottles: variant.stock_bottles || 0,
+        newTotalBottles: variant.stock_bottles || 0,
+    };
+};
+
+const closeStockEditModal = () => {
+    stockEditModal.value.open = false;
+};
+
+const submitStockEdit = () => {
+    if (stockEditModal.value.newTotalBottles < 0) return;
+    isSubmittingStockEdit.value = true;
+    router.put("/inventory/adjust-stock", {
+        product_catalog_id: stockEditModal.value.productCatalogId,
+        variant: stockEditModal.value.variantName,
+        total_bottles: stockEditModal.value.newTotalBottles,
+    }, {
+        onFinish: () => { isSubmittingStockEdit.value = false; },
+        onSuccess: () => { closeStockEditModal(); },
+    });
+};
+
 const getTranslation = (key) => translations[currentLanguage.value]?.[key] || key;
 const getTranslationLabel = (key, lang) => translations[lang]?.[key] || key;
 
@@ -567,15 +715,25 @@ const toBengaliNumber = (numValue) => {
     return output.replace(/[0-9]/g, (digit) => bengaliDigits[parseInt(digit)]);
 };
 
+const buildQuery = (overrides = {}) => ({
+    search: searchQuery.value || undefined,
+    show_out_of_stock: showOutOfStock.value || undefined,
+    ...overrides,
+});
+
 watch(searchQuery, (value) => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        router.get(
-            "/products",
-            { search: value || undefined },
-            { preserveState: true, preserveScroll: true, replace: true }
-        );
+        router.get("/products", buildQuery({ search: value || undefined }), {
+            preserveState: true, preserveScroll: true, replace: true,
+        });
     }, 300);
+});
+
+watch(showOutOfStock, () => {
+    router.get("/products", buildQuery({ page: undefined }), {
+        preserveState: true, preserveScroll: true, replace: true,
+    });
 });
 
 const visiblePages = computed(() => {
@@ -588,11 +746,9 @@ const visiblePages = computed(() => {
 
 const goToPage = (page) => {
     if (page < 1 || page > (props.products.last_page || 1)) return;
-    router.get(
-        "/products",
-        { search: searchQuery.value || undefined, page },
-        { preserveState: true, preserveScroll: true, replace: true }
-    );
+    router.get("/products", buildQuery({ page }), {
+        preserveState: true, preserveScroll: true, replace: true,
+    });
 };
 
 const getVisibleVariants = (product) => {

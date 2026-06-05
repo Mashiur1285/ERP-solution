@@ -98,6 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/products', [ProductPurchaseController::class, 'productList'])->middleware('permission:inventory.view')->name('products.index');
     Route::post('/products/{id}/update', [ProductPurchaseController::class, 'updateProductCatalog'])->middleware('permission:lift.add')->name('products.update');
     Route::get('/inventory/report', [ProductPurchaseController::class, 'inventoryReport'])->middleware('permission:inventory.view')->name('inventory.report');
+    Route::put('/inventory/adjust-stock', [ProductPurchaseController::class, 'adjustVariantStock'])->middleware('permission:lift.add')->name('inventory.adjust-stock');
 
     // Expenses
     Route::get('expenses', [ExpenseController::class, 'index'])->middleware('permission:expense.view')->name('expenses.index');

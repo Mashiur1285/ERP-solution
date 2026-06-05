@@ -571,6 +571,7 @@ interface ProductVariant {
     total_bottles_available: number;
     bottles_per_case: number;
     purchase_rate: number;
+    case_buying_price: number;
     cases_available: number;
     variant_metadata: Record<string, any>;
 }
@@ -595,6 +596,7 @@ interface CartItem {
     bottles_per_case: number;
     free_bottles_per_case: number;
     purchase_rate: number;
+    case_buying_price: number;
     cases: number;
     extra_bottles: number | null;
     price_per_case: number;
@@ -1013,6 +1015,7 @@ const loadEditSale = async (editSale: EditSale) => {
                         total_bottles_available: item.total_bottles_sold, // Treat existing sold bottles as available for max cases limit bypass if needed
                         bottles_per_case: item.bottles_per_case,
                         purchase_rate: 0,
+                        case_buying_price: 0,
                         cases_available: 0,
                         variant_metadata: {
                             free_bottles_per_case: item.free_bottles_per_case,
@@ -1022,6 +1025,7 @@ const loadEditSale = async (editSale: EditSale) => {
                 bottles_per_case: item.bottles_per_case,
                 free_bottles_per_case: item.free_bottles_per_case,
                 purchase_rate: variantInventory?.purchase_rate ?? 0,
+                case_buying_price: safeNumber(variantInventory?.case_buying_price ?? 0),
                 cases: item.cases,
                 extra_bottles: item.extra_bottles ?? null,
                 price_per_case: item.price_per_case,
@@ -1103,6 +1107,7 @@ const loadDraftSale = async (draftSale: DraftSale) => {
                         total_bottles_available: 0,
                         bottles_per_case: item.bottles_per_case,
                         purchase_rate: 0,
+                        case_buying_price: 0,
                         cases_available: 0,
                         variant_metadata: {
                             free_bottles_per_case: item.free_bottles_per_case,
@@ -1112,6 +1117,7 @@ const loadDraftSale = async (draftSale: DraftSale) => {
                 bottles_per_case: item.bottles_per_case,
                 free_bottles_per_case: item.free_bottles_per_case,
                 purchase_rate: variantInventory?.purchase_rate ?? 0,
+                case_buying_price: safeNumber(variantInventory?.case_buying_price ?? 0),
                 cases: item.cases,
                 extra_bottles: item.extra_bottles ?? null,
                 price_per_case: item.price_per_case,
@@ -1159,6 +1165,7 @@ const addVariantsToCart = () => {
             bottles_per_case: safeNumber(v.bottles_per_case),
             free_bottles_per_case: safeNumber(v.variant_metadata?.free_bottles_per_case ?? 0),
             purchase_rate: safeNumber(v.purchase_rate),
+            case_buying_price: safeNumber(v.variant_metadata?.case_buying_price ?? v.case_buying_price ?? 0),
             cases: 0,
             extra_bottles: null,
             price_per_case: 0,
@@ -1248,6 +1255,7 @@ const saleSummary = computed(() => {
         const bpc = safeNumber(item.bottles_per_case);
         const freePerCase = safeNumber(item.free_bottles_per_case);
         const purchaseRate = safeNumber(item.purchase_rate);
+        const caseBuyingPrice = safeNumber(item.case_buying_price);
 
         if (!(cases || extra) || !bpc) continue;
 
@@ -1255,19 +1263,21 @@ const saleSummary = computed(() => {
         const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
         const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
         const subtotal = Math.round(targetBottles * pricePerBottle * 100) / 100;
-        const cost = Math.round(targetBottles * purchaseRate * 100) / 100;
+        // Derive bottle rate directly from caseBuyingPrice (symmetric with revenue calc) to avoid pre-rounded purchaseRate errors
+        const bottleRate = effectiveBPC > 0 ? caseBuyingPrice / effectiveBPC : purchaseRate;
+        const cost = Math.round((cases * caseBuyingPrice + extra * bottleRate) * 100) / 100;
 
         totalCases += cases;
         totalBottles += targetBottles;
         totalAmount += subtotal;
-        totalProfit += subtotal - cost;
+        totalProfit += Math.round((subtotal - cost) * 100) / 100;
     }
 
     return {
         totalCases,
         totalBottles,
-        totalAmount,
-        totalProfit,
+        totalAmount: Math.round(totalAmount * 100) / 100,
+        totalProfit: Math.round(totalProfit * 100) / 100,
         itemCount: cartItems.value.length,
         totalBottlesToSell: totalBottles,
     };

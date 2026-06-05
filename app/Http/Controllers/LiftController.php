@@ -233,8 +233,49 @@ class LiftController extends Controller
 
     public function destroy(int $id)
     {
+        $lift = $this->liftRepository->query()->with(['items.product'])->find($id);
+
+        if (!$lift) {
+            return back()->with('error', 'Lift not found.');
+        }
+
+        if ($lift->status === 'completed') {
+            // Block delete if any product from this lift has been sold
+            foreach ($lift->items as $item) {
+                if (!$item->product_id || !$item->product) continue;
+
+                $variantIndex = collect($item->product->metadata['variants'] ?? [])->search(
+                    fn($v) => ($v['variant'] ?? null) === $item->variant
+                );
+
+                if ($variantIndex === false) continue;
+
+                $variantData = $item->product->metadata['variants'][$variantIndex];
+                $currentPurchased = (int) ($variantData['current_purchased_quantity'] ?? 0);
+                $currentFree     = (int) ($variantData['current_free_quantity'] ?? 0);
+                $originalPurchased = ((int) $item->number_of_cases) * ((int) $item->bottles_per_case);
+                $originalFree    = (int) $item->total_free_bottles;
+
+                if ($currentPurchased < $originalPurchased || $currentFree < $originalFree) {
+                    return back()->with('error', 'This lift cannot be deleted because some products from it have already been sold.');
+                }
+            }
+
+            // Safe to delete — soft-delete products and credit deposit back
+            foreach ($lift->items as $item) {
+                if ($item->product) {
+                    $item->product->delete();
+                }
+            }
+
+            $this->depositRepository->creditAmountBackToSupplierDeposits(
+                $lift->supplier_id,
+                (float) $lift->total_amount
+            );
+        }
+
         $this->liftRepository->delete($id);
-        return back()->with('success', 'Lift deleted.');
+        return back()->with('success', 'Lift deleted successfully.');
     }
 
     public function report(Request $request)

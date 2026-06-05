@@ -516,7 +516,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import DateRangePicker from "../../Components/DateRangePicker.vue";
 
@@ -659,7 +659,7 @@ function toggleLift(liftId) {
 
 function getLiftTotalCases(lift) {
     if (!lift.items) return 0;
-    return lift.items.reduce((sum, item) => sum + (item.number_of_cases || 0), 0);
+    return lift.items.reduce((sum, item) => sum + Number(item.number_of_cases || 0), 0);
 }
 
 function getLiftTotalBottles(lift) {
@@ -681,7 +681,13 @@ function editLift(lift) {
 
 function deleteLift(id) {
     if (!confirm('Are you sure you want to delete this lift? This cannot be undone.')) return;
-    router.delete(route('lifts.destroy', { id }), { preserveScroll: true });
+    router.delete(route('lifts.destroy', { id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            const flash = usePage().props.flash;
+            if (flash?.error) alert(flash.error);
+        },
+    });
 }
 
 function printReport() {

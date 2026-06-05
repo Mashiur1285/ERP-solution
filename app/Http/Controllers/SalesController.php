@@ -198,11 +198,12 @@ class SalesController extends Controller
                         $initialPurchased = $purchasedCases * $bpc;
                         $initialFree = $variantData['total_free_bottles'] ?? 0;
                         return [
-                            'product'       => $p,
-                            'purchased'     => $variantData['current_purchased_quantity'] ?? $initialPurchased,
-                            'free'          => $variantData['current_free_quantity'] ?? $initialFree,
-                            'bottles_per_case' => $bpc,
-                            'purchase_rate' => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                            'product'           => $p,
+                            'purchased'         => $variantData['current_purchased_quantity'] ?? $initialPurchased,
+                            'free'              => $variantData['current_free_quantity'] ?? $initialFree,
+                            'bottles_per_case'  => $bpc,
+                            'purchase_rate'     => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                            'case_buying_price' => floatval($variantData['case_buying_price'] ?? 0),
                         ];
                     })
                     ->filter()
@@ -214,16 +215,17 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $bottlesPerCase        = $batches->first()['bottles_per_case'];
-                $purchaseRatePerBottle = $batches->avg('purchase_rate');
+                $bottlesPerCase          = $batches->first()['bottles_per_case'];
+                $purchaseRatePerBottle   = $batches->avg('purchase_rate');
+                $avgCaseBuyingPrice      = $batches->avg('case_buying_price');
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
-                $targetBottlesToSell       = $item['total_bottles_to_sell'];
+                $targetBottlesToSell         = $item['total_bottles_to_sell'];
                 $actualSellingPricePerBottle = $item['selling_price_per_bottle'];
-                $freeBottlesPerCase        = $item['free_bottles_per_case'] ?? 0;
-                $casesSoldFrontend         = $item['cases_sold'];
-                $extraBottlesFrontend      = $item['extra_bottles'] ?? 0;
+                $freeBottlesPerCase          = $item['free_bottles_per_case'] ?? 0;
+                $casesSoldFrontend           = $item['cases_sold'];
+                $extraBottlesFrontend        = $item['extra_bottles'] ?? 0;
 
                 if ($request->include_free_bottles) {
                     $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
@@ -233,6 +235,7 @@ class SalesController extends Controller
                     $actualTotalBottlesSold  = $purchasedBottlesSold + $freeBottlesSold;
                     $sellingPricePerCase     = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
                 } else {
+                    $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
                     $casesSold               = $casesSoldFrontend;
                     $purchasedBottlesSold    = ($casesSold * $bottlesPerCase) + $extraBottlesFrontend;
                     $freeBottlesSold         = 0;
@@ -240,8 +243,8 @@ class SalesController extends Controller
                     $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
                 }
 
-                $totalAvailable  = $totalPurchasedAvailable + $totalFreeAvailable;
-                $totalToDeduct   = $purchasedBottlesSold + $freeBottlesSold;
+                $totalAvailable = $totalPurchasedAvailable + $totalFreeAvailable;
+                $totalToDeduct  = $purchasedBottlesSold + $freeBottlesSold;
 
                 if (!$saveAsDraft && $totalToDeduct > $totalAvailable) {
                     throw ValidationException::withMessages([
@@ -249,13 +252,14 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $totalSalePrice = $targetBottlesToSell * $actualSellingPricePerBottle;
-                $purchaseCost   = $actualTotalBottlesSold * $purchaseRatePerBottle;
+                $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
+                $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
+                $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
                 $profit         = $totalSalePrice - $purchaseCost;
 
                 $itemsData = [
                     'sale_id'                => $sale->id,
-                    'product_id'             => $item['product_id'],
+                    'product_id'             => $batches->first()['product']->id,
                     'supplier_id'            => $request->supplier_id,
                     'variant'                => $item['variant'],
                     'cases_sold'             => $casesSold,
@@ -352,17 +356,21 @@ class SalesController extends Controller
                 return redirect()->route('sales.index')->with('error', 'Sale not found');
             }
 
-            $paymentAmount = $request->payment_amount;
+            $paymentAmount = round((float) $request->payment_amount, 2);
             $currentAdvanceBalance = DB::table('payments')
                 ->where('shop_id', $sale->shop_id)
                 ->sum('advance_balance');
 
-            $newPaidAmount = $sale->paid_amount + $paymentAmount;
-            $newDueAmount = $sale->due_amount - $paymentAmount;
+            // Use total_amount as source of truth to avoid float accumulation errors.
+            $newPaidAmount = round((float) $sale->paid_amount + $paymentAmount, 2);
+            $newDueAmount  = round((float) $sale->total_amount - $newPaidAmount, 2);
+            if ($newDueAmount < 0.005) {
+                $newDueAmount = 0;
+            }
 
             $data = [
                 'paid_amount' => $newPaidAmount,
-                'due_amount' => max(0, $newDueAmount),
+                'due_amount' => $newDueAmount,
                 'is_paid' => $newDueAmount <= 0,
                 'status' => $newDueAmount <= 0 ? SalesStatus::COMPLETED : SalesStatus::IN_PROGRESS,
             ];
@@ -568,14 +576,24 @@ class SalesController extends Controller
 
             // 1. Restore previous inventory
             foreach ($sale->items as $item) {
-                if ($item->product) {
-                    $this->productPurchaseRepository->updateInventory(
-                        $item->product,
-                        $item->variant,
-                        -abs((int)$item->purchased_bottles_sold),
-                        -abs((int)$item->free_bottles_sold)
-                    );
-                }
+                if (!$item->product) continue;
+
+                $restoreBatches = \App\Models\Product::where('name', $item->product->name)
+                    ->where('supplier_id', $sale->supplier_id)
+                    ->whereNotNull('metadata')
+                    ->orderBy('date', 'asc')
+                    ->get()
+                    ->filter(fn($p) => collect($p->metadata['variants'] ?? [])->contains('variant', $item->variant))
+                    ->values();
+
+                if ($restoreBatches->isEmpty()) continue;
+
+                $this->productPurchaseRepository->updateInventory(
+                    $restoreBatches->first(),
+                    $item->variant,
+                    -abs((int)$item->purchased_bottles_sold),
+                    -abs((int)$item->free_bottles_sold)
+                );
             }
 
             // 2. Delete old items
@@ -601,11 +619,12 @@ class SalesController extends Controller
                         $initialPurchased = $purchasedCases * $bpc;
                         $initialFree = $variantData['total_free_bottles'] ?? 0;
                         return [
-                            'product'       => $p,
-                            'purchased'     => $variantData['current_purchased_quantity'] ?? $initialPurchased,
-                            'free'          => $variantData['current_free_quantity'] ?? $initialFree,
-                            'bottles_per_case' => $bpc,
-                            'purchase_rate' => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                            'product'           => $p,
+                            'purchased'         => $variantData['current_purchased_quantity'] ?? $initialPurchased,
+                            'free'              => $variantData['current_free_quantity'] ?? $initialFree,
+                            'bottles_per_case'  => $bpc,
+                            'purchase_rate'     => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                            'case_buying_price' => floatval($variantData['case_buying_price'] ?? 0),
                         ];
                     })
                     ->filter()
@@ -617,16 +636,17 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $bottlesPerCase        = $batches->first()['bottles_per_case'];
-                $purchaseRatePerBottle = $batches->avg('purchase_rate');
+                $bottlesPerCase          = $batches->first()['bottles_per_case'];
+                $purchaseRatePerBottle   = $batches->avg('purchase_rate');
+                $avgCaseBuyingPrice      = $batches->avg('case_buying_price');
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
-                $targetBottlesToSell       = $item['total_bottles_to_sell'];
+                $targetBottlesToSell         = $item['total_bottles_to_sell'];
                 $actualSellingPricePerBottle = $item['selling_price_per_bottle'];
-                $freeBottlesPerCase        = $item['free_bottles_per_case'] ?? 0;
-                $casesSoldFrontend         = $item['cases_sold'];
-                $extraBottlesFrontend      = $item['extra_bottles'] ?? 0;
+                $freeBottlesPerCase          = $item['free_bottles_per_case'] ?? 0;
+                $casesSoldFrontend           = $item['cases_sold'];
+                $extraBottlesFrontend        = $item['extra_bottles'] ?? 0;
 
                 if ($request->include_free_bottles) {
                     $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
@@ -636,6 +656,7 @@ class SalesController extends Controller
                     $actualTotalBottlesSold  = $purchasedBottlesSold + $freeBottlesSold;
                     $sellingPricePerCase     = $effectiveBottlesPerCase * $actualSellingPricePerBottle;
                 } else {
+                    $effectiveBottlesPerCase = $bottlesPerCase + $freeBottlesPerCase;
                     $casesSold               = $casesSoldFrontend;
                     $purchasedBottlesSold    = ($casesSold * $bottlesPerCase) + $extraBottlesFrontend;
                     $freeBottlesSold         = 0;
@@ -643,8 +664,8 @@ class SalesController extends Controller
                     $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
                 }
 
-                $totalAvailable  = $totalPurchasedAvailable + $totalFreeAvailable;
-                $totalToDeduct   = $purchasedBottlesSold + $freeBottlesSold;
+                $totalAvailable = $totalPurchasedAvailable + $totalFreeAvailable;
+                $totalToDeduct  = $purchasedBottlesSold + $freeBottlesSold;
 
                 if ($totalToDeduct > $totalAvailable) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
@@ -652,13 +673,14 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $totalSalePrice = $targetBottlesToSell * $actualSellingPricePerBottle;
-                $purchaseCost   = $actualTotalBottlesSold * $purchaseRatePerBottle;
+                $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
+                $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
+                $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
                 $profit         = $totalSalePrice - $purchaseCost;
 
                 $itemsData = [
                     'sale_id'                => $sale->id,
-                    'product_id'             => $item['product_id'],
+                    'product_id'             => $batches->first()['product']->id,
                     'supplier_id'            => $request->supplier_id,
                     'variant'                => $item['variant'],
                     'cases_sold'             => $casesSold,

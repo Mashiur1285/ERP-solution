@@ -308,7 +308,7 @@
                         !paymentForm.payment_method ||
                         (paymentForm.payment_method === 'mfs' &&
                             !paymentForm.mfs_provider) ||
-                        paymentError ||
+                        !!paymentError ||
                         isSubmitting ||
                         paymentForm.amount <= 0
                     "
@@ -595,41 +595,40 @@ const paymentError = ref<string | null>(null);
 const isSubmitting = ref(false);
 const showModal = ref(false);
 
+// Use integer math (paisa) to avoid float representation errors.
+const toPaysa = (v: number) => Math.round(Number(v) * 100);
+
 const maxPaymentAmount = computed(() => {
-    return Number(
-        (props.sale.total_amount - (props.sale.paid_amount ?? 0)).toFixed(2)
-    );
+    const totalPaysa = toPaysa(props.sale.total_amount ?? 0);
+    const paidPaysa  = toPaysa(props.sale.paid_amount  ?? 0);
+    return Math.max(0, (totalPaysa - paidPaysa)) / 100;
 });
 
 const formatCurrency = (value: number) => `৳${Number(value).toFixed(2)}`;
 
 const calculateDue = () => {
-    const total = Number(props.sale.total_amount ?? 0);
-    const paid = Number(props.sale.paid_amount ?? 0);
-    let payment = Number(paymentForm.value.amount);
+    const totalPaysa = toPaysa(props.sale.total_amount ?? 0);
+    const paidPaysa  = toPaysa(props.sale.paid_amount  ?? 0);
+    let paymentPaysa = Math.round(Number(paymentForm.value.amount) * 100);
 
-    const maxPayment = maxPaymentAmount.value;
-    if (payment > maxPayment) {
-        paymentForm.value.amount = maxPayment;
-        payment = maxPayment;
-        paymentError.value = `Payment cannot exceed the due amount of ${formatCurrency(
-            maxPayment
-        )}.`;
-    } else if (payment < 0 || isNaN(payment)) {
+    const maxPaysa = totalPaysa - paidPaysa;
+    if (paymentPaysa > maxPaysa) {
+        paymentForm.value.amount = maxPaysa / 100;
+        paymentPaysa = maxPaysa;
+        paymentError.value = `Payment cannot exceed the due amount of ${formatCurrency(maxPaysa / 100)}.`;
+    } else if (paymentPaysa <= 0 || isNaN(paymentPaysa)) {
         paymentForm.value.amount = 0;
-        payment = 0;
-        paymentError.value = "Payment amount must be a positive number.";
-    } else if (payment === 0) {
-        paymentError.value = "Payment amount must be greater than zero.";
+        paymentPaysa = 0;
+        paymentError.value = paymentPaysa < 0 ? "Payment amount must be a positive number." : "Payment amount must be greater than zero.";
     } else {
         paymentError.value = null;
     }
 
-    dueAmount.value = Number((total - (paid + payment)).toFixed(2));
+    dueAmount.value = Math.max(0, (totalPaysa - paidPaysa - paymentPaysa)) / 100;
 };
 
 const onPaymentMethodChange = () => {
-    if (paymentForm.payment_method !== "mfs") {
+    if (paymentForm.value.payment_method !== "mfs") {
         paymentForm.value.mfs_provider = "";
     }
 };
