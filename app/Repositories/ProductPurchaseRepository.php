@@ -260,8 +260,22 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         }
 
         // Update inventory
-        $metadata['variants'][$variantIndex]['current_purchased_quantity'] = $currentPurchased - $soldPurchasedBottles;
-        $metadata['variants'][$variantIndex]['current_free_quantity'] = $currentFree - $soldFreeBottles;
+        $newPurchased = $currentPurchased - $soldPurchasedBottles;
+        $newFree = $currentFree - $soldFreeBottles;
+        $metadata['variants'][$variantIndex]['current_purchased_quantity'] = $newPurchased;
+        $metadata['variants'][$variantIndex]['current_free_quantity'] = $newFree;
+
+        // Keep total_cost in sync with the remaining purchased stock so the
+        // product listing's "Purchase Amount" reflects the value of bottles
+        // still on hand (free bottles carry no cost). This mirrors how
+        // adjustVariantStock recomputes total_cost on manual adjustments.
+        $ratePerBottle = (float) ($variantData['actual_rate_per_bottle'] ?? 0);
+        if ($ratePerBottle <= 0) {
+            $ratePerBottle = $initialPurchasedBottles > 0
+                ? (float) ($variantData['total_cost'] ?? 0) / $initialPurchasedBottles
+                : ($bottlesPerCase > 0 ? (float) ($variantData['case_buying_price'] ?? 0) / $bottlesPerCase : 0);
+        }
+        $metadata['variants'][$variantIndex]['total_cost'] = round(max(0, $newPurchased) * $ratePerBottle, 2);
 
         $product->metadata = $metadata;
         $product->save();

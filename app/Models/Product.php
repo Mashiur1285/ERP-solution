@@ -23,7 +23,9 @@ class Product extends Model
     protected $casts =
         [
             'metadata' => 'array',
-            'date' => 'datetime'
+            // Purchase date is a calendar date; date-only cast avoids the UTC
+            // timestamp serialization that shifts the day for +06 timezones.
+            'date' => 'date:Y-m-d'
         ];
     public function supplier(): BelongsTo
     {

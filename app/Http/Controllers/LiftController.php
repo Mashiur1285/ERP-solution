@@ -11,6 +11,7 @@ use App\Contracts\CategoryContract;
 use App\Contracts\BrandContract;
 use App\Models\ProductCatalog;
 use App\Models\Product;
+use App\Models\SaleItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -155,10 +156,8 @@ class LiftController extends Controller
                 ? $this->liftRepository->query()->with(['items.product'])->find($request->draft_id)
                 : null;
 
-            if ($existingLift && $existingLift->status === 'completed') {
-                $this->revertCompletedLift($existingLift);
-            }
-
+            // A genuine new deposit the user is adding alongside this lift (covers
+            // any shortfall when the lifted value grows beyond available balance).
             if (!$saveAsDraft && $request->filled('deposit_from_here_amount')) {
                 $depositAmount = round((float) $request->deposit_from_here_amount, 2);
 
@@ -170,18 +169,46 @@ class LiftController extends Controller
                 ]);
             }
 
-            $lift = $this->liftRepository->saveLiftWithItems(
-                $liftData,
-                $items,
-                $request->supplier_id,
-                $request->draft_id
-            );
+            if ($existingLift && $existingLift->status === 'completed') {
+                // Editing a completed lift: reconcile IN PLACE so already-sold
+                // product batches keep their id (sale_items stay linked, running
+                // stock stays correct). A variant may not be reduced below what
+                // has already been sold from it.
+                $soldByProduct = $this->soldBottlesByProduct($existingLift);
+                $this->validateLiftEditAgainstSales($existingLift, $items, $soldByProduct);
 
-            if (!$saveAsDraft) {
-                $this->depositRepository->applyAmountAgainstSupplierDeposits(
-                    $request->supplier_id,
-                    (float) $lift->total_amount
+                $oldTotal = round((float) $existingLift->total_amount, 2);
+                $lift = $this->liftRepository->reconcileCompletedLiftItems(
+                    $existingLift,
+                    $items,
+                    $liftData,
+                    $soldByProduct
                 );
+                $newTotal = round((float) $lift->total_amount, 2);
+
+                // Reconcile the supplier deposit by the net change in lifted value.
+                $targetDraw = $saveAsDraft ? 0.0 : $newTotal;
+                $delta = round($targetDraw - $oldTotal, 2);
+                if ($delta > 0) {
+                    $this->depositRepository->applyAmountAgainstSupplierDeposits((int) $request->supplier_id, $delta);
+                } elseif ($delta < 0) {
+                    $this->depositRepository->creditAmountBackToSupplierDeposits((int) $request->supplier_id, -$delta);
+                }
+            } else {
+                // New lift, or editing a DRAFT (no products yet): safe to (re)create.
+                $lift = $this->liftRepository->saveLiftWithItems(
+                    $liftData,
+                    $items,
+                    $request->supplier_id,
+                    $request->draft_id
+                );
+
+                if (!$saveAsDraft) {
+                    $this->depositRepository->applyAmountAgainstSupplierDeposits(
+                        $request->supplier_id,
+                        (float) $lift->total_amount
+                    );
+                }
             }
         });
 
@@ -190,45 +217,117 @@ class LiftController extends Controller
             ->with('success', $saveAsDraft ? 'Lift draft saved successfully' : 'Lift recorded successfully');
     }
 
-    protected function revertCompletedLift($lift): void
+    /**
+     * Map of product_id => ['purchased' => int, 'free' => int] of bottles already
+     * sold (non-draft) for every batch in a lift.
+     */
+    protected function soldBottlesByProduct($lift): array
     {
+        $map = [];
         foreach ($lift->items as $item) {
             if (!$item->product_id) {
                 continue;
             }
+            $map[$item->product_id] = $this->soldBottlesForLiftItem($item);
+        }
+        return $map;
+    }
 
-            $product = Product::query()->find($item->product_id);
-            if (!$product) {
-                continue;
+    /**
+     * Bottles already sold (non-draft sales) for a single lift item's batch+variant.
+     */
+    protected function soldBottlesForLiftItem($item): array
+    {
+        if (!$item->product_id) {
+            return ['purchased' => 0, 'free' => 0];
+        }
+
+        $row = SaleItem::where('product_id', $item->product_id)
+            ->where('variant', $item->variant)
+            ->whereHas('sale', fn ($q) => $q->where('status', '!=', 'draft'))
+            ->selectRaw('COALESCE(SUM(purchased_bottles_sold), 0) as purchased, COALESCE(SUM(free_bottles_sold), 0) as free')
+            ->first();
+
+        return [
+            'purchased' => (int) ($row->purchased ?? 0),
+            'free' => (int) ($row->free ?? 0),
+        ];
+    }
+
+    /**
+     * Enforce the edit rule: a variant may not be reduced below the quantity
+     * already sold from it, and a sold variant may not be removed. Rejects the
+     * whole update (no partial save) with a message naming the offending variant.
+     */
+    protected function validateLiftEditAgainstSales($existingLift, array $items, array $soldByProduct): void
+    {
+        $incoming = [];
+        foreach ($items as $item) {
+            foreach ($item['variants'] as $variant) {
+                $incoming[$item['product_catalog_id'] . '::' . $variant['variant']] = $variant;
+            }
+        }
+
+        foreach ($existingLift->items as $item) {
+            $sold = $soldByProduct[$item->product_id] ?? ['purchased' => 0, 'free' => 0];
+            $soldPurchased = (int) $sold['purchased'];
+            $soldFree = (int) $sold['free'];
+
+            if ($soldPurchased <= 0 && $soldFree <= 0) {
+                continue; // nothing sold from this batch — any edit is allowed
             }
 
-            $variantIndex = collect($product->metadata['variants'] ?? [])->search(function ($variant) use ($item) {
-                return ($variant['variant'] ?? null) === $item->variant;
-            });
+            $key = $item->product_catalog_id . '::' . $item->variant;
 
-            if ($variantIndex === false) {
-                continue;
-            }
-
-            $variantData = $product->metadata['variants'][$variantIndex];
-            $currentPurchased = (int) ($variantData['current_purchased_quantity'] ?? 0);
-            $currentFree = (int) ($variantData['current_free_quantity'] ?? 0);
-            $originalPurchased = ((int) $item->number_of_cases) * ((int) $item->bottles_per_case);
-            $originalFree = (int) $item->total_free_bottles;
-
-            if ($currentPurchased < $originalPurchased || $currentFree < $originalFree) {
+            if (!isset($incoming[$key])) {
                 throw ValidationException::withMessages([
-                    'lift' => 'This lift cannot be edited because some bottles from it have already been sold.',
+                    'lift' => "Cannot remove variant {$item->variant}: {$soldPurchased} bottle(s) have already been sold from it.",
                 ]);
             }
 
-            $product->delete();
+            $variant = $incoming[$key];
+            $cases = (float) ($variant['number_of_cases'] ?? 0);
+            $bottlesPerCase = (float) ($variant['bottles_per_case'] ?? 0);
+            $freeBottlesPerCase = (float) ($variant['free_bottles_per_case'] ?? 0);
+            $newPurchased = (int) round($cases * $bottlesPerCase);
+            $newFree = (int) round($cases * $freeBottlesPerCase);
+
+            if ($newPurchased < $soldPurchased) {
+                throw ValidationException::withMessages([
+                    'lift' => "Variant {$item->variant}: you entered {$newPurchased} bottle(s), but {$soldPurchased} have already been sold. A lift can't go below what's already sold.",
+                ]);
+            }
+
+            if ($newFree < $soldFree) {
+                throw ValidationException::withMessages([
+                    'lift' => "Variant {$item->variant}: you entered {$newFree} free bottle(s), but {$soldFree} free bottle(s) have already been sold.",
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Whether a lift item's product batch has any real (non-draft) sales.
+     * This is the authoritative "has been sold" check — it queries the
+     * sale_items table directly instead of inferring from the running stock
+     * balance (current_purchased_quantity), which can also be lowered by
+     * manual inventory adjustments that are NOT sales.
+     */
+    protected function liftItemHasSales($item): bool
+    {
+        if (!$item->product_id) {
+            return false;
         }
 
-        $this->depositRepository->creditAmountBackToSupplierDeposits(
-            $lift->supplier_id,
-            (float) $lift->total_amount
-        );
+        return SaleItem::where('product_id', $item->product_id)
+            ->where('variant', $item->variant)
+            ->whereHas('sale', fn ($q) => $q->where('status', '!=', 'draft'))
+            ->where(function ($q) {
+                $q->where('purchased_bottles_sold', '>', 0)
+                    ->orWhere('free_bottles_sold', '>', 0)
+                    ->orWhere('total_bottles_sold', '>', 0);
+            })
+            ->exists();
     }
 
     public function destroy(int $id)
@@ -240,23 +339,9 @@ class LiftController extends Controller
         }
 
         if ($lift->status === 'completed') {
-            // Block delete if any product from this lift has been sold
+            // Block delete only if real (non-draft) sales exist for these batches.
             foreach ($lift->items as $item) {
-                if (!$item->product_id || !$item->product) continue;
-
-                $variantIndex = collect($item->product->metadata['variants'] ?? [])->search(
-                    fn($v) => ($v['variant'] ?? null) === $item->variant
-                );
-
-                if ($variantIndex === false) continue;
-
-                $variantData = $item->product->metadata['variants'][$variantIndex];
-                $currentPurchased = (int) ($variantData['current_purchased_quantity'] ?? 0);
-                $currentFree     = (int) ($variantData['current_free_quantity'] ?? 0);
-                $originalPurchased = ((int) $item->number_of_cases) * ((int) $item->bottles_per_case);
-                $originalFree    = (int) $item->total_free_bottles;
-
-                if ($currentPurchased < $originalPurchased || $currentFree < $originalFree) {
+                if ($this->liftItemHasSales($item)) {
                     return back()->with('error', 'This lift cannot be deleted because some products from it have already been sold.');
                 }
             }
