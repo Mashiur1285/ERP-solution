@@ -18,7 +18,11 @@ class Lift extends Model
     ];
 
     protected $casts = [
-        'lift_date' => 'datetime',
+        // Calendar date only — a 'datetime' cast serializes to a UTC timestamp
+        // (e.g. 2026-06-05T18:00:00Z) which shifts the day for +06 users and makes
+        // lifts drop out of date-range filters. 'date:Y-m-d' serializes as a plain
+        // 'Y-m-d' string with no time/timezone.
+        'lift_date' => 'date:Y-m-d',
         'total_amount' => 'decimal:2',
     ];
 

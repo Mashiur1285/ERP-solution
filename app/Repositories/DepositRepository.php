@@ -120,6 +120,14 @@ class DepositRepository extends BaseRepository implements DepositContract
             ->lockForUpdate()
             ->get();
 
+        // Never credit back more than was actually drawn from the deposits.
+        // A lift's total_amount can legitimately diverge from the recorded
+        // usage after an inventory stock adjustment, so cap the credit at the
+        // amount truly used instead of throwing. On a lift re-save the new
+        // total is re-applied afterwards, which keeps the ledger consistent.
+        $totalUsed = round((float) $deposits->sum('balance_used'), 2);
+        $remainingAmount = min($remainingAmount, $totalUsed);
+
         foreach ($deposits as $deposit) {
             if ($remainingAmount <= 0) {
                 break;
@@ -138,10 +146,6 @@ class DepositRepository extends BaseRepository implements DepositContract
             $deposit->save();
 
             $remainingAmount = round($remainingAmount - $creditNow, 2);
-        }
-
-        if ($remainingAmount > 0) {
-            throw new \RuntimeException('Unable to restore previous deposit usage for this supplier.');
         }
     }
 }
