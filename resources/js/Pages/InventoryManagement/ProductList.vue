@@ -326,12 +326,8 @@
                             </svg>
                         </div>
                     <div class="min-w-0 flex-1">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <h3 class="text-lg font-semibold leading-tight text-gray-900 break-words">{{ product.name }}</h3>
-                                <p class="text-sm text-gray-500 mt-1">{{ product.supplier_name }}</p>
-                            </div>
-                            <div class="flex items-center gap-2">
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <button
                                     v-if="canEditProducts"
                                     class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50"
@@ -352,6 +348,10 @@
                                 >
                                     {{ product.is_active ? getTranslation("active") : getTranslation("inactive") }}
                                 </span>
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold leading-tight text-gray-900 break-words">{{ product.name }}</h3>
+                                <p class="text-sm text-gray-500 mt-1">{{ product.supplier_name }}</p>
                             </div>
                         </div>
 
@@ -395,10 +395,23 @@
                                     <div
                                         v-for="variant in getVisibleVariants(product)"
                                         :key="`${product.id}-${variant.variant}`"
-                                        class="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200"
+                                        class="flex flex-col gap-1.5 rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200"
                                     >
-                                        <span class="text-xs font-semibold text-gray-700">{{ variant.variant }}</span>
-                                        <div class="flex items-center gap-3 text-xs text-gray-500">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs font-semibold text-gray-700">{{ variant.variant }}</span>
+                                            <button
+                                                v-if="canEditProducts"
+                                                type="button"
+                                                class="rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600 shrink-0"
+                                                :title="getTranslation('editStock')"
+                                                @click.stop="openStockEditModal(product, variant)"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
                                             <span class="flex items-center gap-1">
                                                 <span class="font-medium text-indigo-600">{{ toBengaliNumber(variant.stock_cases || 0) }}</span>
                                                 <span>{{ getTranslation("casesLabel") }}</span>
@@ -409,18 +422,7 @@
                                                 <span>{{ getTranslation("bottlesLabel") }}</span>
                                             </span>
                                             <span class="text-gray-300">|</span>
-                                            <span class="font-medium text-gray-700 whitespace-nowrap">৳{{ toBengaliNumber(variant.total_purchase_amount || 0) }}</span>
-                                            <button
-                                                v-if="canEditProducts"
-                                                type="button"
-                                                class="ml-1 rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600"
-                                                :title="getTranslation('editStock')"
-                                                @click.stop="openStockEditModal(product, variant)"
-                                            >
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                </svg>
-                                            </button>
+                                            <span class="font-medium text-gray-700">৳{{ toBengaliNumber(variant.total_purchase_amount || 0) }}</span>
                                         </div>
                                     </div>
                                 </div>
