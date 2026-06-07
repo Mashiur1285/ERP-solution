@@ -8,7 +8,7 @@ interface ProductPurchaseContract
 {
     public function purchaseHistory(): Collection;
 
-    public function getInventoryStock(): Collection;
+    public function getInventoryStock(?string $snapshotDate = null): Collection;
 
     public function getProductsBySupplier(int $supplierId): Collection;
 

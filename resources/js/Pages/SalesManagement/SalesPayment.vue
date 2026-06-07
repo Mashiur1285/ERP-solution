@@ -1,8 +1,8 @@
 <template>
     <div
-        class="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl"
+        class="max-w-3xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl"
     >
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-8 text-center">
             Record Payment
         </h1>
 
@@ -300,7 +300,7 @@
                 </div>
             </div>
 
-            <div class="flex justify-end mt-8 space-x-4">
+            <div class="flex flex-col sm:flex-row justify-end mt-6 sm:mt-8 gap-3 sm:space-x-4">
                 <button
                     @click="openModal"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:from-blue-700 hover:to-indigo-700 transition duration-200 flex items-center"
@@ -308,7 +308,7 @@
                         !paymentForm.payment_method ||
                         (paymentForm.payment_method === 'mfs' &&
                             !paymentForm.mfs_provider) ||
-                        paymentError ||
+                        !!paymentError ||
                         isSubmitting ||
                         paymentForm.amount <= 0
                     "
@@ -595,41 +595,40 @@ const paymentError = ref<string | null>(null);
 const isSubmitting = ref(false);
 const showModal = ref(false);
 
+// Use integer math (paisa) to avoid float representation errors.
+const toPaysa = (v: number) => Math.round(Number(v) * 100);
+
 const maxPaymentAmount = computed(() => {
-    return Number(
-        (props.sale.total_amount - (props.sale.paid_amount ?? 0)).toFixed(2)
-    );
+    const totalPaysa = toPaysa(props.sale.total_amount ?? 0);
+    const paidPaysa  = toPaysa(props.sale.paid_amount  ?? 0);
+    return Math.max(0, (totalPaysa - paidPaysa)) / 100;
 });
 
 const formatCurrency = (value: number) => `৳${Number(value).toFixed(2)}`;
 
 const calculateDue = () => {
-    const total = Number(props.sale.total_amount ?? 0);
-    const paid = Number(props.sale.paid_amount ?? 0);
-    let payment = Number(paymentForm.value.amount);
+    const totalPaysa = toPaysa(props.sale.total_amount ?? 0);
+    const paidPaysa  = toPaysa(props.sale.paid_amount  ?? 0);
+    let paymentPaysa = Math.round(Number(paymentForm.value.amount) * 100);
 
-    const maxPayment = maxPaymentAmount.value;
-    if (payment > maxPayment) {
-        paymentForm.value.amount = maxPayment;
-        payment = maxPayment;
-        paymentError.value = `Payment cannot exceed the due amount of ${formatCurrency(
-            maxPayment
-        )}.`;
-    } else if (payment < 0 || isNaN(payment)) {
+    const maxPaysa = totalPaysa - paidPaysa;
+    if (paymentPaysa > maxPaysa) {
+        paymentForm.value.amount = maxPaysa / 100;
+        paymentPaysa = maxPaysa;
+        paymentError.value = `Payment cannot exceed the due amount of ${formatCurrency(maxPaysa / 100)}.`;
+    } else if (paymentPaysa <= 0 || isNaN(paymentPaysa)) {
         paymentForm.value.amount = 0;
-        payment = 0;
-        paymentError.value = "Payment amount must be a positive number.";
-    } else if (payment === 0) {
-        paymentError.value = "Payment amount must be greater than zero.";
+        paymentPaysa = 0;
+        paymentError.value = paymentPaysa < 0 ? "Payment amount must be a positive number." : "Payment amount must be greater than zero.";
     } else {
         paymentError.value = null;
     }
 
-    dueAmount.value = Number((total - (paid + payment)).toFixed(2));
+    dueAmount.value = Math.max(0, (totalPaysa - paidPaysa - paymentPaysa)) / 100;
 };
 
 const onPaymentMethodChange = () => {
-    if (paymentForm.payment_method !== "mfs") {
+    if (paymentForm.value.payment_method !== "mfs") {
         paymentForm.value.mfs_provider = "";
     }
 };

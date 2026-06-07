@@ -58,39 +58,50 @@
             </h1>
         </div>
 
-        <!-- Search and Total Metrics -->
-        <div class="space-y-6 mb-6">
-            <!-- Search Field -->
-            <div class="flex justify-end">
-                <div class="relative w-full sm:w-80">
-                    <div
-                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                    >
-                        <svg
-                            class="w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
+        <!-- Search & Filter Fields -->
+        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
+            <div class="w-full sm:w-auto">
+                <div class="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <input
-                        v-model="searchQuery"
-                        type="text"
-                        :placeholder="getTranslation('searchProducts')"
-                        class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
-                    />
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-gray-400">
+                            {{ getTranslation("snapshotDate") }}
+                        </p>
+                        <input
+                            v-model="snapshotDate"
+                            type="date"
+                            class="mt-1 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
                 </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    {{ getTranslation("snapshotInfo") }}: {{ snapshotDate }}
+                </p>
             </div>
+            <div class="relative w-full sm:w-80">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input
+                    v-model="searchQuery"
+                    type="text"
+                    :placeholder="getTranslation('searchProducts')"
+                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                />
+            </div>
+        </div>
+
+        <!-- Total Metrics -->
+        <div class="space-y-6 mb-6">
 
             <!-- Total Metrics -->
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                 <div
                     class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
                 >
@@ -197,6 +208,35 @@
                     </div>
                 </div>
                 <div
+                    class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl shadow-sm border border-amber-200"
+                >
+                    <div class="flex items-center">
+                        <div class="p-2 bg-amber-500 rounded-lg mr-3">
+                            <svg
+                                class="w-6 h-6 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2 6H6l-2-6m16 0H4"
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-amber-700">
+                                {{ getTranslation("totalSold") }}
+                            </p>
+                            <p class="text-lg lg:text-lg font-bold text-amber-900 metric-value">
+                                {{ toBengaliNumber(totalSold) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
                     class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
                 >
                     <div class="flex items-center">
@@ -238,36 +278,41 @@
         <!-- Inventory Table -->
         <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
             <div class="w-full overflow-x-auto">
-                <table class="w-full divide-y divide-gray-200">
+                <table class="w-full min-w-[1100px] divide-y divide-gray-200 table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
                             <th
-                                class="px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-[24rem] px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("productName") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden sm:table-cell"
+                                class="hidden w-28 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider sm:table-cell"
                             >
                                 {{ getTranslation("variantCount") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("quantity") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("cases") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 hidden md:table-cell"
+                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
-                                {{ getTranslation("unitPrice") }}
+                                {{ getTranslation("sold") }}
                             </th>
                             <th
-                                class="px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                class="w-36 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                {{ getTranslation("stockStatus") }}
+                            </th>
+                            <th
+                                class="w-36 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("totalValue") }}
                             </th>
@@ -283,9 +328,9 @@
                                 @click="toggleVariants(index)"
                             >
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900 w-1/5"
+                                    class="w-[24rem] px-2 lg:px-3 py-3 text-xs font-medium text-gray-900 lg:text-sm"
                                 >
-                                    <div class="flex items-center">
+                                    <div class="flex min-w-0 items-center gap-3">
                                         <svg
                                             :class="[
                                                 'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
@@ -304,15 +349,38 @@
                                                 d="M9 5l7 7-7 7"
                                             />
                                         </svg>
+                                        <div class="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                            <img
+                                                v-if="item.image_url"
+                                                :src="item.image_url"
+                                                :alt="item.product_name"
+                                                class="h-full w-full object-cover"
+                                            />
+                                            <svg
+                                                v-else
+                                                class="w-5 h-5 text-gray-300"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-10h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                />
+                                            </svg>
+                                        </div>
                                         <span
-                                            class="break-all"
+                                            class="min-w-0 break-words font-medium text-gray-900"
                                             :title="item.product_name"
-                                            >{{ item.product_name }}</span
                                         >
+                                            {{ item.product_name }}
+                                        </span>
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5 hidden sm:table-cell"
+                                    class="hidden w-28 px-2 lg:px-3 py-3 text-xs text-gray-500 sm:table-cell lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -323,7 +391,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -334,7 +402,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -345,20 +413,30 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5 hidden md:table-cell"
+                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
-                                    <div class="text-right font-medium">
-                                        ৳{{
+                                    <div class="text-center font-medium text-amber-600">
+                                        {{
                                             toBengaliNumber(
-                                                item.variants[0]?.unit_price ||
-                                                    0,
-                                                2
+                                                item.total_sold
                                             )
                                         }}
                                     </div>
                                 </td>
                                 <td
-                                    class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/5"
+                                    class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
+                                >
+                                    <div class="flex justify-center">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                            :class="stockStatusClass(item.stock_status)"
+                                        >
+                                            {{ getTranslation(item.stock_status) }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td
+                                    class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-right font-medium">
                                         ৳{{
@@ -372,7 +450,7 @@
                                 v-if="expandedVariants[index]"
                                 class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                <td :colspan="6" class="px-2 lg:px-6 py-6">
+                                <td :colspan="8" class="px-2 lg:px-6 py-6">
                                     <div class="ml-2 lg:ml-6">
                                         <!-- Mobile view for hidden columns -->
                                         <div
@@ -442,10 +520,23 @@
                                                             }}</span
                                                         >
                                                     </div>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("sold") }}</span>
+                                                        <span class="text-amber-600 font-medium">{{ toBengaliNumber(item.total_sold) }}</span>
+                                                    </div>
                                                 </div>
                                                 <div class="space-y-2">
+                                                    <div class="flex flex-col">
+                                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("stockStatus") }}</span>
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit"
+                                                            :class="stockStatusClass(item.stock_status)"
+                                                        >
+                                                            {{ getTranslation(item.stock_status) }}
+                                                        </span>
+                                                    </div>
                                                     <div
-                                                        class="md:hidden flex flex-col"
+                                                        class="lg:hidden flex flex-col"
                                                     >
                                                         <span
                                                             class="text-xs text-gray-500 font-medium"
@@ -456,16 +547,8 @@
                                                             }}</span
                                                         >
                                                         <span
-                                                            class="text-gray-800 font-medium"
-                                                            >৳{{
-                                                                toBengaliNumber(
-                                                                    item
-                                                                        .variants[0]
-                                                                        ?.unit_price ||
-                                                                        0,
-                                                                    2
-                                                                )
-                                                            }}</span
+                                                            class="text-gray-400"
+                                                            >-</span
                                                         >
                                                     </div>
                                                 </div>
@@ -552,6 +635,16 @@
                                                         <p
                                                             class="text-sm text-gray-600 mt-1"
                                                         >
+                                                            {{ getTranslation("sold") }}:
+                                                            {{
+                                                                toBengaliNumber(
+                                                                    variant.total_bottles_sold
+                                                                )
+                                                            }}
+                                                        </p>
+                                                        <p
+                                                            class="text-sm text-gray-600 mt-1"
+                                                        >
                                                             {{
                                                                 getTranslation(
                                                                     "cases"
@@ -567,6 +660,14 @@
                                                     <div
                                                         class="ml-3 text-right"
                                                     >
+                                                        <div class="mb-2">
+                                                            <span
+                                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                                :class="stockStatusClass(getStockStatus(variant.cases_available))"
+                                                            >
+                                                                {{ getTranslation(getStockStatus(variant.cases_available)) }}
+                                                            </span>
+                                                        </div>
                                                         <div
                                                             class="flex items-center justify-end mb-1"
                                                         >
@@ -612,8 +713,7 @@
                                                         >
                                                             ৳{{
                                                                 toBengaliNumber(
-                                                                    variant.total_bottles_available *
-                                                                        variant.unit_price,
+                                                                    Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
                                                                     2
                                                                 )
                                                             }}
@@ -711,6 +811,16 @@
                                                                     )
                                                                 }}
                                                             </div>
+                                                        </th>
+                                                        <th
+                                                            class="w-1/5 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            {{ getTranslation("sold") }}
+                                                        </th>
+                                                        <th
+                                                            class="w-1/5 px-4 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
+                                                        >
+                                                            {{ getTranslation("stockStatus") }}
                                                         </th>
                                                         <th
                                                             class="w-1/5 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200"
@@ -843,6 +953,23 @@
                                                             </span>
                                                         </td>
                                                         <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span class="font-bold text-amber-600 text-sm">
+                                                                {{ toBengaliNumber(variant.total_bottles_sold) }}
+                                                            </span>
+                                                        </td>
+                                                        <td
+                                                            class="px-4 py-4 text-center border-r border-gray-200"
+                                                        >
+                                                            <span
+                                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                                :class="stockStatusClass(getStockStatus(variant.cases_available))"
+                                                            >
+                                                                {{ getTranslation(getStockStatus(variant.cases_available)) }}
+                                                            </span>
+                                                        </td>
+                                                        <td
                                                             class="px-4 py-4 text-right border-r border-gray-200"
                                                         >
                                                             <span
@@ -862,8 +989,7 @@
                                                                 class="font-bold text-lg text-green-600"
                                                                 >৳{{
                                                                     toBengaliNumber(
-                                                                        variant.total_bottles_available *
-                                                                            variant.unit_price,
+                                                                        Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
                                                                         2
                                                                     )
                                                                 }}</span
@@ -885,13 +1011,15 @@
 </template>
 
 <script setup>
-import { defineProps, ref, computed } from "vue";
+import { defineProps, ref, computed, watch } from "vue";
 import Layout from "@/Layout.vue";
+import { router } from "@inertiajs/vue3";
 
 defineOptions({ layout: Layout });
 
 const props = defineProps({
     inventoryStock: Array,
+    snapshotDate: String,
 });
 
 const translations = {
@@ -906,13 +1034,21 @@ const translations = {
         unitPrice: "Unit Price",
         totalValue: "Total Value",
         totalProducts: "Total Products",
-        totalQuantity: "Total Products and Variants",
+        totalQuantity: "Total Bottles (Available)",
         totalCases: "Total Cases",
+        totalSold: "Total Sold",
         totalPurchaseValue: "Total Purchase Value",
         searchProducts: "Search products...",
+        snapshotDate: "Snapshot Date",
+        snapshotInfo: "Inventory snapshot as of",
         productDetails: "Product Details",
         productVariants: "Product Variants",
         variants: "variants",
+        sold: "Sold",
+        stockStatus: "Stock Status",
+        inStock: "In Stock",
+        mediumStock: "Medium",
+        lowStock: "Low",
     },
     bn: {
         languageLabel: "বাংলা",
@@ -925,13 +1061,21 @@ const translations = {
         unitPrice: "ইউনিট মূল্য",
         totalValue: "মোট মূল্য",
         totalProducts: "মোট পণ্য",
-        totalQuantity: "মোট পণ্য এবং ভেরিয়েন্ট",
+        totalQuantity: "মোট বোতল (পাওয়া যাচ্ছে)",
         totalCases: "মোট কেস",
+        totalSold: "মোট বিক্রি",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
         searchProducts: "পণ্য অনুসন্ধান করুন...",
+        snapshotDate: "স্ন্যাপশট তারিখ",
+        snapshotInfo: "এই তারিখ পর্যন্ত ইনভেন্টরি",
         productDetails: "পণ্য বিবরণ",
         productVariants: "পণ্য ভেরিয়েন্ট",
         variants: "ভেরিয়েন্ট",
+        sold: "বিক্রি",
+        stockStatus: "স্টক অবস্থা",
+        inStock: "ভালো",
+        mediumStock: "মাঝারি",
+        lowStock: "কম",
     },
 };
 
@@ -939,7 +1083,26 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedVariants = ref({});
 
-// Process inventory stock to include total_quantity, total_cases, and total_value
+// Snapshot date state
+const _todayInv = new Date();
+const _todayStrInv = `${_todayInv.getFullYear()}-${String(_todayInv.getMonth() + 1).padStart(2, "0")}-${String(_todayInv.getDate()).padStart(2, "0")}`;
+const initialSnapshotDate = props.snapshotDate || _todayStrInv;
+const snapshotDate = ref(initialSnapshotDate);
+
+const getStockStatus = (cases) => {
+    const totalCases = Number(cases || 0);
+    if (totalCases <= 5) return "lowStock";
+    if (totalCases <= 20) return "mediumStock";
+    return "inStock";
+};
+
+const stockStatusClass = (status) => ({
+    "bg-green-100 text-green-700": status === "inStock",
+    "bg-yellow-100 text-yellow-700": status === "mediumStock",
+    "bg-red-100 text-red-700": status === "lowStock",
+});
+
+// Process inventory stock to include total_quantity, total_cases and sold status
 const processedInventory = computed(() => {
     return props.inventoryStock.map((item) => {
         const total_quantity = item.variants.reduce(
@@ -950,38 +1113,69 @@ const processedInventory = computed(() => {
             (sum, variant) => sum + variant.cases_available,
             0
         );
-        const total_value = item.variants.reduce(
-            (sum, variant) =>
-                sum + variant.total_bottles_available * variant.unit_price,
+        const total_sold = item.variants.reduce(
+            (sum, variant) => sum + (variant.total_bottles_sold || 0),
             0
         );
+        const total_value = item.variants.reduce((sum, variant) => {
+            const casePrice = Number(variant.variant_metadata?.case_buying_price ?? 0);
+            const cases = Number(variant.cases_available ?? 0);
+            return sum + cases * casePrice;
+        }, 0);
 
         return {
             ...item,
             total_quantity,
             total_cases,
+            total_sold,
             total_value,
+            stock_status: getStockStatus(total_cases),
         };
     });
 });
 
-const totalProducts = computed(() => processedInventory.value.length);
+const totalProducts = computed(() => filteredInventory.value.length);
 const totalQuantity = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_quantity, 0)
+    filteredInventory.value.reduce((sum, item) => sum + item.total_quantity, 0)
 );
 const totalCases = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_cases, 0)
+    filteredInventory.value.reduce((sum, item) => sum + item.total_cases, 0)
+);
+const totalSold = computed(() =>
+    filteredInventory.value.reduce((sum, item) => sum + item.total_sold, 0)
 );
 const totalPurchaseValue = computed(() =>
-    processedInventory.value.reduce((sum, item) => sum + item.total_value, 0)
+    filteredInventory.value.reduce((sum, item) => sum + item.total_value, 0)
 );
 
 const filteredInventory = computed(() => {
-    if (!searchQuery.value) return processedInventory.value;
-    const query = searchQuery.value.toLowerCase();
-    return processedInventory.value.filter((item) =>
-        item.product_name.toLowerCase().includes(query)
-    );
+    let result = processedInventory.value;
+
+    // Apply search filter
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter((item) =>
+            item.product_name.toLowerCase().includes(query)
+        );
+    }
+
+    return result;
+});
+
+let snapshotReloadTimer;
+watch(snapshotDate, (value) => {
+    if (!value || value === props.snapshotDate) {
+        return;
+    }
+
+    clearTimeout(snapshotReloadTimer);
+    snapshotReloadTimer = setTimeout(() => {
+        router.get(
+            "/inventory/report",
+            { snapshot_date: value },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    }, 250);
 });
 
 function getTranslation(key) {
@@ -992,20 +1186,25 @@ function getTranslationLabel(key, lang) {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num, decimals = 0) {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
+function toBengaliNumber(numValue, decimals = null) {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
     if (currentLanguage.value !== "bn") {
-        return decimals > 0 ? Number(num).toFixed(decimals) : num;
+        return output;
     }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    let formattedNum =
-        decimals > 0 ? Number(num).toFixed(decimals) : num.toString();
-    return formattedNum.replace(
-        /\d/g,
-        (digit) => bengaliDigits[parseInt(digit)]
-    );
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 }
 
 function changeLanguage(lang) {
@@ -1086,15 +1285,6 @@ function toggleVariants(index) {
     max-width: 6rem;
 }
 
-table {
-    table-layout: fixed;
-}
-
-th,
-td {
-    width: 16.67%;
-}
-
 /* Adjust metrics card text to prevent overflow */
 .metric-value {
     word-break: break-all;
@@ -1105,12 +1295,12 @@ td {
 
 /* Reduce font size for very large numbers */
 .metric-value.large-number {
-    font-size: 1.5rem; /* Adjust for smaller screens */
+    font-size: 1rem;
 }
 
 @media (min-width: 1024px) {
     .metric-value.large-number {
-        font-size: 1.75rem; /* Slightly larger for desktop */
+        font-size: 1.1rem;
     }
 }
 

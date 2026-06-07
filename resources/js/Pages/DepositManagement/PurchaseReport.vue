@@ -177,24 +177,18 @@
             </div>
         </div>
 
-        <!-- Search Field -->
-        <div class="flex justify-end mb-4">
+        <!-- Search & Filter Fields -->
+        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
+            <DateRangePicker
+                v-model:startDate="dateStart"
+                v-model:endDate="dateEnd"
+                :language="currentLanguage"
+                class="w-full sm:w-auto"
+            />
             <div class="relative w-full sm:w-80">
-                <div
-                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                >
-                    <svg
-                        class="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <input
@@ -299,12 +293,36 @@
                                 <td
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
                                 >
-                                    <span
-                                        class="break-all max-w-24"
-                                        :title="purchase.product_name || '-'"
-                                    >
-                                        {{ purchase.product_name || "-" }}
-                                    </span>
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-10 w-10 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                            <img
+                                                v-if="purchase.image_url"
+                                                :src="purchase.image_url"
+                                                :alt="purchase.product_name || 'Product'"
+                                                class="h-full w-full object-cover"
+                                            />
+                                            <svg
+                                                v-else
+                                                class="w-4 h-4 text-gray-300"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-10h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <span
+                                            class="break-all max-w-24"
+                                            :title="purchase.product_name || '-'"
+                                        >
+                                            {{ purchase.product_name || "-" }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm text-gray-500 w-1/6"
@@ -959,10 +977,12 @@
 import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
+import DateRangePicker from "../../Components/DateRangePicker.vue";
 
 interface Purchase {
     supplier_name: string;
     product_name: string;
+    image_url?: string | null;
     variant: string;
     bottles_per_case: number;
     quantity: number;
@@ -1038,6 +1058,12 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedRows = ref({});
 
+// Date range state (default: today)
+const today = new Date();
+const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+const dateStart = ref(todayStr);
+const dateEnd = ref(todayStr);
+
 const totalPurchases = computed(() => props.purchaseHistory.length);
 const totalAmount = computed(() =>
     props.purchaseHistory.reduce(
@@ -1061,14 +1087,31 @@ const totalCases = computed(() =>
 
 const filteredPurchases = computed(() => {
     const query = searchQuery.value.toLowerCase();
+
     return props.purchaseHistory
-        .filter(
-            (purchase) =>
-                (purchase.total_bottles > 0 || purchase.total_value > 0) &&
-                (purchase.supplier_name?.toLowerCase().includes(query) ||
+        .filter((purchase) => {
+            if (purchase.total_bottles === 0 && purchase.total_value === 0) return false;
+
+            // Date range filter
+            if (dateStart.value || dateEnd.value) {
+                // Ensure pDate is string format like "YYYY-MM-DD"
+                const pDateStr = purchase.purchase_date ? String(purchase.purchase_date).split('T')[0] : null;
+                if (!pDateStr) return false;
+                
+                if (dateStart.value && pDateStr < dateStart.value) return false;
+                if (dateEnd.value && pDateStr > dateEnd.value) return false;
+            }
+
+            // Search filter
+            if (query) {
+                return (
+                    purchase.supplier_name?.toLowerCase().includes(query) ||
                     purchase.product_name?.toLowerCase().includes(query) ||
-                    purchase.variant?.toLowerCase().includes(query))
-        )
+                    purchase.variant?.toLowerCase().includes(query)
+                );
+            }
+            return true;
+        })
         .map((purchase) => ({
             ...purchase,
             total_cases: purchase.purchased_cases + purchase.cases_from_free,
@@ -1083,15 +1126,21 @@ function getTranslationLabel(key: string, lang: string) {
     return translations[lang]?.[key] || key;
 }
 
-function toBengaliNumber(num: number | string) {
+function toBengaliNumber(num: number | string): string {
     if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
+    }
+
+    if (currentLanguage.value !== 'bn') return String(num);
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 }
 
 function changeLanguage(lang: string) {

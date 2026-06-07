@@ -5,15 +5,14 @@
     >
         <div class="px-3 py-2 lg:px-5 lg:pl-3">
             <div class="flex items-center justify-between">
-                <div class="flex items-center justify-start">
+                <div class="flex items-center justify-start gap-2">
+                    <!-- Hamburger Button (Mobile Only) -->
                     <button
-                        data-drawer-target="logo-sidebar"
-                        data-drawer-toggle="logo-sidebar"
-                        aria-controls="logo-sidebar"
                         type="button"
-                        class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                        class="inline-flex items-center p-2 text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors"
+                        aria-label="Toggle sidebar"
+                        @click="$emit('toggle-sidebar')"
                     >
-                        <span class="sr-only">Open sidebar</span>
                         <svg
                             class="w-6 h-6"
                             aria-hidden="true"
@@ -28,15 +27,17 @@
                             ></path>
                         </svg>
                     </button>
-                    <Link :href="route('dashboard')" class="flex ml-2 md:mr-24">
+
+                    <!-- Logo / Brand Name -->
+                    <Link :href="route('dashboard')" class="flex md:mr-24">
                         <span class="text-xl font-bold text-gray-800 whitespace-nowrap">
                             ERP Solution
                         </span>
                     </Link>
                 </div>
 
+                <!-- Right Side: User dropdown (desktop) -->
                 <div class="hidden sm:flex sm:items-center sm:ml-6">
-                    <!-- Settings Dropdown -->
                     <div class="ml-3 relative">
                         <Dropdown align="right" width="48">
                             <template #trigger>
@@ -46,7 +47,6 @@
                                         class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                     >
                                         {{ $page.props.auth?.user?.name || 'User' }}
-
                                         <svg
                                             class="ml-2 -mr-0.5 h-4 w-4"
                                             xmlns="http://www.w3.org/2000/svg"
@@ -75,6 +75,37 @@
                         </Dropdown>
                     </div>
                 </div>
+
+                <!-- Right Side: Mobile user icon -->
+                <div class="flex items-center sm:hidden">
+                    <Dropdown align="right" width="48">
+                        <template #trigger>
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 focus:outline-none transition"
+                                aria-label="User menu"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                </svg>
+                            </button>
+                        </template>
+
+                        <template #content>
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-sm font-semibold text-gray-800">{{ $page.props.auth?.user?.name || 'User' }}</p>
+                                <p class="text-xs text-gray-500 truncate">{{ $page.props.auth?.user?.email || '' }}</p>
+                            </div>
+                            <DropdownLink
+                                :href="route('logout')"
+                                method="post"
+                                as="button"
+                            >
+                                Log Out
+                            </DropdownLink>
+                        </template>
+                    </Dropdown>
+                </div>
             </div>
         </div>
     </nav>
@@ -84,4 +115,6 @@
 import Dropdown from "@/Components/Others/Dropdown.vue";
 import DropdownLink from "@/Components/Others/DropdownLink.vue";
 import { Link } from "@inertiajs/vue3";
+
+defineEmits(['toggle-sidebar']);
 </script>

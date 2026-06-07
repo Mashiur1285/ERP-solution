@@ -1,7 +1,7 @@
 <template>
     <div
         v-if="show"
-        class="fixed top-6 right-6 px-7 py-5 rounded-lg shadow-lg flex items-center space-x-3 animate-toast-in z-50"
+        class="fixed top-[80px] right-6 px-7 py-5 rounded-lg shadow-lg flex items-center space-x-3 animate-toast-in z-50"
         :class="toastClasses"
         role="alert"
     >

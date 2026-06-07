@@ -36,13 +36,23 @@ class ExpenseController extends Controller
         $expense = $this->expenseRepository->update($validated, $id);
     }
 
+    public function destroy(int $id)
+    {
+        $this->expenseRepository->delete($id);
+        return back()->with('success', 'Expense deleted.');
+    }
+
     public function report(Request $request)
     {
-        $filters = $request->only(['start_date', 'end_date']);
-        $report = $this->expenseRepository->getExpenseReport($filters);
+        $month = max(1, min(12, (int) $request->query('month', now()->month)));
+        $year  = max(2000, min(now()->year + 1, (int) $request->query('year', now()->year)));
+
+        $report = $this->expenseRepository->getExpenseReport($month, $year);
+
         return Inertia::render('ExpenseManagement/Report', [
             'report' => $report,
-            'filters' => $filters,
+            'month'  => $month,
+            'year'   => $year,
         ]);
     }
 }

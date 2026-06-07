@@ -3,9 +3,8 @@
 
 namespace App\Contracts;
 
-use Illuminate\Database\Eloquent\Collection;
-
 interface ExpenseContract extends BaseContract
 {
-    public function getExpenseReport(array $filters);
+    public function getExpenseReport(int $month, int $year): array;
+    public function getProfitLossExpenses(string $startDate, string $endDate): array;
 }

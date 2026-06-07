@@ -145,6 +145,69 @@
             </div>
             <div>
                 <label
+                    for="product_image"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    {{ t("productImage") }}
+                </label>
+                <div class="rounded-lg border-2 border-dashed border-indigo-200 bg-white p-4">
+                    <div class="flex items-start gap-4">
+                        <div class="h-20 w-20 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                            <img
+                                v-if="imagePreviewUrl"
+                                :src="imagePreviewUrl"
+                                alt="Product preview"
+                                class="h-full w-full object-cover"
+                            />
+                            <svg
+                                v-else
+                                class="w-8 h-8 text-gray-300"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-10h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <input
+                                id="product_image"
+                                type="file"
+                                accept="image/*"
+                                class="hidden"
+                                @change="handleImageChange"
+                            />
+                            <label
+                                for="product_image"
+                                class="inline-flex cursor-pointer items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            >
+                                {{ productForm.product_image ? t("changeProductImage") : t("uploadProductImage") }}
+                            </label>
+                            <p
+                                v-if="productForm.product_image"
+                                class="mt-2 text-sm text-gray-600 break-all"
+                            >
+                                {{ productForm.product_image.name }}
+                            </p>
+                            <button
+                                v-if="productForm.product_image"
+                                type="button"
+                                class="mt-3 text-sm font-medium text-red-600 hover:text-red-700"
+                                @click="removeImage"
+                            >
+                                {{ t("removeImage") }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label
                     for="brand_id"
                     class="block text-sm font-semibold text-gray-700 mb-2"
                 >
@@ -342,6 +405,7 @@ import { computed, defineEmits, defineProps, ref, watch } from "vue";
 const props = defineProps<{
     productForm: {
         product_name: string;
+        product_image: File | null;
         category_id: string;
         brand_id: string;
         supplier_id: string;
@@ -371,6 +435,7 @@ const supplierSearch = ref("");
 const showCategoryDropdown = ref(false);
 const showBrandDropdown = ref(false);
 const showSupplierDropdown = ref(false);
+const imagePreviewUrl = ref("");
 
 const filteredCategories = computed(() =>
     props.categories.filter((c) =>
@@ -411,6 +476,28 @@ const selectSupplier = (supplier: {
     supplierSearch.value = supplier.company_name;
     showSupplierDropdown.value = false;
 };
+
+const handleImageChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0] || null;
+
+    props.productForm.product_image = file;
+    imagePreviewUrl.value = file ? URL.createObjectURL(file) : "";
+};
+
+const removeImage = () => {
+    props.productForm.product_image = null;
+    imagePreviewUrl.value = "";
+};
+
+watch(
+    () => props.productForm.product_image,
+    (file) => {
+        if (!file) {
+            imagePreviewUrl.value = "";
+        }
+    }
+);
 
 watch(
     () => props.productForm.category_id,

@@ -701,17 +701,23 @@ let chartInstance = null;
 const toBengaliNumber = (num, decimals = 0) => {
     if (num === null || num === undefined || num === "") return "";
     if (typeof num !== "number" && typeof num !== "string") return num;
+
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
+    }
+
     if (props.t("languageLabel") !== "বাংলা") {
-        return decimals > 0 ? Number(num).toFixed(decimals) : num;
+        return num;
     }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    let formattedNum =
-        decimals > 0 ? Number(num).toFixed(decimals) : num.toString();
-    return formattedNum.replace(
-        /\d/g,
-        (digit) => bengaliDigits[parseInt(digit)]
-    );
+    return num
+        .toString()
+        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
 };
 
 // Computed properties for total metrics

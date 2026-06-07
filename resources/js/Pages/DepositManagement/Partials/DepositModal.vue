@@ -43,7 +43,7 @@
                                     />
                                 </svg>
                             </div>
-                            {{ getTranslation("addDeposit") }}
+                            {{ editMode ? getTranslation("editDeposit") : getTranslation("addDeposit") }}
                         </h3>
                         <button
                             @click="$emit('close')"
@@ -103,6 +103,7 @@
                                             isSubmitted &&
                                             !depositForm.supplier_id,
                                     }"
+                                    :disabled="editMode"
                                     required
                                 >
                                     <option value="" disabled>
@@ -206,6 +207,24 @@
                             >
                                 {{ getTranslation("amountRequired") }}
                             </p>
+                        </div>
+
+                        <!-- Deposit Date -->
+                        <div>
+                            <label for="deposit_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ getTranslation("depositDate") }}
+                                </div>
+                            </label>
+                            <input
+                                v-model="depositForm.deposit_date"
+                                id="deposit_date"
+                                type="date"
+                                class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
+                            />
                         </div>
 
                         <!-- Preview Section -->
@@ -323,7 +342,9 @@
                         <span>{{
                             isLoading
                                 ? getTranslation("processing")
-                                : getTranslation("addDeposit")
+                                : editMode
+                                    ? getTranslation("updateDeposit")
+                                    : getTranslation("addDeposit")
                         }}</span>
                     </button>
                 </div>
@@ -333,7 +354,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, onUnmounted } from "vue";
 
 interface Supplier {
     id: number;
@@ -342,13 +363,19 @@ interface Supplier {
 
 const props = defineProps<{
     suppliers: Supplier[];
+    editMode?: boolean;
+    deposit?: {
+        id?: number;
+        supplier_id: number | string;
+        balance_deposited: number;
+    } | null;
 }>();
 
 const emit = defineEmits<{
     (e: "close"): void;
     (
         e: "submit",
-        depositData: { supplier_id: string; balance_deposited: number }
+        depositData: { supplier_id: string; balance_deposited: number; deposit_date: string }
     ): void;
 }>();
 
@@ -364,7 +391,10 @@ const translations = {
         amountRequired: "Please enter a valid amount greater than 0",
         depositPreview: "Deposit Preview",
         selectedSupplier: "Selected Supplier",
+        editDeposit: "Edit Deposit",
+        updateDeposit: "Update Deposit",
         cancel: "Cancel",
+        depositDate: "Deposit Date",
         processing: "Processing...",
     },
     bn: {
@@ -378,19 +408,47 @@ const translations = {
         amountRequired: "অনুগ্রহ করে ০-এর বেশি একটি বৈধ পরিমাণ লিখুন",
         depositPreview: "আমানত পূর্বরূপ",
         selectedSupplier: "নির্বাচিত সরবরাহকারী",
+        editDeposit: "আমানত সম্পাদনা করুন",
+        updateDeposit: "আমানত আপডেট করুন",
         cancel: "বাতিল",
+        depositDate: "আমানতের তারিখ",
         processing: "প্রক্রিয়াকরণ...",
     },
-};
+} as const;
+
+type DepositTranslationKey  = keyof typeof translations.en;
+type DepositTranslationLang = keyof typeof translations;
 
 const currentLanguage = ref(localStorage?.getItem("language") || "en");
 const isSubmitted = ref(false);
 const isLoading = ref(false);
+const editMode = computed(() => Boolean(props.editMode));
+
+const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
 
 const depositForm = ref({
     supplier_id: "",
     balance_deposited: 0,
+    deposit_date: getTodayStr(),
 });
+
+watch(
+    () => props.deposit,
+    (deposit) => {
+        depositForm.value = deposit
+            ? {
+                  supplier_id: String(deposit.supplier_id ?? ""),
+                  balance_deposited: Number(deposit.balance_deposited ?? 0),
+                  deposit_date: getTodayStr(),
+              }
+            : { supplier_id: "", balance_deposited: 0, deposit_date: getTodayStr() };
+        isSubmitted.value = false;
+    },
+    { immediate: true }
+);
 
 const selectedSupplierName = computed(() => {
     const supplier = props.suppliers.find(
@@ -399,23 +457,22 @@ const selectedSupplierName = computed(() => {
     return supplier?.company_name || "";
 });
 
-const getTranslation = (key: string) => {
-    return (
-        translations[currentLanguage.value]?.[key] ||
-        translations.en[key] ||
-        key
-    );
-};
+const getTranslation = (key: DepositTranslationKey) =>
+    translations[currentLanguage.value as DepositTranslationLang]?.[key] ?? translations.en[key] ?? key;
 
-const toBengaliNumber = (num: number | string) => {
+const toBengaliNumber = (num: number | string): string => {
     if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num.toString();
+    
+    // Round decimals to 2 places if it's a number or a numeric string
+    let n = Number(num);
+    if (!isNaN(n) && n % 1 !== 0) {
+        num = n.toFixed(2);
+    } else if (!isNaN(n)) {
+        num = n.toString();
+    }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 const submit = () => {
@@ -427,13 +484,7 @@ const submit = () => {
     ) {
         isLoading.value = true;
         emit("submit", { ...depositForm.value });
-
-        // Reset form after submission
-        setTimeout(() => {
-            depositForm.value = { supplier_id: "", balance_deposited: 0 };
-            isSubmitted.value = false;
-            isLoading.value = false;
-        }, 1000);
+        isLoading.value = false;
     } else {
         console.error("Please fill all required fields");
     }
@@ -458,8 +509,6 @@ const cleanup = () => {
     }
 };
 
-// Cleanup on unmount
-import { onUnmounted } from "vue";
 onUnmounted(cleanup);
 </script>
 

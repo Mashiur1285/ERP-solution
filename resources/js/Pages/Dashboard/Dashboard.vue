@@ -29,6 +29,121 @@
             </button>
         </div>
 
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-green-600">
+                            {{ t("totalSalesCard") }}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">{{ selectedMonthYear }}</p>
+                    </div>
+                    <div class="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3v18m-4-4h8m-8-10h8" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-all leading-tight">৳{{ toBengaliNumber(monthlySales?.total_sales || 0, 2) }}</p>
+                <div class="mt-4 space-y-2 border-t border-gray-100 pt-3 text-sm">
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-500">{{ t("paidAmount") }}</span>
+                        <span class="font-semibold text-green-700">৳{{ toBengaliNumber(monthlySales?.paid_amount || 0, 2) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-500">{{ t("dueAmount") }}</span>
+                        <span class="font-semibold text-red-600">৳{{ toBengaliNumber(monthlySales?.due_amount || 0, 2) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-500">{{ t("profit") }}</span>
+                        <span class="font-semibold text-indigo-700">৳{{ toBengaliNumber(monthlySales?.profit || 0, 2) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-500">{{ t("netProfit") }}</span>
+                        <span :class="['font-semibold', (monthlySales?.net_profit || 0) >= 0 ? 'text-emerald-700' : 'text-red-600']">
+                            ৳{{ toBengaliNumber(monthlySales?.net_profit || 0, 2) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-rose-600">
+                            {{ t("totalExpenseCard") }}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">{{ selectedMonthYear }}</p>
+                    </div>
+                    <div class="h-10 w-10 rounded-xl bg-rose-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2m-2 0h14l-1 10H6L5 9z" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-all leading-tight">৳{{ toBengaliNumber(monthlyExpenses?.total_amount || 0, 2) }}</p>
+                <p class="text-sm text-gray-500 mt-4 border-t border-gray-100 pt-3">
+                    {{ toBengaliNumber(monthlyExpenses?.total_expenses || 0) }} {{ t("totalExpenses") }}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-sky-600">
+                            {{ t("totalDeposit") }}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">{{ t("topDepositSuppliers") }}</p>
+                    </div>
+                    <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-all leading-tight">৳{{ toBengaliNumber(totalDepositAmount, 2) }}</p>
+                <div class="mt-4 space-y-2 border-t border-gray-100 pt-3">
+                    <div
+                        v-for="deposit in topDepositSuppliers"
+                        :key="deposit.supplier_name"
+                        class="flex items-center justify-between text-sm gap-3"
+                    >
+                        <span class="text-gray-600 truncate min-w-0">{{ deposit.supplier_name }}</span>
+                        <span class="font-semibold text-sky-700 shrink text-right text-xs xl:text-sm break-all">৳{{ toBengaliNumber(deposit.total_remaining_deposit || 0, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                            {{ t("totalLifting") }}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">{{ selectedMonthYear }}</p>
+                    </div>
+                    <div class="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3V3H9v2H6a2 2 0 00-2 2v6m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4m5 4h6" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-words leading-tight">{{ toBengaliNumber(totalMonthlyLifts) }}</p>
+                <div class="mt-4 space-y-2 border-t border-gray-100 pt-3 text-sm">
+                    <p class="text-gray-500">
+                        {{ toBengaliNumber(totalLiftCases || 0) }} {{ t("totalCases") }}
+                    </p>
+                    <p class="truncate text-gray-600">
+                        {{ t("recentSupplier") }}: <span class="font-medium text-gray-800">{{ recentLiftSupplierName }}</span>
+                    </p>
+                    <p class="text-gray-600">
+                        {{ t("depositBalance") }}:
+                        <span class="font-semibold text-amber-700">৳{{ toBengaliNumber(recentLiftSupplierDeposit, 2) }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Child Components -->
         <SalesOverview
             :monthlySales="monthlySales"
@@ -48,8 +163,13 @@
             :shops="shops"
             :dateWiseSalesData="dateWiseSalesData"
             :sales="sales"
+            :lifts="lifts"
             :totalShopsSold="totalShopsSold"
             :totalCasesSold="totalCasesSold"
+            :totalLiftCases="totalLiftCases"
+            :totalLiftBottles="totalLiftBottles"
+            :totalLiftAmount="totalLiftAmount"
+            :totalFreeLiftBottles="totalFreeLiftBottles"
             :todaysExpensesAmount="todaysExpensesAmount"
             :topSellingProducts="topSellingProducts"
             :lowStockProducts="lowStockProducts"
@@ -123,6 +243,7 @@ defineOptions({ layout: Layout });
 const props = defineProps({
     suppliersCount: Number,
     topDeposits: Array,
+    totalDepositAmount: Number,
     suppliers: Array,
     shops: Array,
     dateWiseSalesData: Array,
@@ -134,8 +255,13 @@ const props = defineProps({
     topSellingProducts: Array,
     lowStockProducts: Array,
     sales: Array,
+    lifts: Array,
     totalShopsSold: Number,
     totalCasesSold: Number,
+    totalLiftCases: Number,
+    totalLiftBottles: Number,
+    totalLiftAmount: Number,
+    totalFreeLiftBottles: Number,
     todaysExpensesAmount: Number,
     topSellingProducts: Array,
     lowStockProducts: Array,
@@ -163,14 +289,23 @@ const translations = {
         paid: "Paid",
         due: "Due",
         totalSales: "Total Revenue",
+        totalSalesCard: "Total Sales",
         paidAmount: "Amount Received",
         dueAmount: "Due Amount",
         profitAndLoss: "Profit & Loss",
-        profit: "Profit",
+        profit: "Gross Profit",
+        netProfit: "Net Profit",
         loss: "Loss",
+        recentSupplier: "Recent Supplier",
+        depositBalance: "Deposit Balance",
         totalExpenses: "Total Expenses",
+        totalExpenseCard: "Total Expense",
         totalAmount: "Total Amount",
+        totalCost: "Total Cost",
+        totalDeposit: "Total Deposit",
+        totalLifting: "Total Lifting",
         inventoryStock: "Inventory Stock",
+        availableStock: "Available Stock",
         topSellingProducts: "Top Selling Products",
         lowStockProducts: "Low Stock Products",
         totalQuantity: "Total Quantity",
@@ -182,6 +317,7 @@ const translations = {
         showChart: "Show Chart",
         showList: "Show List",
         products: "Products",
+        noStockAvailable: "No stock available",
         variantDetails: "Variant Details",
         variant: "Variant",
         boxes: "Cases",
@@ -193,7 +329,10 @@ const translations = {
         amount: "Amount",
         shops: "Shops",
         dailySales: "Daily Sales",
+        dailyLifting: "Monthly Lifting",
         shopName: "Shop Name",
+        supplierName: "Supplier Name",
+        liftNo: "Lift No",
         total: "Total",
         totalShopsSold: "Total Shops Sold",
         totalCasesSold: "Total Cases Sold",
@@ -201,11 +340,13 @@ const translations = {
         todaysSell: "Today's Sales",
         totalShops: "Total Shops",
         totalCases: "Total Cases (Box)",
+        totalBottles: "Total Bottles",
         monthlySell: "This Month's Sales",
         todaysExpenses: "Today's Expenses",
         topProduct: "Top Product",
         lowStock: "Low Stock",
-        todaysLifting: "Today's Lifting",
+        todaysLifting: "Total Lifts",
+        noLiftingToday: "No lifting this month",
         fastMoving: "Fast Moving",
         fastMovingLowStock: "Fast Moving (Low Stock)",
         slowMoving: "Slow Moving",
@@ -230,14 +371,23 @@ const translations = {
         paid: "প্রদত্ত",
         due: "বাকি",
         totalSales: "মোট আয়",
+        totalSalesCard: "মোট বিক্রয়",
         paidAmount: "প্রাপ্ত অর্থ",
         dueAmount: "বাকি পরিমাণ",
         profitAndLoss: "লাভ ও ক্ষতি",
-        profit: "লাভ",
+        profit: "গ্রস লাভ",
+        netProfit: "নেট লাভ",
         loss: "ক্ষতি",
+        recentSupplier: "সর্বশেষ সাপ্লায়ার",
+        depositBalance: "ডিপোজিট ব্যালেন্স",
         totalExpenses: "মোট ব্যয়",
+        totalExpenseCard: "মোট খরচ",
         totalAmount: "মোট পরিমাণ",
+        totalCost: "মোট খরচ",
+        totalDeposit: "মোট ডিপোজিট",
+        totalLifting: "মোট লিফটিং",
         inventoryStock: "ইনভেন্টরি স্টক",
+        availableStock: "এভেইলেবল স্টক",
         topSellingProducts: "সর্বাধিক বিক্রিত পণ্য",
         lowStockProducts: "কম স্টক পণ্য",
         totalQuantity: "মোট পরিমাণ",
@@ -249,6 +399,7 @@ const translations = {
         showChart: "চার্ট দেখান",
         showList: "তালিকা দেখান",
         products: "পণ্য",
+        noStockAvailable: "কোন স্টক পাওয়া যায়নি",
         variantDetails: "ভেরিয়েন্ট বিবরণ",
         variant: "ভেরিয়েন্ট",
         boxes: "বক্স",
@@ -260,7 +411,10 @@ const translations = {
         amount: "টাকার পরিমাণ",
         shops: "দোকান",
         dailySales: "দৈনিক বিক্রয়",
+        dailyLifting: "মাসিক লিফটিং",
         shopName: " দোকানের নাম",
+        supplierName: "সাপ্লায়ারের নাম",
+        liftNo: "লিফট নং",
         total: "মোট",
         totalShopsSold: "মোট দোকান বিক্রি",
         totalCasesSold: "মোট কেস বিক্রি",
@@ -268,11 +422,13 @@ const translations = {
         todaysSell: "আজকের বিক্রয়",
         totalShops: "মোট দোকান",
         totalCases: "মোট কেস (বক্স)",
+        totalBottles: "মোট বোতল",
         monthlySell: "এই মাসের বিক্রয়",
         todaysExpenses: "আজকের খরচ",
         topProduct: "শীর্ষ পণ্য",
         lowStock: "কম স্টক",
-        todaysLifting: "আজকের লিফটিং",
+        todaysLifting: "মোট লিফট",
+        noLiftingToday: "এই মাসে কোনো লিফটিং নেই",
         fastMoving: "দ্রুত বিক্রিত",
         fastMovingLowStock: "দ্রুত বিক্রিত (কম স্টক)",
         slowMoving: "ধীর বিক্রিত",
@@ -302,15 +458,23 @@ const selectedYear = ref(props.year);
 const t = computed(() => (key) => translations[currentLanguage.value][key]);
 
 // Function to convert numbers to Bengali
-const toBengaliNumber = (num) => {
-    if (num === null || num === undefined || num === "") return "";
-    if (typeof num !== "number" && typeof num !== "string") return num;
-    if (currentLanguage.value !== "bn") return num;
+const toBengaliNumber = (numValue, decimals = null) => {
+    if (numValue === null || numValue === undefined || numValue === "") return "";
+    
+    let n = Number(numValue);
+    if (isNaN(n)) return String(numValue);
+
+    let output;
+    if (decimals !== null) {
+        output = n.toFixed(decimals);
+    } else {
+        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+    }
+
+    if (currentLanguage.value !== "bn") return output;
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-    return num
-        .toString()
-        .replace(/\d/g, (digit) => bengaliDigits[parseInt(digit)]);
+    return output.replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
 };
 
 // Change language
@@ -501,6 +665,24 @@ const selectedMonthYear = computed(() => {
         year: "numeric",
     });
 });
+
+const topDepositSuppliers = computed(() => (props.topDeposits || []).slice(0, 4));
+const recentLift = computed(() => (props.lifts || [])[0] || null);
+const recentLiftSupplierName = computed(
+    () => recentLift.value?.supplier?.company_name || recentLift.value?.supplier_name || "-"
+);
+const recentLiftSupplierDeposit = computed(() => {
+    const supplierName = recentLiftSupplierName.value;
+    if (!supplierName || supplierName === "-") return 0;
+
+    const matchedDeposit = (props.topDeposits || []).find(
+        (deposit) => deposit.supplier_name === supplierName
+    );
+
+    return Number(matchedDeposit?.total_remaining_deposit || 0);
+});
+
+const totalMonthlyLifts = computed(() => (props.lifts || []).length);
 
 onMounted(() => {
     const duration = 2000;

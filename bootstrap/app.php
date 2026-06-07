@@ -17,11 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        $middleware->web(append: [
-        HandleInertiaRequests::class,
-    ]);$middleware->validateCsrfTokens(except: [
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
             'suppliers/store',
-            // Add other routes if needed
+            'sales/store',
+            'sales/payment/store/*',
+            'lifts/store',
+            'api/product-catalog/quick-store',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

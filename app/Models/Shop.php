@@ -8,6 +8,7 @@ class Shop extends Model
 {
     protected $fillable = [
         'shop_name',
+        'road',
         'owner_name',
         'shop_address',
         'phone_number',

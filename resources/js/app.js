@@ -23,10 +23,17 @@ import {
     faTag,
     faShoppingCart,
     faFileAlt,
+    faFileInvoice,
     faPlusCircle,
     faClipboardList,
     faChevronDown,
-    faLayerGroup
+    faLayerGroup,
+    faUserShield,
+    faUsersGear,
+    faBoxOpen,
+    faChartLine,
+    faChartPie,
+    faReceipt
 } from '@fortawesome/free-solid-svg-icons';
 
 // Add icons to library
@@ -44,10 +51,17 @@ library.add(
     faTag,
     faShoppingCart,
     faFileAlt,
+    faFileInvoice,
     faPlusCircle,
     faClipboardList,
     faChevronDown,
-    faLayerGroup
+    faLayerGroup,
+    faUserShield,
+    faUsersGear,
+    faBoxOpen,
+    faChartLine,
+    faChartPie,
+    faReceipt
 );
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

@@ -1,7 +1,7 @@
 ```vue
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-4 sm:p-6 space-y-6 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
     >
         <!-- Toast Notification -->
         <div
@@ -64,10 +64,10 @@
 
         <!-- Header -->
         <div
-            class="flex justify-between items-center mb-8 border-b border-indigo-100 pb-4"
+            class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8 border-b border-indigo-100 pb-4"
         >
             <h1
-                class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-2xl sm:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-50 rounded-full flex items-center justify-center"
@@ -90,7 +90,7 @@
             </h1>
             <Link
                 href="/shops/create"
-                class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
             >
                 <svg
                     class="w-5 h-5"
@@ -126,133 +126,63 @@
                 />
             </svg>
 
-            <div class="relative z-10">
+            <div class="relative z-10 overflow-x-auto">
                 <table class="min-w-full divide-y divide-indigo-100">
                     <thead class="bg-indigo-50">
                         <tr>
                             <th
                                 scope="col"
-                                class="px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
+                                class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
                             >
                                 <span class="flex items-center">
-                                    <svg
-                                        class="w-4 h-4 text-indigo-500 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                        ></path>
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                     </svg>
                                     Shop Name
                                 </span>
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
-                            >
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider hidden sm:table-cell">
                                 <span class="flex items-center">
-                                    <svg
-                                        class="w-4 h-4 text-indigo-500 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                        ></path>
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                     </svg>
                                     Owner Name
                                 </span>
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
-                            >
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider hidden md:table-cell">
                                 <span class="flex items-center">
-                                    <svg
-                                        class="w-4 h-4 text-indigo-500 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                        ></path>
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5-2.5V6.5L9 4m0 16l6-3m-6 3V4m6 13l5-2.5V3.5L15 4m0 13V4"></path>
+                                    </svg>
+                                    Road
+                                </span>
+                            </th>
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                     </svg>
                                     Contact
                                 </span>
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
-                            >
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider hidden md:table-cell">
                                 <span class="flex items-center">
-                                    <svg
-                                        class="w-4 h-4 text-indigo-500 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                                        ></path>
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
                                     </svg>
                                     Email
                                 </span>
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
-                            >
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider hidden lg:table-cell">
                                 <span class="flex items-center">
-                                    <svg
-                                        class="w-4 h-4 text-indigo-500 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
-                                        ></path>
+                                    <svg class="w-4 h-4 text-indigo-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
                                     </svg>
                                     Website
                                 </span>
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider"
-                            >
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-indigo-600 uppercase tracking-wider">
                                 <span class="flex items-center">
-                                    <svg
-                                        class="w-4 h-4 text-indigo-500 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                        />
-                                    </svg>
                                     Actions
                                 </span>
                             </th>
@@ -264,27 +194,32 @@
                             :key="shop.id"
                             class="hover:bg-indigo-50/50 transition-colors"
                         >
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">
                                     {{ shop.shop_name ?? "-" }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                                 <div class="text-sm text-gray-900">
                                     {{ shop.owner_name ?? "-" }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                                <div class="text-sm text-gray-900">
+                                    {{ shop.road ?? "-" }}
+                                </div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">
                                     {{ shop.phone_number ?? "-" }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                                 <div class="text-sm text-gray-900">
                                     {{ shop.email ?? "-" }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                                 <a
                                     :href="shop.website"
                                     target="_blank"
@@ -294,7 +229,7 @@
                                 </a>
                             </td>
                             <td
-                                class="px-6 py-4 whitespace-nowrap flex space-x-2"
+                                class="px-4 sm:px-6 py-4 whitespace-nowrap flex space-x-2"
                             >
                                 <Link
                                     :href="`/shops/${shop.id}/edit`"
@@ -376,6 +311,7 @@ interface Shop {
     id: number;
     shop_name: string;
     owner_name: string | null;
+    road: string | null;
     phone_number: string;
     email: string | null;
     website: string | null;
