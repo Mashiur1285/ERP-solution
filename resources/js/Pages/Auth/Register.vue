@@ -1,3 +1,4 @@
+```vue
 <template>
     <div
         class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8"
@@ -116,14 +117,14 @@
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        safeErrors.name
+                                        form.errors.name
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
                                     :placeholder="t('namePlaceholder')"
                                 />
                                 <div
-                                    v-if="safeErrors.name"
+                                    v-if="form.errors.name"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
@@ -140,10 +141,10 @@
                                 </div>
                             </div>
                             <p
-                                v-if="safeErrors.name"
+                                v-if="form.errors.name"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ safeErrors.name }}
+                                {{ form.errors.name }}
                             </p>
                         </div>
 
@@ -164,14 +165,14 @@
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        safeErrors.email
+                                        form.errors.email
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
                                     :placeholder="t('emailPlaceholder')"
                                 />
                                 <div
-                                    v-if="safeErrors.email"
+                                    v-if="form.errors.email"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
@@ -188,10 +189,10 @@
                                 </div>
                             </div>
                             <p
-                                v-if="safeErrors.email"
+                                v-if="form.errors.email"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ safeErrors.email }}
+                                {{ form.errors.email }}
                             </p>
                         </div>
 
@@ -212,14 +213,14 @@
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        safeErrors.password
+                                        form.errors.password
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
                                     :placeholder="t('passwordPlaceholder')"
                                 />
                                 <div
-                                    v-if="safeErrors.password"
+                                    v-if="form.errors.password"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
@@ -236,10 +237,10 @@
                                 </div>
                             </div>
                             <p
-                                v-if="safeErrors.password"
+                                v-if="form.errors.password"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ safeErrors.password }}
+                                {{ form.errors.password }}
                             </p>
                         </div>
 
@@ -260,7 +261,7 @@
                                     required
                                     :class="[
                                         'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                        safeErrors.password_confirmation
+                                        form.errors.password_confirmation
                                             ? 'border-red-300'
                                             : 'border-gray-300',
                                     ]"
@@ -269,11 +270,11 @@
                                     "
                                 />
                                 <div
-                                    v-if="safeErrors.password_confirmation"
+                                    v-if="form.errors.password_confirmation"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                 >
                                     <svg
-                                        class="h-5 w-5 text-red-500"
+                                        class="h-5 w-5 text-red-5 00"
                                         fill="currentColor"
                                         viewBox="0 0 20 20"
                                     >
@@ -286,10 +287,10 @@
                                 </div>
                             </div>
                             <p
-                                v-if="safeErrors.password_confirmation"
+                                v-if="form.errors.password_confirmation"
                                 class="mt-2 text-sm text-red-600"
                             >
-                                {{ safeErrors.password_confirmation }}
+                                {{ form.errors.password_confirmation }}
                             </p>
                         </div>
                     </div>
@@ -310,7 +311,7 @@
                 <p class="mt-6 text-center text-sm text-gray-600">
                     {{ t("hasAccount") }}
                     <Link
-                        :href="safeRoute('login', '/login')"
+                        :href="route('login')"
                         class="font-medium text-indigo-600 hover:text-indigo-500"
                     >
                         {{ t("signIn") }}
@@ -322,7 +323,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onErrorCaptured } from "vue";
+import { ref, computed } from "vue";
 import { useForm, Link } from "@inertiajs/vue3";
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
@@ -373,7 +374,7 @@ const changeLanguage = (lang) => {
     document.documentElement.lang = lang;
 };
 
-// Form handling with safe initialization
+// Form handling
 const form = useForm({
     name: "",
     email: "",
@@ -381,59 +382,11 @@ const form = useForm({
     password_confirmation: "",
 });
 
-// Safe error access - CRITICAL FIX for undefined errors
-const safeErrors = computed(() => {
-    try {
-        return {
-            name: form.errors?.name || null,
-            email: form.errors?.email || null,
-            password: form.errors?.password || null,
-            password_confirmation: form.errors?.password_confirmation || null,
-            general: form.errors?.general || null,
-        };
-    } catch (error) {
-        console.warn('Error accessing form errors:', error);
-        return { 
-            name: null, 
-            email: null, 
-            password: null, 
-            password_confirmation: null, 
-            general: null 
-        };
-    }
-});
-
-// Safe route helper
-const safeRoute = (routeName, fallback = '#') => {
-    try {
-        if (typeof route === 'function') {
-            return route(routeName);
-        }
-        return fallback;
-    } catch (error) {
-        console.warn(`Route ${routeName} not found:`, error);
-        return fallback;
-    }
-};
-
 const submit = () => {
-    try {
-        form.post(safeRoute("register", "/register"), {
-            onSuccess: () => form.reset("password", "password_confirmation"),
-            onError: (errors) => {
-                console.log('Registration errors:', errors);
-            }
-        });
-    } catch (error) {
-        console.error('Registration submission error:', error);
-    }
+    form.post(route("register"), {
+        onSuccess: () => form.reset("password", "password_confirmation"),
+    });
 };
-
-// Error boundary
-onErrorCaptured((error, instance, info) => {
-    console.error('Register component error:', error, info);
-    return false; // Prevent error from propagating
-});
 </script>
 
 <style scoped>
@@ -503,3 +456,4 @@ onErrorCaptured((error, instance, info) => {
         0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 </style>
+```

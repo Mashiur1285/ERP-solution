@@ -1,3 +1,4 @@
+```vue
 <template>
     <div
         class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative"
@@ -124,7 +125,7 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                d="M12 11c0-1.1-.9-2-2-2H8V7h2c2.2 0 4 1.8 4 4v2c0 2.2-1.8 4-4 4H8v-2h2c1.1 0 2-.9 2-2v-2zm8 5h-2v2h-2v-2h-2v-2h2v-2h2v2h2v2z"
                             />
                         </svg>
                     </div>
@@ -156,14 +157,14 @@
                                 autofocus
                                 :class="[
                                     'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm',
-                                    safeErrors.email
+                                    form.errors.email
                                         ? 'border-red-300'
                                         : 'border-gray-300',
                                 ]"
                                 :placeholder="t('emailPlaceholder')"
                             />
                             <div
-                                v-if="safeErrors.email"
+                                v-if="form.errors.email"
                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                             >
                                 <svg
@@ -180,10 +181,10 @@
                             </div>
                         </div>
                         <p
-                            v-if="safeErrors.email"
+                            v-if="form.errors.email"
                             class="mt-2 text-sm text-red-600"
                         >
-                            {{ safeErrors.email }}
+                            {{ form.errors.email }}
                         </p>
                     </div>
                 </div>
@@ -204,7 +205,7 @@
             <p class="mt-6 text-center text-sm text-gray-600">
                 {{ t("backToLogin") }}
                 <Link
-                    :href="safeRoute('login', '/login')"
+                    :href="route('login')"
                     class="font-medium text-indigo-600 hover:text-indigo-500"
                 >
                     {{ t("signIn") }}
@@ -215,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onErrorCaptured } from "vue";
+import { ref, computed } from "vue";
 import { useForm, Link, usePage } from "@inertiajs/vue3";
 
 defineProps({
@@ -223,7 +224,7 @@ defineProps({
 });
 
 const currentLanguage = ref(localStorage.getItem("language") || "en");
-const statusMessage = ref(null);
+const statusMessage = ref(null); // State for toast message
 
 // Translation object
 const translations = {
@@ -264,63 +265,28 @@ const changeLanguage = (lang) => {
     document.documentElement.lang = lang;
 };
 
-// Form handling with safe initialization
+// Form handling
 const form = useForm({
     email: "",
 });
 
-// Safe error access - CRITICAL FIX for password.request error
-const safeErrors = computed(() => {
-    try {
-        return {
-            email: form.errors?.email || null,
-            general: form.errors?.general || null,
-        };
-    } catch (error) {
-        console.warn('Error accessing form errors:', error);
-        return { email: null, general: null };
-    }
-});
-
-// Safe route helper
-const safeRoute = (routeName, fallback = '#') => {
-    try {
-        if (typeof route === 'function') {
-            return route(routeName);
-        }
-        return fallback;
-    } catch (error) {
-        console.warn(`Route ${routeName} not found:`, error);
-        return fallback;
-    }
-};
-
 const submit = () => {
-    try {
-        form.post(safeRoute("password.email", "/password/email"), {
-            onSuccess: () => {
-                form.reset("email");
-                statusMessage.value = translations[currentLanguage.value].statusMessage;
-            },
-            onError: (errors) => {
-                console.log('Password reset errors:', errors);
-                statusMessage.value = null;
-            },
-        });
-    } catch (error) {
-        console.error('Password reset submission error:', error);
-    }
+    form.post(route("password.email"), {
+        onSuccess: () => {
+            form.reset("email");
+            statusMessage.value =
+                translations[currentLanguage.value].statusMessage;
+        },
+        onError: () => {
+            statusMessage.value = null;
+        },
+    });
 };
 
 // Watch for status prop to display toast
+import { watch } from "vue";
 watch(
-    () => {
-        try {
-            return usePage().props?.status;
-        } catch {
-            return null;
-        }
-    },
+    () => usePage().props.status,
     (newStatus) => {
         if (newStatus) {
             statusMessage.value = newStatus;
@@ -331,11 +297,89 @@ watch(
         }
     }
 );
-
-// Error boundary
-onErrorCaptured((error, instance, info) => {
-    console.error('ForgotPassword component error:', error, info);
-    return false; // Prevent error from propagating
-});
-
 </script>
+
+<style scoped>
+@import url("https://fonts.maateen.me/kalpurush/font.css");
+
+.bangla-font {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
+}
+
+.bangla-font h2,
+.bangla-font p,
+.bangla-font label,
+.bangla-font input::placeholder,
+.bangla-font button,
+.bangla-font a,
+.bangla-font span {
+    font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
+}
+
+.bg-gradient-to-br {
+    background-image: linear-gradient(
+        to bottom right,
+        var(--tw-gradient-stops)
+    );
+}
+
+.from-gray-50 {
+    --tw-gradient-from: #f9fafb;
+    --tw-gradient-stops: var(--tw-gradient-from),
+        var(--tw-gradient-to, rgba(249, 250, 251, 0));
+}
+
+.via-white {
+    --tw-gradient-stops: var(--tw-gradient-from), #ffffff,
+        var(--tw-gradient-to, rgba(255, 255, 255, 0));
+}
+
+.to-gray-50 {
+    --tw-gradient-to: #f9fafb;
+}
+
+.bg-gradient-to-r {
+    background: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+.from-indigo-600 {
+    --tw-gradient-from: #4f46e5;
+    --tw-gradient-stops: var(--tw-gradient-from),
+        var(--tw-gradient-to, rgba(79, 70, 229, 0));
+}
+
+.to-purple-600 {
+    --tw-gradient-to: #7c3aed;
+}
+
+.from-indigo-100 {
+    --tw-gradient-from: #e0e7ff;
+    --tw-gradient-stops: var(--tw-gradient-from),
+        var(--tw-gradient-to, rgba(224, 231, 255, 0));
+}
+
+.to-purple-100 {
+    --tw-gradient-to: #ede9fe;
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+</style>
+```
