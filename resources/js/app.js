@@ -33,7 +33,8 @@ import {
     faBoxOpen,
     faChartLine,
     faChartPie,
-    faReceipt
+    faReceipt,
+    faClock
 } from '@fortawesome/free-solid-svg-icons';
 
 // Add icons to library
@@ -61,7 +62,8 @@ library.add(
     faBoxOpen,
     faChartLine,
     faChartPie,
-    faReceipt
+    faReceipt,
+    faClock
 );
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

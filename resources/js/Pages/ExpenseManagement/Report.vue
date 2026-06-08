@@ -63,6 +63,7 @@
                 <h2 class="text-base font-bold text-gray-800">{{ t('breakdownByCategory') }}</h2>
                 <span class="text-xs text-gray-400">{{ selectedMonthLabel }}</span>
             </div>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="bg-rose-600 text-white text-xs uppercase tracking-wider">
@@ -107,6 +108,7 @@
                     </tr>
                 </tfoot>
             </table>
+            </div>
         </div>
 
         <!-- Detailed Table -->

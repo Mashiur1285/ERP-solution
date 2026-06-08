@@ -2,23 +2,23 @@
 <template>
     <div class="space-y-6">
         <!-- Sales Summary Section -->
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div class="flex items-center gap-2">
-                    <div class="p-1.5 bg-indigo-100 rounded-lg">
+                    <div class="hidden sm:block p-1.5 bg-indigo-100 rounded-lg">
                         <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">{{ t("dailySales") }}</h3>
-                    <span class="text-xs text-gray-400">— {{ dailySalesDate }}</span>
+                    <h3 class="ts-title font-semibold text-gray-800 uppercase tracking-wide">{{ t("dailySales") }}</h3>
+                    <span class="ts-label text-gray-400">— {{ dailySalesDate }}</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
                         @click="showSalesList = !showSalesList"
-                        class="text-xs text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
+                        class="ts-label text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
                     >
                         {{ t("showList") }}
                         <svg
@@ -33,7 +33,7 @@
                     </button>
                     <button
                         @click="goToDailySalesReport"
-                        class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                        class="ts-label text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
                     >
                         {{ t("totalSales") }}
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,45 +46,45 @@
             <!-- Summary Stats -->
             <div class="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-gray-100">
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalSales") }}</p>
-                    <p class="text-xl font-bold text-gray-900">৳{{ props.toBengaliNumber(dailyTotals.total, 2) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalSales") }}</p>
+                    <p class="ts-value font-bold text-gray-900">৳{{ props.toBengaliNumber(dailyTotals.total, 2) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("paidAmount") }}</p>
-                    <p class="text-xl font-bold text-green-600">৳{{ props.toBengaliNumber(dailyTotals.paid, 2) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("paidAmount") }}</p>
+                    <p class="ts-value font-bold text-green-600">৳{{ props.toBengaliNumber(dailyTotals.paid, 2) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("dueAmount") }}</p>
-                    <p class="text-xl font-bold text-red-500">৳{{ props.toBengaliNumber(dailyTotals.due, 2) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("dueAmount") }}</p>
+                    <p class="ts-value font-bold text-red-500">৳{{ props.toBengaliNumber(dailyTotals.due, 2) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("profit") }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("profit") }}</p>
                     <p
-                        class="text-xl font-bold"
+                        class="ts-value font-bold"
                         :class="dailyTotals.profit >= 0 ? 'text-indigo-600' : 'text-red-600'"
                     >
                         ৳{{ props.toBengaliNumber(dailyTotals.profit, 2) }}
                     </p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalCasesSold") }}</p>
-                    <p class="text-xl font-bold text-sky-600">{{ props.toBengaliNumber(props.totalCasesSold || 0) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalCasesSold") }}</p>
+                    <p class="ts-value font-bold text-sky-600">{{ props.toBengaliNumber(props.totalCasesSold || 0) }}</p>
                 </div>
             </div>
 
             <!-- Sales Table -->
             <div v-if="showSalesList" class="border-t border-gray-100">
                 <div v-if="props.sales && props.sales.length > 0" class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full ts-detail">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("shopName") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("totalAmount") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ t("paidAmount") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ t("dueAmount") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("totalCasesSold") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("profit") }}</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("shopName") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("totalAmount") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ t("paidAmount") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ t("dueAmount") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("totalCasesSold") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("profit") }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -94,7 +94,7 @@
                                 class="hover:bg-gray-50 cursor-pointer transition-colors"
                                 @click="redirectToSale(sale.id)"
                             >
-                                <td class="px-4 py-3 text-gray-400 text-xs">{{ props.toBengaliNumber(idx + 1) }}</td>
+                                <td class="px-4 py-3 text-gray-400 ts-label">{{ props.toBengaliNumber(idx + 1) }}</td>
                                 <td class="px-4 py-3 font-medium text-gray-800">{{ sale?.shop?.shop_name || '—' }}</td>
                                 <td class="px-4 py-3 text-right font-semibold text-gray-800">
                                     ৳{{ props.toBengaliNumber(parseFloat(sale.total_amount) || 0, 2) }}
@@ -116,7 +116,7 @@
                                 </td>
                             </tr>
                             <tr class="bg-indigo-50 font-bold border-t-2 border-indigo-100">
-                                <td class="px-4 py-3 text-xs text-indigo-700" colspan="2">{{ t("total") }}</td>
+                                <td class="px-4 py-3 ts-label text-indigo-700" colspan="2">{{ t("total") }}</td>
                                 <td class="px-4 py-3 text-right text-indigo-800">
                                     ৳{{ props.toBengaliNumber(dailyTotals.total, 2) }}
                                 </td>
@@ -140,7 +140,7 @@
                     </table>
                 </div>
 
-                <div v-else class="py-10 text-center text-gray-400 text-sm">
+                <div v-else class="py-10 text-center text-gray-400 ts-detail">
                     <svg class="mx-auto h-8 w-8 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -149,22 +149,22 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div class="flex items-center gap-2">
-                    <div class="p-1.5 bg-amber-100 rounded-lg">
+                    <div class="hidden sm:block p-1.5 bg-amber-100 rounded-lg">
                         <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3V3H9v2H6a2 2 0 00-2 2v6m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4m5 4h6" />
                         </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">{{ t("dailyLifting") }}</h3>
-                    <span class="text-xs text-gray-400">— {{ formattedSelectedMonthYear }}</span>
+                    <h3 class="ts-title font-semibold text-gray-800 uppercase tracking-wide">{{ t("dailyLifting") }}</h3>
+                    <span class="ts-label text-gray-400">— {{ formattedSelectedMonthYear }}</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
                         @click="showLiftList = !showLiftList"
-                        class="text-xs text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
+                        class="ts-label text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
                     >
                         {{ t("showList") }}
                         <svg
@@ -179,7 +179,7 @@
                     </button>
                     <button
                         @click="goToLiftReport"
-                        class="text-xs text-amber-600 hover:text-amber-800 font-medium flex items-center gap-1"
+                        class="ts-label text-amber-600 hover:text-amber-800 font-medium flex items-center gap-1"
                     >
                         {{ t("totalCost") }}
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,34 +191,34 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-gray-100">
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalCost") }}</p>
-                    <p class="text-xl font-bold text-gray-900">৳{{ props.toBengaliNumber(monthlyLiftTotals.totalAmount, 2) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalCost") }}</p>
+                    <p class="ts-value font-bold text-gray-900">৳{{ props.toBengaliNumber(monthlyLiftTotals.totalAmount, 2) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("todaysLifting") }}</p>
-                    <p class="text-xl font-bold text-amber-600">{{ props.toBengaliNumber(monthlyLiftTotals.totalLifts) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("todaysLifting") }}</p>
+                    <p class="ts-value font-bold text-amber-600">{{ props.toBengaliNumber(monthlyLiftTotals.totalLifts) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalCases") }}</p>
-                    <p class="text-xl font-bold text-sky-600">{{ props.toBengaliNumber(monthlyLiftTotals.totalCases) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalCases") }}</p>
+                    <p class="ts-value font-bold text-sky-600">{{ props.toBengaliNumber(monthlyLiftTotals.totalCases) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalBottles") }}</p>
-                    <p class="text-xl font-bold text-emerald-600">{{ props.toBengaliNumber(monthlyLiftTotals.totalBottles) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalBottles") }}</p>
+                    <p class="ts-value font-bold text-emerald-600">{{ props.toBengaliNumber(monthlyLiftTotals.totalBottles) }}</p>
                 </div>
             </div>
 
             <div v-if="showLiftList" class="border-t border-gray-100">
                 <div v-if="props.lifts && props.lifts.length > 0" class="overflow-x-auto overflow-y-auto max-h-[34rem]">
-                    <table class="w-full text-sm">
+                    <table class="w-full ts-detail">
                         <thead class="bg-gray-50 sticky top-0">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("liftNo") }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("supplierName") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("totalCases") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ t("totalBottles") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("totalAmount") }}</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("liftNo") }}</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("supplierName") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("totalCases") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ t("totalBottles") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("totalAmount") }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -228,7 +228,7 @@
                                 class="hover:bg-gray-50 cursor-pointer transition-colors"
                                 @click="goToLiftReport"
                             >
-                                <td class="px-4 py-3 text-gray-400 text-xs">{{ props.toBengaliNumber(idx + 1) }}</td>
+                                <td class="px-4 py-3 text-gray-400 ts-label">{{ props.toBengaliNumber(idx + 1) }}</td>
                                 <td class="px-4 py-3 font-medium text-gray-800">{{ lift.lift_number || "—" }}</td>
                                 <td class="px-4 py-3 font-medium text-gray-800">{{ lift?.supplier?.company_name || "—" }}</td>
                                 <td class="px-4 py-3 text-right font-semibold text-sky-700">
@@ -242,7 +242,7 @@
                                 </td>
                             </tr>
                             <tr class="bg-amber-50 font-bold border-t-2 border-amber-100 sticky bottom-0">
-                                <td class="px-4 py-3 text-xs text-amber-700" colspan="3">{{ t("total") }}</td>
+                                <td class="px-4 py-3 ts-label text-amber-700" colspan="3">{{ t("total") }}</td>
                                 <td class="px-4 py-3 text-right text-sky-800">
                                     {{ props.toBengaliNumber(monthlyLiftTotals.totalCases) }}
                                 </td>
@@ -257,7 +257,7 @@
                     </table>
                 </div>
 
-                <div v-else class="py-10 text-center text-gray-400 text-sm">
+                <div v-else class="py-10 text-center text-gray-400 ts-detail">
                     <svg class="mx-auto h-8 w-8 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3V3H9v2H6a2 2 0 00-2 2v6m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4m5 4h6" />
                     </svg>
@@ -266,21 +266,21 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div class="flex items-center gap-2">
-                    <div class="p-1.5 bg-emerald-100 rounded-lg">
+                    <div class="hidden sm:block p-1.5 bg-emerald-100 rounded-lg">
                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
                         </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">{{ t("availableStock") }}</h3>
-                    <span class="text-xs text-gray-400">— {{ t("inventoryStock") }}</span>
+                    <h3 class="ts-title font-semibold text-gray-800 uppercase tracking-wide">{{ t("availableStock") }}</h3>
+                    <span class="ts-label text-gray-400">— {{ t("inventoryStock") }}</span>
                 </div>
                 <button
                     type="button"
                     @click="showStockList = !showStockList"
-                    class="text-xs text-emerald-600 hover:text-emerald-800 font-medium flex items-center gap-1"
+                    class="ts-label text-emerald-600 hover:text-emerald-800 font-medium flex items-center gap-1"
                 >
                     {{ t("showList") }}
                     <svg
@@ -295,40 +295,44 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-gray-100">
+            <div class="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-gray-100">
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalProducts") }}</p>
-                    <p class="text-xl font-bold text-gray-900">{{ props.toBengaliNumber(availableStockTotals.totalProducts) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalProducts") }}</p>
+                    <p class="ts-value font-bold text-gray-900">{{ props.toBengaliNumber(availableStockTotals.totalProducts) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalCases") }}</p>
-                    <p class="text-xl font-bold text-emerald-600">{{ props.toBengaliNumber(availableStockTotals.totalCases) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("stockValue") }}</p>
+                    <p class="ts-value font-bold text-rose-600">৳{{ props.toBengaliNumber(availableStockTotals.totalStockValue) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalBottles") }}</p>
-                    <p class="text-xl font-bold text-sky-600">{{ props.toBengaliNumber(availableStockTotals.totalBottles) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalCases") }}</p>
+                    <p class="ts-value font-bold text-emerald-600">{{ props.toBengaliNumber(availableStockTotals.totalCases) }}</p>
                 </div>
                 <div class="p-4">
-                    <p class="text-xs text-gray-500 mb-1">{{ t("totalSuppliers") }}</p>
-                    <p class="text-xl font-bold text-indigo-600">{{ props.toBengaliNumber(availableStockTotals.totalSuppliers) }}</p>
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalBottles") }}</p>
+                    <p class="ts-value font-bold text-sky-600">{{ props.toBengaliNumber(availableStockTotals.totalBottles) }}</p>
+                </div>
+                <div class="p-4">
+                    <p class="ts-label text-gray-500 mb-1">{{ t("totalSuppliers") }}</p>
+                    <p class="ts-value font-bold text-indigo-600">{{ props.toBengaliNumber(availableStockTotals.totalSuppliers) }}</p>
                 </div>
             </div>
 
             <div v-if="showStockList" class="border-t border-gray-100">
                 <div v-if="props.inventoryStock && props.inventoryStock.length > 0" class="overflow-x-auto overflow-y-auto max-h-[34rem]">
-                    <table class="w-full text-sm">
+                    <table class="w-full ts-detail">
                         <thead class="bg-gray-50 sticky top-0">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("products") }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("supplierName") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("totalCases") }}</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t("totalBottles") }}</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("products") }}</th>
+                                <th class="px-4 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("supplierName") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("totalCases") }}</th>
+                                <th class="px-4 py-3 text-right ts-label font-medium text-gray-500 uppercase tracking-wider">{{ t("totalBottles") }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             <tr v-for="(item, idx) in props.inventoryStock" :key="item.product_id || item.product_name" class="hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-3 text-gray-400 text-xs">{{ props.toBengaliNumber(idx + 1) }}</td>
+                                <td class="px-4 py-3 text-gray-400 ts-label">{{ props.toBengaliNumber(idx + 1) }}</td>
                                 <td class="px-4 py-3 font-medium text-gray-800">{{ item.product_name || "—" }}</td>
                                 <td class="px-4 py-3 text-gray-700">{{ item.supplier_name || "—" }}</td>
                                 <td class="px-4 py-3 text-right font-semibold text-emerald-700">
@@ -342,7 +346,7 @@
                     </table>
                 </div>
 
-                <div v-else class="py-10 text-center text-gray-400 text-sm">
+                <div v-else class="py-10 text-center text-gray-400 ts-detail">
                     <svg class="mx-auto h-8 w-8 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
                     </svg>
@@ -405,25 +409,25 @@
                                 <tr>
                                     <th
                                         scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-6 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         {{ t("shopName") }}
                                     </th>
                                     <th
                                         scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-6 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         {{ t("totalAmount") }}
                                     </th>
                                     <th
                                         scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-6 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         {{ t("paidAmount") }}
                                     </th>
                                     <th
                                         scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-6 py-3 text-left ts-label font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         {{ t("dueAmount") }}
                                     </th>
@@ -633,6 +637,10 @@ const availableStockTotals = computed(() => ({
     ),
     totalBottles: (props.inventoryStock || []).reduce(
         (sum, item) => sum + (Number(item.total_available_bottles) || 0),
+        0
+    ),
+    totalStockValue: (props.inventoryStock || []).reduce(
+        (sum, item) => sum + (Number(item.total_stock_value) || 0),
         0
     ),
     totalSuppliers: new Set(

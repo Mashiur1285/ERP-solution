@@ -1,51 +1,47 @@
 <template>
     <div
-        class="p-3 space-y-4 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="px-3 pt-1.5 pb-3 space-y-3 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
-        <!-- Language Toggle and Logout -->
-        <div class="flex justify-end space-x-2">
-            <button
-                @click="changeLanguage('en')"
-                :class="[
-                    'px-4 py-2 rounded-md font-medium transition-colors',
-                    currentLanguage === 'en'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                ]"
-            >
-                {{ translations.en.languageLabel }}
-            </button>
-            <button
-                @click="changeLanguage('bn')"
-                :class="[
-                    'px-4 py-2 rounded-md font-medium transition-colors',
-                    currentLanguage === 'bn'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-                ]"
-            >
-                {{ translations.bn.languageLabel }}
-            </button>
+        <!-- Header: Date + Language Toggle -->
+        <div class="flex items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 shadow-sm px-3 py-1.5">
+            <p class="ts-sub font-medium text-gray-600">{{ selectedMonthYear }}</p>
+            <div class="inline-flex items-center bg-gray-100 rounded-md p-0.5">
+                <button
+                    @click="changeLanguage('en')"
+                    :class="[
+                        'px-3 py-1 rounded ts-label font-medium transition-all',
+                        currentLanguage === 'en'
+                            ? 'bg-white text-indigo-700 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-800',
+                    ]"
+                >
+                    {{ translations.en.languageLabel }}
+                </button>
+                <button
+                    @click="changeLanguage('bn')"
+                    :class="[
+                        'px-3 py-1 rounded ts-label font-medium transition-all',
+                        currentLanguage === 'bn'
+                            ? 'bg-white text-indigo-700 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-800',
+                    ]"
+                >
+                    {{ translations.bn.languageLabel }}
+                </button>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-4 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-green-600">
-                            {{ t("totalSalesCard") }}
-                        </p>
-                        <p class="text-sm text-gray-500 mt-1">{{ selectedMonthYear }}</p>
-                    </div>
-                    <div class="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3v18m-4-4h8m-8-10h8" />
-                        </svg>
-                    </div>
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-green-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+                <div>
+                    <p class="ts-label font-semibold uppercase tracking-wide text-green-600">
+                        {{ t("totalSalesCard") }}
+                    </p>
+                    <p class="ts-sub text-gray-500 mt-0.5 sm:mt-1">{{ selectedMonthYear }}</p>
                 </div>
-                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-all leading-tight">৳{{ toBengaliNumber(monthlySales?.total_sales || 0, 2) }}</p>
-                <div class="mt-4 space-y-2 border-t border-gray-100 pt-3 text-sm">
+                <p class="ts-value font-bold text-gray-900 mt-3 sm:mt-5 break-all leading-tight">৳{{ toBengaliNumber(monthlySales?.total_sales || 0, 2) }}</p>
+                <div class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 border-t border-gray-100 pt-2 sm:pt-3 ts-detail">
                     <div class="flex items-center justify-between gap-4">
                         <span class="text-gray-500">{{ t("paidAmount") }}</span>
                         <span class="font-semibold text-green-700">৳{{ toBengaliNumber(monthlySales?.paid_amount || 0, 2) }}</span>
@@ -67,73 +63,52 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-rose-600">
-                            {{ t("totalExpenseCard") }}
-                        </p>
-                        <p class="text-sm text-gray-500 mt-1">{{ selectedMonthYear }}</p>
-                    </div>
-                    <div class="h-10 w-10 rounded-xl bg-rose-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2m-2 0h14l-1 10H6L5 9z" />
-                        </svg>
-                    </div>
+            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-rose-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+                <div>
+                    <p class="ts-label font-semibold uppercase tracking-wide text-rose-600">
+                        {{ t("totalExpenseCard") }}
+                    </p>
+                    <p class="ts-sub text-gray-500 mt-0.5 sm:mt-1">{{ selectedMonthYear }}</p>
                 </div>
-                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-all leading-tight">৳{{ toBengaliNumber(monthlyExpenses?.total_amount || 0, 2) }}</p>
-                <p class="text-sm text-gray-500 mt-4 border-t border-gray-100 pt-3">
+                <p class="ts-value font-bold text-gray-900 mt-3 sm:mt-5 break-all leading-tight">৳{{ toBengaliNumber(monthlyExpenses?.total_amount || 0, 2) }}</p>
+                <p class="ts-detail text-gray-500 mt-3 sm:mt-4 border-t border-gray-100 pt-2 sm:pt-3">
                     {{ toBengaliNumber(monthlyExpenses?.total_expenses || 0) }} {{ t("totalExpenses") }}
                 </p>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-sky-600">
-                            {{ t("totalDeposit") }}
-                        </p>
-                        <p class="text-sm text-gray-500 mt-1">{{ t("topDepositSuppliers") }}</p>
-                    </div>
-                    <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
+            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-sky-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+                <div>
+                    <p class="ts-label font-semibold uppercase tracking-wide text-sky-600">
+                        {{ t("totalDeposit") }}
+                    </p>
+                    <p class="ts-sub text-gray-500 mt-0.5 sm:mt-1">{{ t("topDepositSuppliers") }}</p>
                 </div>
-                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-all leading-tight">৳{{ toBengaliNumber(totalDepositAmount, 2) }}</p>
-                <div class="mt-4 space-y-2 border-t border-gray-100 pt-3">
+                <p class="ts-value font-bold text-gray-900 mt-3 sm:mt-5 break-all leading-tight">৳{{ toBengaliNumber(totalDepositAmount, 2) }}</p>
+                <div class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 border-t border-gray-100 pt-2 sm:pt-3 ts-detail">
                     <div
                         v-for="deposit in topDepositSuppliers"
                         :key="deposit.supplier_name"
-                        class="flex items-center justify-between text-sm gap-3"
+                        class="flex items-center justify-between gap-2 sm:gap-3"
                     >
-                        <span class="text-gray-600 truncate min-w-0">{{ deposit.supplier_name }}</span>
-                        <span class="font-semibold text-sky-700 shrink text-right text-xs xl:text-sm break-all">৳{{ toBengaliNumber(deposit.total_remaining_deposit || 0, 2) }}</span>
+                        <span class="text-gray-600 min-w-0 break-words">{{ deposit.supplier_name }}</span>
+                        <span class="font-semibold text-sky-700 shrink-0 text-right break-all">৳{{ toBengaliNumber(deposit.total_remaining_deposit || 0, 2) }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm min-h-[15.5rem]">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                            {{ t("totalLifting") }}
-                        </p>
-                        <p class="text-sm text-gray-500 mt-1">{{ selectedMonthYear }}</p>
-                    </div>
-                    <div class="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3V3H9v2H6a2 2 0 00-2 2v6m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4m5 4h6" />
-                        </svg>
-                    </div>
+            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-amber-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+                <div>
+                    <p class="ts-label font-semibold uppercase tracking-wide text-amber-600">
+                        {{ t("totalLifting") }}
+                    </p>
+                    <p class="ts-sub text-gray-500 mt-0.5 sm:mt-1">{{ selectedMonthYear }}</p>
                 </div>
-                <p class="text-lg xl:text-xl font-bold text-gray-900 mt-5 break-words leading-tight">{{ toBengaliNumber(totalMonthlyLifts) }}</p>
-                <div class="mt-4 space-y-2 border-t border-gray-100 pt-3 text-sm">
+                <p class="ts-value font-bold text-gray-900 mt-3 sm:mt-5 break-words leading-tight">{{ toBengaliNumber(totalMonthlyLifts) }}</p>
+                <div class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 border-t border-gray-100 pt-2 sm:pt-3 ts-detail">
                     <p class="text-gray-500">
                         {{ toBengaliNumber(totalLiftCases || 0) }} {{ t("totalCases") }}
                     </p>
-                    <p class="truncate text-gray-600">
+                    <p class="text-gray-600 break-words">
                         {{ t("recentSupplier") }}: <span class="font-medium text-gray-800">{{ recentLiftSupplierName }}</span>
                     </p>
                     <p class="text-gray-600">
@@ -310,6 +285,7 @@ const translations = {
         lowStockProducts: "Low Stock Products",
         totalQuantity: "Total Quantity",
         totalValue: "Total Value",
+        stockValue: "Total Cost",
         totalProducts: "Total Products",
         totalBoxes: "Total Cases",
         totalPurchaseValue: "Total Purchase Value",
@@ -392,6 +368,7 @@ const translations = {
         lowStockProducts: "কম স্টক পণ্য",
         totalQuantity: "মোট পরিমাণ",
         totalValue: "মোট মূল্য",
+        stockValue: "মোট খরচ",
         totalProducts: "মোট পণ্য",
         totalBoxes: "মোট কেস (কার্টুন)",
         totalPurchaseValue: "মোট ক্রয় মূল্য",
@@ -457,19 +434,17 @@ const selectedYear = ref(props.year);
 // Translation function
 const t = computed(() => (key) => translations[currentLanguage.value][key]);
 
-// Function to convert numbers to Bengali
+// Function to convert numbers to Bengali.
+// Dashboard figures are shown as whole numbers only (no decimals), so the
+// `decimals` argument is accepted for backward compatibility but ignored.
 const toBengaliNumber = (numValue, decimals = null) => {
     if (numValue === null || numValue === undefined || numValue === "") return "";
-    
+
     let n = Number(numValue);
     if (isNaN(n)) return String(numValue);
 
-    let output;
-    if (decimals !== null) {
-        output = n.toFixed(decimals);
-    } else {
-        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
-    }
+    // Whole numbers with thousands separators: 10,000 / 1,000,000 / 1,000,000,000
+    let output = Math.round(n).toLocaleString("en-US");
 
     if (currentLanguage.value !== "bn") return output;
 

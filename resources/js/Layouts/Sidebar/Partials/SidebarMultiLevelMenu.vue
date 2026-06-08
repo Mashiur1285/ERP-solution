@@ -3,8 +3,8 @@
         <div class="flex flex-col space-y-1">
             <!-- Menu Header (clickable to expand/collapse) -->
             <div
-                class="flex items-center p-2.5 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 group cursor-pointer transition-colors duration-150"
-                :class="{ 'bg-indigo-50 text-indigo-700 font-medium': active }"
+                class="flex items-center p-2.5 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group cursor-pointer transition-colors duration-150"
+                :class="{ 'bg-gray-700 text-white font-medium': active }"
                 @click="states.rotate = !states.rotate"
             >
                 <!-- Icon -->
@@ -12,7 +12,7 @@
                     <font-awesome-icon
                         :icon="['fas', getIconName(icon)]"
                         class="w-[15px] h-[15px]"
-                        :class="active ? 'text-indigo-600' : 'text-gray-500 group-hover:text-indigo-600'"
+                        :class="active ? 'text-white' : 'text-gray-400 group-hover:text-white'"
                     />
                 </div>
                 <!-- Label -->
@@ -22,14 +22,14 @@
                     <font-awesome-icon
                         :icon="['fas', 'chevron-down']"
                         class="w-3 h-3 transition-transform duration-200 ease-in-out"
-                        :class="[states.rotate ? 'rotate-180 text-indigo-500' : 'text-gray-400']"
+                        :class="[states.rotate ? 'rotate-180 text-indigo-400' : 'text-gray-500']"
                     />
                 </div>
             </div>
 
             <!-- Submenu with smooth animation -->
             <Transition name="submenu">
-                <div v-if="states.rotate" class="ml-5 space-y-0.5 border-l-2 border-indigo-100 pl-3">
+                <div v-if="states.rotate" class="ml-5 space-y-0.5 border-l-2 border-gray-700 pl-3">
                     <SidebarSingleLevelMenu
                         v-for="menu in submenu"
                         :key="menu.href"

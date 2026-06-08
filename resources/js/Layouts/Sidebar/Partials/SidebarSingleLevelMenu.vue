@@ -52,22 +52,22 @@ const isActive = computed(() => page.url === props.href || props.active);
 
 const colorMap = {
     indigo: {
-        link: "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700",
-        linkActive: "bg-indigo-50 text-indigo-700",
-        icon: "text-gray-500 group-hover:text-indigo-600",
-        iconActive: "text-indigo-600",
+        link: "text-gray-300 hover:bg-gray-700 hover:text-white",
+        linkActive: "bg-indigo-600 text-white shadow-sm",
+        icon: "text-gray-400 group-hover:text-white",
+        iconActive: "text-white",
     },
     orange: {
-        link: "text-gray-700 hover:bg-orange-50 hover:text-orange-600",
-        linkActive: "bg-orange-50 text-orange-600",
-        icon: "text-orange-400 group-hover:text-orange-500",
-        iconActive: "text-orange-500",
+        link: "text-gray-300 hover:bg-gray-700 hover:text-orange-300",
+        linkActive: "bg-orange-600 text-white shadow-sm",
+        icon: "text-orange-400 group-hover:text-orange-300",
+        iconActive: "text-white",
     },
     green: {
-        link: "text-gray-700 hover:bg-green-50 hover:text-green-700",
-        linkActive: "bg-green-50 text-green-700",
-        icon: "text-green-500 group-hover:text-green-600",
-        iconActive: "text-green-600",
+        link: "text-gray-300 hover:bg-gray-700 hover:text-green-300",
+        linkActive: "bg-green-600 text-white shadow-sm",
+        icon: "text-green-400 group-hover:text-green-300",
+        iconActive: "text-white",
     },
 };
 

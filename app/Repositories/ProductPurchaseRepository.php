@@ -217,6 +217,9 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'total_bottles_sold' => $aggregatedVariants->sum('total_bottles_sold'),
                 'total_available_bottles' => $aggregatedVariants->sum('total_bottles_available'),
                 'total_available_cases' => $aggregatedVariants->sum('cases_available'),
+                'total_stock_value' => $aggregatedVariants->sum(
+                    fn ($variant) => ($variant['unit_price'] ?? 0) * ($variant['total_bottles_available'] ?? 0)
+                ),
             ];
         })->values();
     }

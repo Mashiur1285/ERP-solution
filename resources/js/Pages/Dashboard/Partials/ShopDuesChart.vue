@@ -1,7 +1,7 @@
 <template>
     <div class="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
         <div class="mb-4">
-            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sales Trend</h3>
+            <h3 class="ts-title font-semibold text-gray-700 uppercase tracking-wide">Sales Trend</h3>
         </div>
         <div>
             <canvas ref="salesChart" class="w-full h-64"></canvas>

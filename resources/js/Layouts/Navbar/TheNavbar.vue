@@ -38,6 +38,15 @@
 
                 <!-- Right Side: User dropdown (desktop) -->
                 <div class="hidden sm:flex sm:items-center sm:ml-6">
+                    <!-- Date & Time Stamp -->
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+                        <font-awesome-icon :icon="['fas', 'clock']" class="w-3.5 h-3.5 text-indigo-500" />
+                        <div class="leading-tight text-right">
+                            <span class="block text-xs font-semibold text-gray-700">{{ currentTime }}</span>
+                            <span class="block text-[10px] text-gray-400">{{ currentDate }}</span>
+                        </div>
+                    </div>
+
                     <div class="ml-3 relative">
                         <Dropdown align="right" width="48">
                             <template #trigger>
@@ -115,6 +124,36 @@
 import Dropdown from "@/Components/Others/Dropdown.vue";
 import DropdownLink from "@/Components/Others/DropdownLink.vue";
 import { Link } from "@inertiajs/vue3";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 
 defineEmits(['toggle-sidebar']);
+
+const now = ref(new Date());
+let timer = null;
+
+onMounted(() => {
+    timer = setInterval(() => { now.value = new Date(); }, 1000);
+});
+
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
+
+const currentDate = computed(() =>
+    now.value.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    })
+);
+
+const currentTime = computed(() =>
+    now.value.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+    })
+);
 </script>
