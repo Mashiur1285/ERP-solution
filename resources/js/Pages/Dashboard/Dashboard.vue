@@ -4,16 +4,16 @@
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Header: Date + Language Toggle -->
-        <div class="flex items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 shadow-sm px-3 py-1.5">
-            <p class="ts-sub font-medium text-gray-600">{{ selectedMonthYear }}</p>
-            <div class="inline-flex items-center bg-gray-100 rounded-md p-0.5">
+        <div class="flex items-center justify-between gap-2 bg-slate-800 rounded-sm shadow-sm px-4 py-2">
+            <p class="ts-sub font-semibold text-white">{{ selectedMonthYear }}</p>
+            <div class="inline-flex items-center bg-white/10 rounded-md p-0.5">
                 <button
                     @click="changeLanguage('en')"
                     :class="[
-                        'px-3 py-1 rounded ts-label font-medium transition-all',
+                        'px-3 py-1 rounded ts-label font-semibold transition-all',
                         currentLanguage === 'en'
-                            ? 'bg-white text-indigo-700 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-800',
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-white/70 hover:text-white',
                     ]"
                 >
                     {{ translations.en.languageLabel }}
@@ -21,10 +21,10 @@
                 <button
                     @click="changeLanguage('bn')"
                     :class="[
-                        'px-3 py-1 rounded ts-label font-medium transition-all',
+                        'px-3 py-1 rounded ts-label font-semibold transition-all',
                         currentLanguage === 'bn'
-                            ? 'bg-white text-indigo-700 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-800',
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-white/70 hover:text-white',
                     ]"
                 >
                     {{ translations.bn.languageLabel }}
@@ -33,7 +33,7 @@
         </div>
 
         <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-green-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+            <div class="bg-white rounded-sm border-2 sm:border-4 border-green-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
                 <div>
                     <p class="ts-label font-semibold uppercase tracking-wide text-green-600">
                         {{ t("totalSalesCard") }}
@@ -63,7 +63,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-rose-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+            <div class="bg-white rounded-sm border-2 sm:border-4 border-rose-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
                 <div>
                     <p class="ts-label font-semibold uppercase tracking-wide text-rose-600">
                         {{ t("totalExpenseCard") }}
@@ -76,7 +76,7 @@
                 </p>
             </div>
 
-            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-sky-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+            <div class="bg-white rounded-sm border-2 sm:border-4 border-sky-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
                 <div>
                     <p class="ts-label font-semibold uppercase tracking-wide text-sky-600">
                         {{ t("totalDeposit") }}
@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg sm:rounded-xl border-2 sm:border-4 border-amber-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
+            <div class="bg-white rounded-sm border-2 sm:border-4 border-amber-500 p-3 sm:p-5 shadow-sm min-h-0 sm:min-h-[15.5rem]">
                 <div>
                     <p class="ts-label font-semibold uppercase tracking-wide text-amber-600">
                         {{ t("totalLifting") }}
@@ -118,6 +118,13 @@
                 </div>
             </div>
         </div>
+
+        <!-- Sales Trend (placed right after the summary cards) -->
+        <ShopDuesChart
+            :dateWiseSalesData="dateWiseSalesData"
+            :t="t"
+            :toBengaliNumber="toBengaliNumber"
+        />
 
         <!-- Child Components -->
         <SalesOverview
@@ -211,6 +218,7 @@ import TotalShops from "./Partials/TotalShops.vue";
 import SalesOverview from "./Partials/SalesOverview.vue";
 import ExpensesOverview from "./Partials/ExpenseOverview.vue";
 import InventoryStock from "./Partials/InventoryStock.vue";
+import ShopDuesChart from "./Partials/ShopDuesChart.vue";
 import Layout from "@/Layout.vue";
 
 defineOptions({ layout: Layout });
@@ -261,6 +269,7 @@ const translations = {
         nextMonth: "Next month",
         salesBreakdown: "Sales Breakdown",
         expensesBreakdown: "Expenses Breakdown",
+        salesTrend: "Sales Trend",
         paid: "Paid",
         due: "Due",
         totalSales: "Total Revenue",
@@ -344,6 +353,7 @@ const translations = {
         nextMonth: "পরবর্তী মাস",
         salesBreakdown: "বিক্রয় বিভাজন",
         expensesBreakdown: "ব্যয় বিভাজন",
+        salesTrend: "বিক্রয় প্রবণতা",
         paid: "প্রদত্ত",
         due: "বাকি",
         totalSales: "মোট আয়",

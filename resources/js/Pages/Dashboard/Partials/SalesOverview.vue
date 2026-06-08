@@ -2,23 +2,23 @@
 <template>
     <div class="space-y-6">
         <!-- Sales Summary Section -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
             <!-- Header -->
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between px-5 py-4 bg-indigo-600">
                 <div class="flex items-center gap-2">
-                    <div class="hidden sm:block p-1.5 bg-indigo-100 rounded-lg">
-                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="hidden sm:block p-1.5 bg-white/20 rounded-lg">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                     </div>
-                    <h3 class="ts-title font-semibold text-gray-800 uppercase tracking-wide">{{ t("dailySales") }}</h3>
-                    <span class="ts-label text-gray-400">— {{ dailySalesDate }}</span>
+                    <h3 class="ts-title font-semibold text-white uppercase tracking-wide">{{ t("dailySales") }}</h3>
+                    <span class="ts-label text-indigo-100">— {{ dailySalesDate }}</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
                         @click="showSalesList = !showSalesList"
-                        class="ts-label text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
+                        class="ts-label text-white/80 hover:text-white font-medium flex items-center gap-1"
                     >
                         {{ t("showList") }}
                         <svg
@@ -33,7 +33,7 @@
                     </button>
                     <button
                         @click="goToDailySalesReport"
-                        class="ts-label text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                        class="ts-label text-white hover:text-indigo-100 font-semibold flex items-center gap-1"
                     >
                         {{ t("totalSales") }}
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,22 +149,22 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div class="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 bg-amber-500">
                 <div class="flex items-center gap-2">
-                    <div class="hidden sm:block p-1.5 bg-amber-100 rounded-lg">
-                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="hidden sm:block p-1.5 bg-white/20 rounded-lg">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3V3H9v2H6a2 2 0 00-2 2v6m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4m5 4h6" />
                         </svg>
                     </div>
-                    <h3 class="ts-title font-semibold text-gray-800 uppercase tracking-wide">{{ t("dailyLifting") }}</h3>
-                    <span class="ts-label text-gray-400">— {{ formattedSelectedMonthYear }}</span>
+                    <h3 class="ts-title font-semibold text-white uppercase tracking-wide">{{ t("dailyLifting") }}</h3>
+                    <span class="ts-label text-amber-50">— {{ formattedSelectedMonthYear }}</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
                         @click="showLiftList = !showLiftList"
-                        class="ts-label text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
+                        class="ts-label text-white/80 hover:text-white font-medium flex items-center gap-1"
                     >
                         {{ t("showList") }}
                         <svg
@@ -179,7 +179,7 @@
                     </button>
                     <button
                         @click="goToLiftReport"
-                        class="ts-label text-amber-600 hover:text-amber-800 font-medium flex items-center gap-1"
+                        class="ts-label text-white hover:text-amber-50 font-semibold flex items-center gap-1"
                     >
                         {{ t("totalCost") }}
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,21 +266,21 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div class="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 bg-emerald-600">
                 <div class="flex items-center gap-2">
-                    <div class="hidden sm:block p-1.5 bg-emerald-100 rounded-lg">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="hidden sm:block p-1.5 bg-white/20 rounded-lg">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
                         </svg>
                     </div>
-                    <h3 class="ts-title font-semibold text-gray-800 uppercase tracking-wide">{{ t("availableStock") }}</h3>
-                    <span class="ts-label text-gray-400">— {{ t("inventoryStock") }}</span>
+                    <h3 class="ts-title font-semibold text-white uppercase tracking-wide">{{ t("availableStock") }}</h3>
+                    <span class="ts-label text-emerald-50">— {{ t("inventoryStock") }}</span>
                 </div>
                 <button
                     type="button"
                     @click="showStockList = !showStockList"
-                    class="ts-label text-emerald-600 hover:text-emerald-800 font-medium flex items-center gap-1"
+                    class="ts-label text-white hover:text-emerald-50 font-semibold flex items-center gap-1"
                 >
                     {{ t("showList") }}
                     <svg
@@ -354,12 +354,6 @@
                 </div>
             </div>
         </div>
-
-        <ShopDuesChart
-            :dateWiseSalesData="dateWiseSalesData"
-            :t="t"
-            :toBengaliNumber="toBengaliNumber"
-        />
 
         <!-- Daily sales table and list commented out as requested -->
         <!--
@@ -494,7 +488,6 @@
 <script setup>
 import { defineProps, ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
-import ShopDuesChart from "./ShopDuesChart.vue";
 
 const props = defineProps({
     t: Function,
