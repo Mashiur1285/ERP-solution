@@ -165,7 +165,10 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         // Group by product_name and then aggregate by variant
         return $rawData->groupBy('product_name')->map(function ($productGroup, $productName) {
             // Aggregate variants by variant name
+            // PHP casts numeric-string array keys (e.g. "500") to integers, so the
+            // groupBy key must be cast back to string before it is sent to the client.
             $aggregatedVariants = $productGroup->groupBy('variant')->map(function ($variantGroup, $variantName) {
+                $variantName = (string) $variantName;
                 // Aggregate metrics for the same variant
                 $totalPurchasedBottles = $variantGroup->sum('purchased_bottles_available');
                 $totalFreeBottles = $variantGroup->sum('free_bottles_available');

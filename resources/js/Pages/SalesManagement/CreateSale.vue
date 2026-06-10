@@ -1343,7 +1343,7 @@ const confirmSale = () => {
 
         return {
             product_id: item.product_id,
-            variant: item.selected_variant,
+            variant: String(item.selected_variant),
             cases_sold: cases,
             extra_bottles: extra,
             total_bottles_to_sell: targetBottles,
@@ -1429,7 +1429,7 @@ const saveDraft = () => {
 
         return {
             product_id: item.product_id,
-            variant: item.selected_variant,
+            variant: String(item.selected_variant),
             cases_sold: cases,
             extra_bottles: extra,
             total_bottles_to_sell: targetBottles,

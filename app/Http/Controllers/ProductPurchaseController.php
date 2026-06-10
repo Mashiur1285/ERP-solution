@@ -338,7 +338,8 @@ class ProductPurchaseController extends Controller
                     $stock = $variantStockMap->get($variantName);
 
                     return [
-                        'variant' => $variantName,
+                        // groupBy casts numeric-string keys to int; variant must stay a string
+                        'variant' => (string) $variantName,
                         'bottles_per_case' => (int) ($first['bottles_per_case'] ?? 0),
                         'free_bottles_per_case' => (float) ($first['free_bottles_per_case'] ?? 0),
                         'total_purchase_amount' => round((float) $variants->sum(function ($variant) {
