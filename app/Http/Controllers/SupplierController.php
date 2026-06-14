@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Models\Supplier;
 use App\Models\SaleItem;
@@ -90,10 +91,24 @@ class SupplierController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    { 
-        $data=$request->all();
-        if($this->supplierRepository->update( $data, $id) instanceof Supplier)
-        {
+    {
+        // Validate before saving so a duplicate phone number (or other bad input)
+        // returns a friendly validation error instead of a 500 from the DB's
+        // unique constraint. The unique rule ignores the supplier being edited.
+        $data = $request->validate([
+            'company_name' => 'required|string|max:40',
+            'branch_name' => 'nullable|string|max:20',
+            'phone_number' => ['required', 'string', 'max:20', Rule::unique('suppliers', 'phone_number')->ignore($id)],
+            'emergency_phone_number' => 'nullable|string|max:20',
+            'address' => 'required|string',
+            'email' => 'nullable|email|max:255',
+            'country' => 'nullable|string|max:20',
+            'city' => 'nullable|string|max:20',
+            'website' => 'nullable|url|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($this->supplierRepository->update($data, $id) instanceof Supplier) {
             return back()->with('success', 'Supplier updated successfully');
         }
         return back()->with('error', 'Unable to update');
