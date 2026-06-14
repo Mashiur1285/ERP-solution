@@ -243,7 +243,11 @@ class SalesController extends Controller
                     $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
                 }
 
-                $totalAvailable = $totalPurchasedAvailable + $totalFreeAvailable;
+                // When free bottles are excluded from the sale they must not be
+                // sold or consumed, so validate against purchased stock only.
+                $totalAvailable = $request->include_free_bottles
+                    ? ($totalPurchasedAvailable + $totalFreeAvailable)
+                    : $totalPurchasedAvailable;
                 $totalToDeduct  = $purchasedBottlesSold + $freeBottlesSold;
 
                 if (!$saveAsDraft && $totalToDeduct > $totalAvailable) {
@@ -255,7 +259,7 @@ class SalesController extends Controller
                 $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
                 $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
-                $profit         = $totalSalePrice - $purchaseCost;
+                $profit         = round($totalSalePrice - $purchaseCost, 2);
 
                 $itemsData = [
                     'sale_id'                => $sale->id,
@@ -286,12 +290,23 @@ class SalesController extends Controller
                     $remainingToDeduct = (int) $totalToDeduct;
                     foreach ($batches as $batch) {
                         if ($remainingToDeduct <= 0) break;
-                        $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
-                        if ($batchTotal <= 0) continue;
 
-                        $deductFromBatch = min($remainingToDeduct, $batchTotal);
-                        $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
-                        $deductFree      = $deductFromBatch - $deductPurchased;
+                        // Free bottles are only consumed when the sale includes them;
+                        // otherwise deduct from the purchased pool exclusively.
+                        if ($request->include_free_bottles) {
+                            $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
+                            if ($batchTotal <= 0) continue;
+
+                            $deductFromBatch = min($remainingToDeduct, $batchTotal);
+                            $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
+                            $deductFree      = $deductFromBatch - $deductPurchased;
+                        } else {
+                            $deductPurchased = min($remainingToDeduct, (int) $batch['purchased']);
+                            $deductFree      = 0;
+                            $deductFromBatch = $deductPurchased;
+                        }
+
+                        if ($deductFromBatch <= 0) continue;
 
                         $this->productPurchaseRepository->updateInventory(
                             $batch['product'],
@@ -364,7 +379,7 @@ class SalesController extends Controller
             // Use total_amount as source of truth to avoid float accumulation errors.
             $newPaidAmount = round((float) $sale->paid_amount + $paymentAmount, 2);
             $newDueAmount  = round((float) $sale->total_amount - $newPaidAmount, 2);
-            if ($newDueAmount < 0.005) {
+            if ($newDueAmount <= 0) {
                 $newDueAmount = 0;
             }
 
@@ -664,7 +679,11 @@ class SalesController extends Controller
                     $sellingPricePerCase     = $bottlesPerCase * $actualSellingPricePerBottle;
                 }
 
-                $totalAvailable = $totalPurchasedAvailable + $totalFreeAvailable;
+                // When free bottles are excluded from the sale they must not be
+                // sold or consumed, so validate against purchased stock only.
+                $totalAvailable = $request->include_free_bottles
+                    ? ($totalPurchasedAvailable + $totalFreeAvailable)
+                    : $totalPurchasedAvailable;
                 $totalToDeduct  = $purchasedBottlesSold + $freeBottlesSold;
 
                 if ($totalToDeduct > $totalAvailable) {
@@ -676,7 +695,7 @@ class SalesController extends Controller
                 $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
                 $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
-                $profit         = $totalSalePrice - $purchaseCost;
+                $profit         = round($totalSalePrice - $purchaseCost, 2);
 
                 $itemsData = [
                     'sale_id'                => $sale->id,
@@ -706,12 +725,23 @@ class SalesController extends Controller
                 $remainingToDeduct = (int) $totalToDeduct;
                 foreach ($batches as $batch) {
                     if ($remainingToDeduct <= 0) break;
-                    $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
-                    if ($batchTotal <= 0) continue;
 
-                    $deductFromBatch = min($remainingToDeduct, $batchTotal);
-                    $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
-                    $deductFree      = $deductFromBatch - $deductPurchased;
+                    // Free bottles are only consumed when the sale includes them;
+                    // otherwise deduct from the purchased pool exclusively.
+                    if ($request->include_free_bottles) {
+                        $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
+                        if ($batchTotal <= 0) continue;
+
+                        $deductFromBatch = min($remainingToDeduct, $batchTotal);
+                        $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
+                        $deductFree      = $deductFromBatch - $deductPurchased;
+                    } else {
+                        $deductPurchased = min($remainingToDeduct, (int) $batch['purchased']);
+                        $deductFree      = 0;
+                        $deductFromBatch = $deductPurchased;
+                    }
+
+                    if ($deductFromBatch <= 0) continue;
 
                     $this->productPurchaseRepository->updateInventory(
                         $batch['product'],

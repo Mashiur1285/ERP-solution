@@ -9,6 +9,7 @@ use App\Contracts\ShopContract;
 use App\Contracts\ProductPurchaseContract;
 use App\Contracts\ExpenseContract; // Add this
 use App\Contracts\LiftContract;
+use App\Enums\SalesStatus;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -63,6 +64,7 @@ class DashboardController extends Controller
         $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
 
         $monthlySales = $this->salesRepository->query()
+            ->where('status', '!=', SalesStatus::DRAFT->value)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->with('items')
             ->get();
@@ -87,6 +89,7 @@ class DashboardController extends Controller
         $totalExpenseAmount = $monthlyExpenses->sum('amount');
 
         $sales = $this->salesRepository->query()
+            ->where('status', '!=', SalesStatus::DRAFT->value)
             ->whereDate('created_at', $dailySalesDate)
             ->with('items', 'shop')
             ->get();

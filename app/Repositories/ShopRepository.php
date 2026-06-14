@@ -18,7 +18,8 @@ class ShopRepository extends BaseRepository implements ShopContract
         return $this->model
             ->leftJoin('sales', function ($join) use ($date) {
                 $join->on('shops.id', '=', 'sales.shop_id')
-                    ->where('sales.sale_date', '=', $date);
+                    ->whereRaw('DATE(sales.created_at) = ?', [$date])
+                    ->where('sales.status', '!=', 'draft');
             })
             ->select(
                 'shops.id as shop_id',

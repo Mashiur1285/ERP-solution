@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\ExpenseContract;
 use App\Contracts\SalesContract;
+use App\Enums\SalesStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,6 +26,7 @@ class ProfitLossController extends Controller
 
         // Sales & items
         $sales    = $this->salesRepository->query()
+            ->where('status', '!=', SalesStatus::DRAFT->value)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->with('items')
             ->get();

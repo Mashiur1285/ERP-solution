@@ -41,8 +41,8 @@ class DepositRepository extends BaseRepository implements DepositContract
      */
     public function updateDepositTable(int $purchaseAmount, Model $deposit): void
     {
-        $deposit->balance_remaining -= $purchaseAmount;
-        $deposit->balance_used = $deposit->balance_deposited - $deposit->balance_remaining;
+        $deposit->balance_remaining = round((float) $deposit->balance_remaining - $purchaseAmount, 2);
+        $deposit->balance_used = round((float) $deposit->balance_deposited - (float) $deposit->balance_remaining, 2);
         $deposit->is_used = $deposit->balance_remaining <= 0;
         $deposit->save();
     }
