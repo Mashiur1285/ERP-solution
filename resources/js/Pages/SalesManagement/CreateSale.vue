@@ -1236,7 +1236,10 @@ const getItemSubtotal = (item: CartItem): number => {
     if (!(cases || extra) || !pricePerCase || !bottlesPerCase) return 0;
 
     const effectiveBPC = bottlesPerCase + freePerCase;
-    const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+    // When free bottles aren't included in the sale, price the case across paid
+    // bottles only; otherwise spread it across paid + free bottles.
+    const pricingBottlesPerCase = includeFreeBottles.value ? effectiveBPC : bottlesPerCase;
+    const pricePerBottle = pricingBottlesPerCase > 0 ? pricePerCase / pricingBottlesPerCase : 0;
     const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bottlesPerCase) + extra;
     return Math.round(targetBottles * pricePerBottle * 100) / 100;
 };
@@ -1260,7 +1263,10 @@ const saleSummary = computed(() => {
         if (!(cases || extra) || !bpc) continue;
 
         const effectiveBPC = bpc + freePerCase;
-        const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+        // When free bottles aren't included in the sale, price the case across paid
+        // bottles only; otherwise spread it across paid + free bottles.
+        const pricingBottlesPerCase = includeFreeBottles.value ? effectiveBPC : bpc;
+        const pricePerBottle = pricingBottlesPerCase > 0 ? pricePerCase / pricingBottlesPerCase : 0;
         const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
         const subtotal = Math.round(targetBottles * pricePerBottle * 100) / 100;
         // Derive bottle rate directly from caseBuyingPrice (symmetric with revenue calc) to avoid pre-rounded purchaseRate errors
@@ -1338,7 +1344,10 @@ const confirmSale = () => {
         const bpc = safeNumber(item.bottles_per_case);
         const freePerCase = safeNumber(item.free_bottles_per_case);
         const effectiveBPC = bpc + freePerCase;
-        const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+        // When free bottles aren't included in the sale, price the case across paid
+        // bottles only; otherwise spread it across paid + free bottles.
+        const pricingBottlesPerCase = includeFreeBottles.value ? effectiveBPC : bpc;
+        const pricePerBottle = pricingBottlesPerCase > 0 ? pricePerCase / pricingBottlesPerCase : 0;
         const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
 
         return {
@@ -1424,7 +1433,10 @@ const saveDraft = () => {
         const bpc = safeNumber(item.bottles_per_case);
         const freePerCase = safeNumber(item.free_bottles_per_case);
         const effectiveBPC = bpc + freePerCase;
-        const pricePerBottle = effectiveBPC > 0 ? pricePerCase / effectiveBPC : 0;
+        // When free bottles aren't included in the sale, price the case across paid
+        // bottles only; otherwise spread it across paid + free bottles.
+        const pricingBottlesPerCase = includeFreeBottles.value ? effectiveBPC : bpc;
+        const pricePerBottle = pricingBottlesPerCase > 0 ? pricePerCase / pricingBottlesPerCase : 0;
         const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
 
         return {

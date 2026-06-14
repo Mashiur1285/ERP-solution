@@ -14,6 +14,7 @@ use App\Enums\SalesItemsStatus;
 use App\Enums\SalesStatus;
 use App\Http\Requests\StoreSalesRequest;
 use App\Models\Product;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -29,7 +30,8 @@ class SalesController extends Controller
         protected CategoryContract $categoryRepository,
         protected SalesContract $salesRepository,
         protected BrandContract $brandRepository,
-        protected SalesItemContract $salesItemRepository
+        protected SalesItemContract $salesItemRepository,
+        protected SmsService $smsService
     ) {
     }
 
@@ -152,8 +154,9 @@ class SalesController extends Controller
         ]);
 
         $saveAsDraft = $request->boolean('save_as_draft');
+        $smsPayload = null;
 
-        return DB::transaction(function () use ($request, $saveAsDraft) {
+        $response = DB::transaction(function () use ($request, $saveAsDraft, &$smsPayload) {
             $sale = null;
             $data = [
                 'shop_id' => $request->shop_id,
@@ -333,8 +336,31 @@ class SalesController extends Controller
                 return redirect()->route('sales.report')->with('success', 'Sale draft saved successfully');
             }
 
+            $shop = $this->shopRepository->find($request->shop_id);
+            $smsPayload = [
+                'mobile'  => $shop?->phone_number,
+                'owner'   => $shop?->owner_name,
+                'invoice' => $invoiceNumber,
+                'total'   => $totalAmount,
+                'due'     => $totalAmount,
+            ];
+
             return redirect()->route('sales.payment', $sale->id)->with('success', 'Sale created successfully, please proceed with payment');
         });
+
+        // Notify the shop owner by SMS after the sale has committed, so a gateway
+        // failure can never roll back or block the sale. This call never throws.
+        if ($smsPayload && !empty($smsPayload['mobile'])) {
+            $this->smsService->sendSaleNotification(
+                $smsPayload['mobile'],
+                $smsPayload['owner'],
+                $smsPayload['invoice'],
+                (float) $smsPayload['total'],
+                (float) $smsPayload['due'],
+            );
+        }
+
+        return $response;
     }
 
     public function payment(Request $request, $id)

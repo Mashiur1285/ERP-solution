@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'mimsms' => [
+        'endpoint' => env('MIMSMS_ENDPOINT', 'https://api.mimsms.com/api/SmsSending/OneToMany'),
+        'username' => env('MIMSMS_USERNAME'),
+        'api_key' => env('MIMSMS_API_KEY'),
+        'sender_name' => env('MIMSMS_SENDER_NAME'),
+        'transaction_type' => env('MIMSMS_TRANSACTION_TYPE', 'T'),
+        'campaign_id' => env('MIMSMS_CAMPAIGN_ID', 'null'),
+        'brand' => env('MIMSMS_BRAND'),
+        'timeout' => env('MIMSMS_TIMEOUT', 15),
+    ],
+
 ];
