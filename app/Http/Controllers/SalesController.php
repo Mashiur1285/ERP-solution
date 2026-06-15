@@ -616,26 +616,7 @@ class SalesController extends Controller
             }
 
             // 1. Restore previous inventory
-            foreach ($sale->items as $item) {
-                if (!$item->product) continue;
-
-                $restoreBatches = \App\Models\Product::where('name', $item->product->name)
-                    ->where('supplier_id', $sale->supplier_id)
-                    ->whereNotNull('metadata')
-                    ->orderBy('date', 'asc')
-                    ->get()
-                    ->filter(fn($p) => collect($p->metadata['variants'] ?? [])->contains('variant', $item->variant))
-                    ->values();
-
-                if ($restoreBatches->isEmpty()) continue;
-
-                $this->productPurchaseRepository->updateInventory(
-                    $restoreBatches->first(),
-                    $item->variant,
-                    -abs((int)$item->purchased_bottles_sold),
-                    -abs((int)$item->free_bottles_sold)
-                );
-            }
+            $this->restoreSaleInventory($sale);
 
             // 2. Delete old items
             $sale->items()->delete();
@@ -828,10 +809,55 @@ class SalesController extends Controller
         });
     }
 
+    /**
+     * Add a sale's sold bottles back to the product inventory metadata.
+     * Mirrors the deduction done at sale time by calling updateInventory() with
+     * negative quantities. Restores to the earliest matching batch (same
+     * convention used when re-deducting on edit). Only call for sales whose
+     * stock was actually deducted (i.e. non-draft sales).
+     */
+    private function restoreSaleInventory(\App\Models\Sale $sale): void
+    {
+        foreach ($sale->items as $item) {
+            if (!$item->product) continue;
+
+            $restoreBatches = \App\Models\Product::where('name', $item->product->name)
+                ->where('supplier_id', $sale->supplier_id)
+                ->whereNotNull('metadata')
+                ->orderBy('date', 'asc')
+                ->get()
+                ->filter(fn($p) => collect($p->metadata['variants'] ?? [])->contains('variant', $item->variant))
+                ->values();
+
+            if ($restoreBatches->isEmpty()) continue;
+
+            $this->productPurchaseRepository->updateInventory(
+                $restoreBatches->first(),
+                $item->variant,
+                -abs((int) $item->purchased_bottles_sold),
+                -abs((int) $item->free_bottles_sold)
+            );
+        }
+    }
+
     public function destroy(int $id)
     {
-        \App\Models\Sale::findOrFail($id)->delete();
-        return back()->with('success', 'Sale deleted.');
+        return DB::transaction(function () use ($id) {
+            $sale = $this->salesRepository->query()->with('items.product')->find($id);
+            if (!$sale) {
+                return back()->with('error', 'Sale not found.');
+            }
+
+            // Draft sales never deducted stock, so only finalized sales get restored.
+            if ($sale->status !== SalesStatus::DRAFT->value) {
+                $this->restoreSaleInventory($sale);
+            }
+
+            // Deleting cascades sale_items (FK onDelete cascade) and nulls payments.sale_id.
+            $sale->delete();
+
+            return back()->with('success', 'Sale deleted and stock returned to inventory.');
+        });
     }
 
     public function report(Request $request)
