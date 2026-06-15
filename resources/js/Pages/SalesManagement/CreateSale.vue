@@ -224,7 +224,7 @@
                                         />
                                         <p v-if="getVariantData(item)" class="text-xs mt-0.5"
                                             :class="itemExceedsStock(item) ? 'text-red-500 font-medium' : 'text-gray-400'">
-                                            {{ itemExceedsStock(item) ? t('exceedsStock') : `${getMaxCases(item)} ${t('casesAvailable')}` }}
+                                            {{ itemExceedsStock(item) ? t('exceedsStock') : `${getMaxCases(item)} ${getCasesAvailableLabel(item)}` }}
                                         </p>
                                     </td>
 
@@ -677,6 +677,7 @@ const translations: Record<string, Record<string, string>> = {
         selectVariants: "Select Variants",
         addToCart: "Add to Cart",
         casesAvailable: "cases available",
+        maxSellable: "max sellable (incl. free)",
         exceedsStock: "Exceeds available stock",
         extraBottles: "Extra Bottles",
         optional: "optional",
@@ -743,6 +744,7 @@ const translations: Record<string, Record<string, string>> = {
         selectVariants: "ভেরিয়েন্ট নির্বাচন করুন",
         addToCart: "কার্টে যোগ করুন",
         casesAvailable: "কেস উপলব্ধ",
+        maxSellable: "বিক্রয়যোগ্য (ফ্রি সহ)",
         exceedsStock: "উপলব্ধ স্টকের বেশি",
         extraBottles: "অতিরিক্ত বোতল",
         optional: "ঐচ্ছিক",
@@ -1195,6 +1197,14 @@ const getMaxCases = (item: CartItem): number => {
         return effectiveBPC > 0 ? Math.floor(vd.total_bottles_available / effectiveBPC) : 0;
     }
     return vd.cases_available;
+};
+
+// When free bottles are bundled into each sold case, "cases available" counts
+// cases of (bpc + free) bottles, which is intentionally fewer than the physical
+// stock cases shown on /products. Relabel so the two numbers aren't confused.
+const getCasesAvailableLabel = (item: CartItem): string => {
+    const fbpc = safeNumber(item.free_bottles_per_case);
+    return includeFreeBottles.value && fbpc > 0 ? t('maxSellable') : t('casesAvailable');
 };
 
 const itemExceedsStock = (item: CartItem): boolean => {
