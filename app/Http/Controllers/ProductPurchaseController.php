@@ -202,8 +202,7 @@ class ProductPurchaseController extends Controller
         $productIds = $products->getCollection()->pluck('id')->all();
 
         $purchaseAggregates = collect();
-        $inventoryAggregates = collect();
-        $variantInventoryAggregates = collect();
+        $inventoryByCatalog = collect();
 
         if (!empty($productIds)) {
             $purchaseAggregates = DB::table('products')
@@ -229,92 +228,19 @@ class ProductPurchaseController extends Controller
                 ->get()
                 ->keyBy('product_catalog_id');
 
-            $idsList = implode(',', array_map('intval', $productIds));
-
-            $inventoryAggregates = collect(DB::select("
-                SELECT
-                    p.product_catalog_id,
-                    SUM(
-                        GREATEST(
-                            0,
-                            COALESCE((variant_data->>'current_purchased_quantity')::int,
-                                (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
-                            )
-                            + COALESCE((variant_data->>'current_free_quantity')::int,
-                                COALESCE((variant_data->>'total_free_bottles')::int, 0)
-                            )
-                        )
-                    ) as total_available_bottles,
-                    SUM(
-                        CASE
-                            WHEN COALESCE((variant_data->>'bottles_per_case')::int, 0) > 0 THEN
-                                FLOOR(
-                                    GREATEST(
-                                        0,
-                                        COALESCE((variant_data->>'current_purchased_quantity')::int,
-                                            (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
-                                        )
-                                        + COALESCE((variant_data->>'current_free_quantity')::int,
-                                            COALESCE((variant_data->>'total_free_bottles')::int, 0)
-                                        )
-                                    ) / COALESCE(NULLIF((variant_data->>'bottles_per_case')::int, 0), 1)
-                                )
-                            ELSE 0
-                        END
-                    ) as total_available_cases
-                FROM products p
-                LEFT JOIN LATERAL jsonb_array_elements(COALESCE(p.metadata->'variants', '[]'::jsonb)) AS variant_data ON true
-                WHERE p.deleted_at IS NULL
-                    AND p.product_catalog_id IN ($idsList)
-                GROUP BY p.product_catalog_id
-            "))->keyBy('product_catalog_id');
-
-            $variantInventoryAggregates = collect(DB::select("
-                SELECT
-                    p.product_catalog_id,
-                    COALESCE(variant_data->>'variant', 'N/A') as variant,
-                    SUM(
-                        GREATEST(
-                            0,
-                            COALESCE((variant_data->>'current_purchased_quantity')::int,
-                                (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
-                            )
-                            + COALESCE((variant_data->>'current_free_quantity')::int,
-                                COALESCE((variant_data->>'total_free_bottles')::int, 0)
-                            )
-                        )
-                    ) as available_bottles,
-                    SUM(
-                        CASE
-                            WHEN COALESCE((variant_data->>'bottles_per_case')::int, 0) > 0 THEN
-                                FLOOR(
-                                    GREATEST(
-                                        0,
-                                        COALESCE((variant_data->>'current_purchased_quantity')::int,
-                                            (COALESCE((variant_data->>'cases_without_free_bottles')::int, 0) * COALESCE((variant_data->>'bottles_per_case')::int, 0))
-                                        )
-                                        + COALESCE((variant_data->>'current_free_quantity')::int,
-                                            COALESCE((variant_data->>'total_free_bottles')::int, 0)
-                                        )
-                                    ) / COALESCE(NULLIF((variant_data->>'bottles_per_case')::int, 0), 1)
-                                )
-                            ELSE 0
-                        END
-                    ) as available_cases
-                FROM products p
-                LEFT JOIN LATERAL jsonb_array_elements(COALESCE(p.metadata->'variants', '[]'::jsonb)) AS variant_data ON true
-                WHERE p.deleted_at IS NULL
-                    AND p.product_catalog_id IN ($idsList)
-                GROUP BY p.product_catalog_id, COALESCE(variant_data->>'variant', 'N/A')
-            "))
-                ->groupBy('product_catalog_id')
-                ->map(fn ($rows) => collect($rows)->keyBy('variant'));
+            // Single source of truth: reuse the same inventory computation that
+            // /sales and the dashboard use (getInventoryStock), so case/bottle
+            // counts can never diverge between pages. Keyed by catalog for lookup.
+            $inventoryByCatalog = $this->productPurchaseRepository
+                ->getInventoryStock()
+                ->whereIn('product_catalog_id', $productIds)
+                ->keyBy('product_catalog_id');
         }
 
-        $products->setCollection($products->getCollection()->map(function ($product) use ($purchaseAggregates, $inventoryAggregates, $variantInventoryAggregates) {
+        $products->setCollection($products->getCollection()->map(function ($product) use ($purchaseAggregates, $inventoryByCatalog) {
             $purchaseSummary = $purchaseAggregates->get($product->id);
-            $inventorySummary = $inventoryAggregates->get($product->id);
-            $variantStockMap = $variantInventoryAggregates->get($product->id, collect());
+            $inventory = $inventoryByCatalog->get($product->id);
+            $variantStockMap = collect($inventory['variants'] ?? [])->keyBy('variant');
             $catalogVariants = collect($product->default_variants ?? []);
             $purchaseVariants = $product->products
                 ->flatMap(function ($purchase) {
@@ -345,8 +271,8 @@ class ProductPurchaseController extends Controller
                         'total_purchase_amount' => round((float) $variants->sum(function ($variant) {
                             return (float) ($variant['total_purchase_amount'] ?? 0);
                         }), 2),
-                        'stock_cases' => (int) ($stock->available_cases ?? 0),
-                        'stock_bottles' => (int) ($stock->available_bottles ?? 0),
+                        'stock_cases' => (int) ($stock['cases_available'] ?? 0),
+                        'stock_bottles' => (int) ($stock['total_bottles_available'] ?? 0),
                     ];
                 })
                 ->values()
@@ -365,8 +291,8 @@ class ProductPurchaseController extends Controller
                 'default_variants' => $mergedVariants,
                 'purchase_batches_count' => (int) ($purchaseSummary->purchase_batches_count ?? 0),
                 'total_purchase_amount' => round((float) ($purchaseSummary->total_purchase_amount ?? 0), 2),
-                'stock_cases' => (int) ($inventorySummary->total_available_cases ?? 0),
-                'stock_bottles' => (int) ($inventorySummary->total_available_bottles ?? 0),
+                'stock_cases' => (int) ($inventory['total_available_cases'] ?? 0),
+                'stock_bottles' => (int) ($inventory['total_available_bottles'] ?? 0),
                 'is_active' => (bool) $product->is_active,
                 'created_at' => optional($product->created_at)?->toDateString(),
             ];
