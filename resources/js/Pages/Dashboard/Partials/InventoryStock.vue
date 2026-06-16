@@ -734,57 +734,21 @@ const totalBoxes = computed(() =>
         0
     )
 );
-const totalPurchaseValue = computed(() => {
-    const total = props.inventoryStock.reduce((sum, item) => {
-        const itemTotalValue = item.variants.reduce((variantSum, variant) => {
-            if (
-                typeof variant.total_bottles_available !== "number" ||
-                typeof variant.unit_price !== "number"
-            ) {
-                console.warn(
-                    `Invalid variant data in item ${item.product_name}:`,
-                    variant
-                );
-                return variantSum;
-            }
-            return (
-                variantSum +
-                variant.total_bottles_available * variant.unit_price
-            );
-        }, 0);
-        return sum + itemTotalValue;
-    }, 0);
-    return total;
-});
+// Stock value comes from the backend (paid bottles × case_buying_price / bpc,
+// free bottles = 0) so the dashboard matches the inventory report exactly.
+const totalPurchaseValue = computed(() =>
+    props.inventoryStock.reduce(
+        (sum, item) => sum + (Number(item.total_stock_value) || 0),
+        0
+    )
+);
 
 // Processed inventory to ensure total_value is calculated
 const processedInventory = computed(() => {
-    return props.inventoryStock.map((item) => {
-        if (!item.variants || !Array.isArray(item.variants)) {
-            console.warn(
-                `Invalid variants for item ${item.product_name}:`,
-                item
-            );
-            return { ...item, total_value: 0 };
-        }
-        const total_value = item.variants.reduce((sum, variant) => {
-            if (
-                typeof variant.total_bottles_available !== "number" ||
-                typeof variant.unit_price !== "number"
-            ) {
-                console.warn(
-                    `Invalid variant data in item ${item.product_name}:`,
-                    variant
-                );
-                return sum;
-            }
-            return sum + variant.total_bottles_available * variant.unit_price;
-        }, 0);
-        return {
-            ...item,
-            total_value,
-        };
-    });
+    return props.inventoryStock.map((item) => ({
+        ...item,
+        total_value: Number(item.total_stock_value) || 0,
+    }));
 });
 
 // Determine stock level based on quantity
