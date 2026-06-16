@@ -16,7 +16,6 @@
         <SalesConfirmationModal
             :show="showModal"
             :sale-summary="saleSummary"
-            :estimated-profit="estimatedProfit"
             :is-loading="isLoading"
             :current-language="currentLanguage"
             :t="t"
@@ -509,7 +508,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { router } from "@inertiajs/vue3";
-import axios from "axios";
 import Layout from "../../Layout.vue";
 import ToastNotification from "./partials/salesPartials/ToastNotification.vue";
 import SalesConfirmationModal from "./partials/salesPartials/SalesConfirmationModal.vue";
@@ -972,9 +970,6 @@ const editPaymentMethod = ref(props.editSale?.payment?.payment_method ?? 'cash')
 const isSubmitted = ref(false);
 const isLoading = ref(false);
 const showModal = ref(false);
-// Profit shown in the confirmation modal, computed server-side (true FIFO) so
-// it always matches the value that will be recorded and shown on the summary.
-const estimatedProfit = ref<number | null>(null);
 const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref<"success" | "error">("success");
@@ -1326,7 +1321,7 @@ const resetForm = () => {
     showToastMessage("formReset", "success");
 };
 
-const openModal = async () => {
+const openModal = () => {
     isSubmitted.value = true;
 
     if (!shopId.value || !saleDate.value || cartItems.value.length === 0) {
@@ -1346,27 +1341,13 @@ const openModal = async () => {
         return;
     }
 
-    // Fetch the true-FIFO profit from the same backend logic that records the
-    // sale, so the modal matches the value shown later on the summary page.
-    // Null lets the modal fall back to the local estimate if the request fails.
-    estimatedProfit.value = null;
-    try {
-        const { data } = await axios.post("/sales/estimate-profit", {
-            include_free_bottles: includeFreeBottles.value,
-            items: buildSaleItems(),
-        });
-        estimatedProfit.value = safeNumber(data.total_profit);
-    } catch (e) {
-        estimatedProfit.value = null;
-    }
-
     showModal.value = true;
 };
 
-// Build the per-item payload shared by the profit preview and the actual save,
-// so the estimate is computed from exactly the same numbers that get stored.
-const buildSaleItems = () => {
-    return cartItems.value.map(item => {
+const confirmSale = () => {
+    isLoading.value = true;
+
+    const items = cartItems.value.map(item => {
         const cases = safeNumber(item.cases);
         const extra = safeNumber(item.extra_bottles);
         const pricePerCase = safeNumber(item.price_per_case);
@@ -1389,12 +1370,6 @@ const buildSaleItems = () => {
             free_bottles_per_case: freePerCase,
         };
     });
-};
-
-const confirmSale = () => {
-    isLoading.value = true;
-
-    const items = buildSaleItems();
 
     const payload = {
         draft_id: draftSaleId.value,

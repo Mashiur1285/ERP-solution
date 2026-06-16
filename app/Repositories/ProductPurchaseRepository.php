@@ -126,11 +126,6 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 ? max(0, (int) $variant['current_free_quantity'])
                 : max(0, $initialFreeBottles - $soldFree);
 
-            // Value stock at the FIFO cost basis: available PAID bottles priced at
-            // case_buying_price / bottles_per_case; free bottles are cost-free.
-            $caseBuyingPrice = floatval($variant['case_buying_price'] ?? 0);
-            $perBottleCost   = $bottlesPerCase > 0 ? $caseBuyingPrice / $bottlesPerCase : 0;
-
             return [
                 'product_id' => $item->id,
                 'product_catalog_id' => $item->product_catalog_id,
@@ -150,7 +145,6 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'bottles_per_case' => $bottlesPerCase,
                 'cases_available' => $bottlesPerCase ? floor(($currentPurchased + $currentFree) / $bottlesPerCase) : 0,
                 'purchase_rate' => floatval($variant['actual_rate_per_bottle'] ?? 0),
-                'stock_value' => round($currentPurchased * $perBottleCost, 2),
                 'variant_metadata' => $variant,
             ];
         })->filter(function ($item) use ($snapshotDate) {
@@ -210,7 +204,6 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                     'bottles_per_case' => $bottlesPerCase,
                     'cases_available' => $totalCasesAvailable,
                     'purchase_rate' => $unitPrice,
-                    'stock_value' => round($variantGroup->sum('stock_value'), 2),
                     'variant_metadata' => $variantMetadata,
                 ];
             })->values();
@@ -227,7 +220,9 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'total_bottles_sold' => $aggregatedVariants->sum('total_bottles_sold'),
                 'total_available_bottles' => $aggregatedVariants->sum('total_bottles_available'),
                 'total_available_cases' => $aggregatedVariants->sum('cases_available'),
-                'total_stock_value' => round($aggregatedVariants->sum('stock_value'), 2),
+                'total_stock_value' => $aggregatedVariants->sum(
+                    fn ($variant) => ($variant['unit_price'] ?? 0) * ($variant['total_bottles_available'] ?? 0)
+                ),
             ];
         })->values();
     }

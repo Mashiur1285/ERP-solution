@@ -713,7 +713,7 @@
                                                         >
                                                             ৳{{
                                                                 toBengaliNumber(
-                                                                    Number(variant.stock_value ?? 0),
+                                                                    Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
                                                                     2
                                                                 )
                                                             }}
@@ -989,7 +989,7 @@
                                                                 class="font-bold text-lg text-green-600"
                                                                 >৳{{
                                                                     toBengaliNumber(
-                                                                        Number(variant.stock_value ?? 0),
+                                                                        Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
                                                                         2
                                                                     )
                                                                 }}</span
@@ -1117,9 +1117,11 @@ const processedInventory = computed(() => {
             (sum, variant) => sum + (variant.total_bottles_sold || 0),
             0
         );
-        // Backend-computed value (paid bottles × case_buying_price / bpc, free = 0)
-        // so this matches the dashboard's total cost.
-        const total_value = Number(item.total_stock_value) || 0;
+        const total_value = item.variants.reduce((sum, variant) => {
+            const casePrice = Number(variant.variant_metadata?.case_buying_price ?? 0);
+            const cases = Number(variant.cases_available ?? 0);
+            return sum + cases * casePrice;
+        }, 0);
 
         return {
             ...item,

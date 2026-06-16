@@ -80,7 +80,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Sales
     Route::get('sales', [SalesController::class, 'index'])->middleware('permission:sales.add')->name('sales.index');
     Route::post('sales/store', [SalesController::class, 'store'])->middleware('permission:sales.add')->name('sales.store');
-    Route::post('sales/estimate-profit', [SalesController::class, 'estimateProfit'])->middleware('permission:sales.add')->name('sales.estimate-profit');
     Route::get('/sales/report', [SalesController::class, 'report'])->middleware('permission:sales.view')->name('sales.report');
     Route::get('/sales/summary', [SalesController::class, 'summaryReport'])->middleware('permission:sales.view')->name('sales.summary');
     Route::get('sales/payment/{id}', [SalesController::class, 'payment'])->middleware('permission:sales.update')->name('sales.payment');

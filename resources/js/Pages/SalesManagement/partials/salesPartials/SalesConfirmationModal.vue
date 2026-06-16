@@ -96,11 +96,11 @@
                                 <p class="text-sm font-medium text-purple-600">{{ t("expectedProfit") }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-lg font-bold" :class="displayProfit >= 0 ? 'text-green-600' : 'text-red-600'">
-                                    ৳{{ currentLanguage === "bn" ? toBengaliNumber(formatNumber(displayProfit, 2)) : formatNumber(displayProfit, 2) }}
+                                <p class="text-lg font-bold" :class="(saleSummary.totalProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'">
+                                    ৳{{ currentLanguage === "bn" ? toBengaliNumber(formatNumber(saleSummary.totalProfit || 0, 2)) : formatNumber(saleSummary.totalProfit || 0, 2) }}
                                 </p>
-                                <p class="text-xs" :class="displayProfit >= 0 ? 'text-green-500' : 'text-red-500'">
-                                    {{ displayProfit >= 0 ? t("profit") : t("loss") }}
+                                <p class="text-xs" :class="(saleSummary.totalProfit || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                    {{ (saleSummary.totalProfit || 0) >= 0 ? t("profit") : t("loss") }}
                                 </p>
                             </div>
                         </div>
@@ -172,8 +172,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-
 const props = defineProps<{
     show: boolean;
     saleSummary: {
@@ -183,9 +181,6 @@ const props = defineProps<{
         totalBottlesToSell?: number;
         itemCount?: number;
     };
-    // Server-computed (true FIFO) profit. When null, fall back to the local
-    // estimate in saleSummary.totalProfit.
-    estimatedProfit?: number | null;
     isLoading: boolean;
     currentLanguage: string;
     t: (key: string, params?: Record<string, any>) => string;
@@ -196,13 +191,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(["close", "confirm", "update:paymentAmount", "update:paymentMethod"]);
-
-// Prefer the backend figure so the modal matches what gets recorded/summarised.
-const displayProfit = computed(() =>
-    props.estimatedProfit !== null && props.estimatedProfit !== undefined
-        ? props.estimatedProfit
-        : (props.saleSummary.totalProfit || 0)
-);
 
 const formatNumber = (value: any, decimals: number = 2): string => {
     const num = Number(value) || 0;

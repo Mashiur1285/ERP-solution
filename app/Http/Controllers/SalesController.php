@@ -14,7 +14,6 @@ use App\Enums\SalesItemsStatus;
 use App\Enums\SalesStatus;
 use App\Http\Requests\StoreSalesRequest;
 use App\Models\Product;
-use App\Services\SaleCostingService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,50 +31,8 @@ class SalesController extends Controller
         protected SalesContract $salesRepository,
         protected BrandContract $brandRepository,
         protected SalesItemContract $salesItemRepository,
-        protected SmsService $smsService,
-        protected SaleCostingService $saleCostingService
+        protected SmsService $smsService
     ) {
-    }
-
-    /**
-     * Load the FIFO-ordered purchase batches for a single sale line.
-     *
-     * Returns the per-batch availability and cost figures shared by sale
-     * creation, sale editing, and the profit-preview endpoint so they all
-     * cost from identical data.
-     *
-     * @return \Illuminate\Support\Collection
-     */
-    private function loadVariantBatches(int $productId, string $variant)
-    {
-        $referenceProduct = $this->productPurchaseRepository->find($productId);
-
-        return Product::where('name', $referenceProduct->name)
-            ->where('supplier_id', $referenceProduct->supplier_id)
-            ->whereNotNull('metadata')
-            ->orderBy('date', 'asc')
-            ->get()
-            ->map(function ($p) use ($variant) {
-                $variantData = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $variant);
-                if (!$variantData) {
-                    return null;
-                }
-                $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
-                $bpc = $variantData['bottles_per_case'] ?? 0;
-                $initialPurchased = $purchasedCases * $bpc;
-                $initialFree = $variantData['total_free_bottles'] ?? 0;
-
-                return [
-                    'product'           => $p,
-                    'purchased'         => $variantData['current_purchased_quantity'] ?? $initialPurchased,
-                    'free'              => $variantData['current_free_quantity'] ?? $initialFree,
-                    'bottles_per_case'  => $bpc,
-                    'purchase_rate'     => floatval($variantData['actual_rate_per_bottle'] ?? 0),
-                    'case_buying_price' => floatval($variantData['case_buying_price'] ?? 0),
-                ];
-            })
-            ->filter()
-            ->values();
     }
 
     public function index()
@@ -177,65 +134,6 @@ class SalesController extends Controller
         return response()->json($inventory);
     }
 
-    /**
-     * Read-only preview of the FIFO profit a sale would record, so the
-     * confirmation modal can show the exact figure that store() will persist.
-     */
-    public function estimateProfit(Request $request)
-    {
-        $request->validate([
-            'include_free_bottles' => 'required|boolean',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.variant' => 'required|string',
-            'items.*.cases_sold' => 'required|integer|min:0',
-            'items.*.extra_bottles' => 'nullable|integer|min:0',
-            'items.*.total_bottles_to_sell' => 'required|integer|min:0',
-            'items.*.selling_price_per_bottle' => 'required|numeric|min:0',
-            'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
-        ]);
-
-        $includeFreeBottles = $request->boolean('include_free_bottles');
-        $resultItems = [];
-        $totalProfit = 0.0;
-
-        foreach ($request->items as $item) {
-            $batches = $this->loadVariantBatches($item['product_id'], $item['variant']);
-
-            if ($batches->isEmpty()) {
-                $resultItems[] = ['variant' => $item['variant'], 'profit' => 0];
-                continue;
-            }
-
-            $bottlesPerCase              = $batches->first()['bottles_per_case'];
-            $targetBottlesToSell         = $item['total_bottles_to_sell'];
-            $actualSellingPricePerBottle = $item['selling_price_per_bottle'];
-            $freeBottlesPerCase          = $item['free_bottles_per_case'] ?? 0;
-            $casesSold                   = $item['cases_sold'];
-            $extraBottles                = $item['extra_bottles'] ?? 0;
-
-            $purchasedBottlesSold = ($casesSold * $bottlesPerCase) + $extraBottles;
-            $freeBottlesSold      = $includeFreeBottles ? $casesSold * $freeBottlesPerCase : 0;
-
-            $purchaseCost   = $this->saleCostingService->fifoPurchaseCost(
-                $batches,
-                $purchasedBottlesSold,
-                $freeBottlesSold,
-                $includeFreeBottles
-            );
-            $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
-            $profit         = round($totalSalePrice - $purchaseCost, 2);
-
-            $resultItems[] = ['variant' => $item['variant'], 'profit' => $profit];
-            $totalProfit += $profit;
-        }
-
-        return response()->json([
-            'items' => $resultItems,
-            'total_profit' => round($totalProfit, 2),
-        ]);
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -288,7 +186,31 @@ class SalesController extends Controller
             $totalProfit = 0;
 
             foreach ($request->items as $item) {
-                $batches = $this->loadVariantBatches($item['product_id'], $item['variant']);
+                $referenceProduct = $this->productPurchaseRepository->find($item['product_id']);
+
+                $batches = Product::where('name', $referenceProduct->name)
+                    ->where('supplier_id', $referenceProduct->supplier_id)
+                    ->whereNotNull('metadata')
+                    ->orderBy('date', 'asc')
+                    ->get()
+                    ->map(function ($p) use ($item) {
+                        $variantData = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $item['variant']);
+                        if (!$variantData) return null;
+                        $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
+                        $bpc = $variantData['bottles_per_case'] ?? 0;
+                        $initialPurchased = $purchasedCases * $bpc;
+                        $initialFree = $variantData['total_free_bottles'] ?? 0;
+                        return [
+                            'product'           => $p,
+                            'purchased'         => $variantData['current_purchased_quantity'] ?? $initialPurchased,
+                            'free'              => $variantData['current_free_quantity'] ?? $initialFree,
+                            'bottles_per_case'  => $bpc,
+                            'purchase_rate'     => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                            'case_buying_price' => floatval($variantData['case_buying_price'] ?? 0),
+                        ];
+                    })
+                    ->filter()
+                    ->values();
 
                 if ($batches->isEmpty()) {
                     throw ValidationException::withMessages([
@@ -298,6 +220,7 @@ class SalesController extends Controller
 
                 $bottlesPerCase          = $batches->first()['bottles_per_case'];
                 $purchaseRatePerBottle   = $batches->avg('purchase_rate');
+                $avgCaseBuyingPrice      = $batches->avg('case_buying_price');
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
@@ -336,13 +259,9 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $purchaseCost   = $this->saleCostingService->fifoPurchaseCost(
-                    $batches,
-                    $purchasedBottlesSold,
-                    $freeBottlesSold,
-                    $request->include_free_bottles
-                );
+                $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
+                $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
                 $profit         = round($totalSalePrice - $purchaseCost, 2);
 
                 $itemsData = [
@@ -707,7 +626,31 @@ class SalesController extends Controller
             $totalProfit = 0;
 
             foreach ($request->items as $item) {
-                $batches = $this->loadVariantBatches($item['product_id'], $item['variant']);
+                $referenceProduct = $this->productPurchaseRepository->find($item['product_id']);
+
+                $batches = \App\Models\Product::where('name', $referenceProduct->name)
+                    ->where('supplier_id', $referenceProduct->supplier_id)
+                    ->whereNotNull('metadata')
+                    ->orderBy('date', 'asc')
+                    ->get()
+                    ->map(function ($p) use ($item) {
+                        $variantData = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $item['variant']);
+                        if (!$variantData) return null;
+                        $purchasedCases = $variantData['cases_without_free_bottles'] ?? 0;
+                        $bpc = $variantData['bottles_per_case'] ?? 0;
+                        $initialPurchased = $purchasedCases * $bpc;
+                        $initialFree = $variantData['total_free_bottles'] ?? 0;
+                        return [
+                            'product'           => $p,
+                            'purchased'         => $variantData['current_purchased_quantity'] ?? $initialPurchased,
+                            'free'              => $variantData['current_free_quantity'] ?? $initialFree,
+                            'bottles_per_case'  => $bpc,
+                            'purchase_rate'     => floatval($variantData['actual_rate_per_bottle'] ?? 0),
+                            'case_buying_price' => floatval($variantData['case_buying_price'] ?? 0),
+                        ];
+                    })
+                    ->filter()
+                    ->values();
 
                 if ($batches->isEmpty()) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
@@ -717,6 +660,7 @@ class SalesController extends Controller
 
                 $bottlesPerCase          = $batches->first()['bottles_per_case'];
                 $purchaseRatePerBottle   = $batches->avg('purchase_rate');
+                $avgCaseBuyingPrice      = $batches->avg('case_buying_price');
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
@@ -755,13 +699,9 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $purchaseCost   = $this->saleCostingService->fifoPurchaseCost(
-                    $batches,
-                    $purchasedBottlesSold,
-                    $freeBottlesSold,
-                    $request->include_free_bottles
-                );
+                $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
+                $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
                 $profit         = round($totalSalePrice - $purchaseCost, 2);
 
                 $itemsData = [
