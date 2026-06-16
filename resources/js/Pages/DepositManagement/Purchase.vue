@@ -361,6 +361,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
+import axios from "axios";
 import Layout from "../../Layout.vue";
 import ToastNotification from "./Partials/PurchasePartials/ToastNotification.vue";
 import ConfirmationModal from "./Partials/PurchasePartials/ConfirmationModal.vue";
@@ -413,9 +414,6 @@ defineOptions({
 // Language handling
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const currentDate = new Date().toLocaleDateString(currentLanguage.value === 'bn' ? 'bn-BD' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-const csrfToken =
-    (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
-        ?.content || "";
 
 const categoriesList = ref([...props.categories]);
 const brandsList = ref([...props.brands]);
@@ -681,20 +679,13 @@ const pushToast = (message: string, type: "success" | "error" = "success") => {
 };
 
 const postJson = async (url: string, payload: Record<string, any>) => {
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "X-CSRF-TOKEN": csrfToken,
-            "X-Requested-With": "XMLHttpRequest",
-        },
-        body: JSON.stringify(payload),
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
+    // axios sends the always-fresh XSRF-TOKEN cookie; the meta-tag CSRF token
+    // goes stale in a long-lived SPA session and causes 419s.
+    try {
+        const { data } = await axios.post(url, payload);
+        return data;
+    } catch (err: any) {
+        const data = err?.response?.data ?? {};
         const validationMessage =
             data?.message ||
             (data?.errors &&
@@ -703,8 +694,6 @@ const postJson = async (url: string, payload: Record<string, any>) => {
                     .join(", "));
         throw new Error(validationMessage || "Request failed");
     }
-
-    return data;
 };
 
 const handleCategoryCreate = async (data: {
