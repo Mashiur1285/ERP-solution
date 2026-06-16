@@ -705,7 +705,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
-import axios from "axios";
 import Layout from "../../Layout.vue";
 
 interface Supplier {
@@ -798,6 +797,7 @@ const getTodayString = () => {
 // State
 const lang = ref(localStorage.getItem("language") || "en");
 const currentDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || "";
 const isLoading = ref(false);
 const showConfirmModal = ref(false);
 const showCreateProductModal = ref(false);
@@ -834,39 +834,54 @@ const quickStoreSupplier = async () => {
     if (!newSupplier.value.company_name || !newSupplier.value.phone_number || !newSupplier.value.address) return;
     isQuickSupplierLoading.value = true;
     try {
-        // axios uses the always-fresh XSRF-TOKEN cookie (the meta-tag token goes
-        // stale in a long-lived SPA session → 419).
-        const { data } = await axios.post("/suppliers/quick-store", {
-            company_name: newSupplier.value.company_name,
-            phone_number: newSupplier.value.phone_number,
-            address: newSupplier.value.address,
+        const res = await fetch("/suppliers/quick-store", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": csrfToken,
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({
+                company_name: newSupplier.value.company_name,
+                phone_number: newSupplier.value.phone_number,
+                address: newSupplier.value.address,
+            }),
         });
+        const data = await res.json();
+        if (!res.ok) {
+            const messages = data.errors ? Object.values(data.errors).flat().join(", ") : (data.message || t("error"));
+            showToast(messages as string, "error");
+        } else {
+            const created: Supplier = { ...data.supplier, remaining_deposit: 0 };
 
-        const created: Supplier = { ...data.supplier, remaining_deposit: 0 };
-
-        if (newSupplier.value.initial_deposit && newSupplier.value.initial_deposit > 0) {
-            // Best-effort: the supplier is already created, so a failed deposit
-            // shouldn't abort the flow.
-            try {
-                await axios.post("/api/deposits/quick-store", {
-                    supplier_id: created.id,
-                    balance_deposited: newSupplier.value.initial_deposit,
+            if (newSupplier.value.initial_deposit && newSupplier.value.initial_deposit > 0) {
+                const depositRes = await fetch("/api/deposits/quick-store", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                    body: JSON.stringify({
+                        supplier_id: created.id,
+                        balance_deposited: newSupplier.value.initial_deposit,
+                    }),
                 });
-                created.remaining_deposit = newSupplier.value.initial_deposit;
-            } catch {
-                // Deposit can be added later from the deposit page.
+                if (depositRes.ok) {
+                    created.remaining_deposit = newSupplier.value.initial_deposit;
+                }
             }
-        }
 
-        localSuppliers.value.push(created);
-        selectSupplier(created);
-        showQuickSupplierModal.value = false;
-        newSupplier.value = { company_name: "", phone_number: "", address: "", initial_deposit: null };
-        showToast(t("supplierCreated"), "success");
-    } catch (err: any) {
-        const resp = err?.response?.data;
-        const messages = resp?.errors ? Object.values(resp.errors).flat().join(", ") : (resp?.message || t("error"));
-        showToast(messages as string, "error");
+            localSuppliers.value.push(created);
+            selectSupplier(created);
+            showQuickSupplierModal.value = false;
+            newSupplier.value = { company_name: "", phone_number: "", address: "", initial_deposit: null };
+            showToast(t("supplierCreated"), "success");
+        }
+    } catch {
+        showToast(t("error"), "error");
     } finally {
         isQuickSupplierLoading.value = false;
     }
@@ -1126,16 +1141,20 @@ const createProduct = async () => {
         if (newProduct.value.brand_id) formData.append("brand_id", String(newProduct.value.brand_id));
         if (newProduct.value.imageFile) formData.append("product_image", newProduct.value.imageFile);
 
-        // axios sets the multipart boundary for FormData and sends the fresh
-        // XSRF-TOKEN cookie (avoids the stale meta-token 419).
-        const { data } = await axios.post("/api/product-catalog/quick-store", formData);
+        const res = await fetch("/api/product-catalog/quick-store", {
+            method: "POST",
+            headers: { Accept: "application/json", "X-CSRF-TOKEN": csrfToken, "X-Requested-With": "XMLHttpRequest" },
+            body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed");
         showCreateProductModal.value = false;
         // Refresh product list and open variant picker for the new product
         await fetchProducts(productSearch.value);
         selectProductForVariants(data.product);
         showToast(t("productCreated"), "success");
     } catch (err: any) {
-        showToast(err?.response?.data?.message || err.message || t("error"), "error");
+        showToast(err.message || t("error"), "error");
     }
 };
 
@@ -1192,12 +1211,20 @@ const submitQuickDeposit = async () => {
     if (!selectedSupplier.value || shortfallAmount.value <= 0) return;
     isQuickDepositLoading.value = true;
     try {
-        // Use axios (not fetch + meta-tag token): it sends the always-fresh
-        // XSRF-TOKEN cookie, avoiding the 419 the stale meta token caused.
-        await axios.post('/api/deposits/quick-store', {
-            supplier_id: selectedSupplier.value.id,
-            balance_deposited: shortfallAmount.value,
+        const res = await fetch('/api/deposits/quick-store', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                supplier_id: selectedSupplier.value.id,
+                balance_deposited: shortfallAmount.value,
+            }),
         });
+        if (!res.ok) throw new Error(t('error'));
         selectedSupplier.value = {
             ...selectedSupplier.value,
             remaining_deposit: selectedSupplier.value.remaining_deposit + shortfallAmount.value,
@@ -1206,7 +1233,7 @@ const submitQuickDeposit = async () => {
         showToast(t('depositSuccess'), 'success');
         submitLift();
     } catch (err: any) {
-        showToast(err?.response?.data?.message || t('error'), 'error');
+        showToast(err.message || t('error'), 'error');
     }
     isQuickDepositLoading.value = false;
 };
