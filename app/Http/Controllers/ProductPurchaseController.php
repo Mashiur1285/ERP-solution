@@ -13,8 +13,6 @@ use Inertia\Inertia;
 use App\Models\Supplier;
 use App\Models\ProductCatalog;
 use App\Models\Product;
-use App\Models\Lift;
-use App\Models\LiftItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -379,11 +377,14 @@ class ProductPurchaseController extends Controller
             return back()->withErrors(['error' => 'No inventory found for this variant.']);
         }
 
-        try {
-            DB::transaction(function () use ($products, $variantName, $newTotal) {
-            $affectedLiftIds = [];
-
-            // Zero out older batches for this variant (no stock => no lifting cost)
+        // A stock adjustment is a physical recount of what's CURRENTLY on hand. It
+        // only touches the available-stock fields in product metadata. It must NOT
+        // alter the lift records (lift_items) or the supplier deposit ledger: those
+        // represent what was originally lifted and owed, which a recount can't change.
+        // To correct an actual lifted quantity, edit the lift instead.
+        DB::transaction(function () use ($products, $variantName, $newTotal) {
+            // Zero out older batches' available stock (the recount consolidates all
+            // remaining stock into the latest batch).
             foreach ($products->slice(0, -1) as $product) {
                 $metadata = $product->metadata;
                 $variants = $metadata['variants'] ?? [];
@@ -399,14 +400,9 @@ class ProductPurchaseController extends Controller
                 $metadata['variants'] = $variants;
                 $product->metadata    = $metadata;
                 $product->save();
-
-                $liftId = $this->syncLiftItemForBatch($product->id, $variantName, 0);
-                if ($liftId !== null) {
-                    $affectedLiftIds[$liftId] = $liftId;
-                }
             }
 
-            // Set new total on latest batch and recompute its lifting cost
+            // Set new total available on the latest batch and recompute its stock value.
             $latest   = $products->last();
             $metadata = $latest->metadata;
             $variants = $metadata['variants'] ?? [];
@@ -423,84 +419,9 @@ class ProductPurchaseController extends Controller
             $metadata['variants'] = $variants;
             $latest->metadata     = $metadata;
             $latest->save();
-
-            $liftId = $this->syncLiftItemForBatch($latest->id, $variantName, $newTotal);
-            if ($liftId !== null) {
-                $affectedLiftIds[$liftId] = $liftId;
-            }
-
-            // Recompute each affected lift's total amount from its (updated)
-            // items, and keep the supplier deposit ledger in sync by the delta.
-            foreach ($affectedLiftIds as $liftId) {
-                $lift = Lift::find($liftId);
-                if (!$lift) {
-                    continue;
-                }
-
-                $oldAmount = round((float) $lift->total_amount, 2);
-                $newAmount = round((float) LiftItem::where('lift_id', $liftId)->sum('total_cost'), 2);
-                $lift->update(['total_amount' => $newAmount]);
-
-                // Only completed lifts ever drew against deposits.
-                if ($lift->status === 'draft' || !$lift->supplier_id) {
-                    continue;
-                }
-
-                $delta = round($newAmount - $oldAmount, 2);
-                if ($delta > 0) {
-                    $this->depositRepository->applyAmountAgainstSupplierDeposits((int) $lift->supplier_id, $delta);
-                } elseif ($delta < 0) {
-                    $this->depositRepository->creditAmountBackToSupplierDeposits((int) $lift->supplier_id, -$delta);
-                }
-            }
-            });
-        } catch (\RuntimeException $e) {
-            // e.g. the increased lift value exceeds the supplier's deposit balance.
-            return back()->withErrors(['error' => $e->getMessage()]);
-        }
+        });
 
         return back()->with('success', 'Inventory adjusted successfully.');
-    }
-
-    /**
-     * Mirror a stock adjustment onto the lifting record (lift_items) tied to a
-     * purchase batch so the Lift Report shows the corrected bottles and cost.
-     * Returns the affected lift_id (so its total can be recomputed) or null
-     * when the batch has no associated lift item (e.g. direct purchases).
-     */
-    private function syncLiftItemForBatch(int $productId, string $variantName, int $totalBottles): ?int
-    {
-        $liftItem = LiftItem::where('product_id', $productId)
-            ->where('variant', $variantName)
-            ->first();
-
-        if (!$liftItem) {
-            return null;
-        }
-
-        $bottlesPerCase = (int) ($liftItem->bottles_per_case ?? 0);
-        $ratePerBottle  = (float) ($liftItem->actual_rate_per_bottle ?? 0);
-        if ($ratePerBottle <= 0 && $bottlesPerCase > 0) {
-            $ratePerBottle = (float) ($liftItem->case_buying_price ?? 0) / $bottlesPerCase;
-        }
-
-        // number_of_cases is an integer column; the accurate value is total_cost
-        // (bottles x rate). Round the case count for display.
-        $numberOfCases = $bottlesPerCase > 0
-            ? (int) round($totalBottles / $bottlesPerCase)
-            : ($totalBottles > 0 ? (int) $liftItem->number_of_cases : 0);
-
-        $liftItem->update([
-            'number_of_cases'            => $numberOfCases,
-            'total_bottles'              => $totalBottles,
-            'total_free_bottles'         => 0,
-            'extra_free_bottles'         => 0,
-            'cases_with_free_bottles'    => 0,
-            'cases_without_free_bottles' => $numberOfCases,
-            'total_cost'                 => round($totalBottles * $ratePerBottle, 2),
-        ]);
-
-        return (int) $liftItem->lift_id;
     }
 
     /**

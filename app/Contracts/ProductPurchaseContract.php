@@ -16,6 +16,8 @@ interface ProductPurchaseContract
 
     public function getVariantInventory(int $productId, string $variant): ?array;
 
+    public function weightedVariantCost(Collection $batches): array;
+
     public function getTopSellingProducts(int $limit): Collection;
 
     public function getLowStockProducts(int $threshold): Collection;

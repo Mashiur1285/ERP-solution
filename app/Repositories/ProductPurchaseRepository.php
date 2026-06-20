@@ -179,11 +179,20 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 $bottlesPerCase = $variantGroup->first()['bottles_per_case'] ?? 0;
                 $totalCasesAvailable = $bottlesPerCase ? floor($totalBottlesAvailable / $bottlesPerCase) : 0;
 
-                // Use the most recent unit_price (or average if needed)
-                $unitPrice = $variantGroup->avg('unit_price');
+                // Weighted-average cost across this variant's batches (by available
+                // purchased bottles) so the sale modal and the stored sale profit
+                // share one cost basis when a product was lifted at different prices.
+                $weightedCost = $this->weightedVariantCost($variantGroup->map(fn ($g) => [
+                    'available_purchased' => $g['purchased_bottles_available'],
+                    'case_buying_price'   => (float) ($g['variant_metadata']['case_buying_price'] ?? 0),
+                    'rate_per_bottle'     => (float) ($g['unit_price'] ?? 0),
+                ]));
+                $unitPrice = $weightedCost['rate_per_bottle'];
 
-                // Use the most recent variant_metadata
+                // Carry the weighted case price on the metadata the cart reads from
+                // (full precision so it matches the backend's stored-profit basis).
                 $variantMetadata = $variantGroup->first()['variant_metadata'];
+                $variantMetadata['case_buying_price'] = $weightedCost['case_buying_price'];
 
                 return [
                     'product_id' => $variantGroup->first()['product_id'],
@@ -287,6 +296,31 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         $product->save();
     }
 
+    /**
+     * Weighted-average purchase cost for a variant across its batches, weighted by
+     * each batch's available purchased bottles. Falls back to the simple average
+     * when no purchased stock remains (avoids divide-by-zero for free-only/empty
+     * batches). Each entry of $batches must carry: 'available_purchased',
+     * 'case_buying_price', 'rate_per_bottle'.
+     */
+    public function weightedVariantCost(Collection $batches): array
+    {
+        $totalQty = (float) $batches->sum(fn ($b) => (float) ($b['available_purchased'] ?? 0));
+
+        if ($totalQty > 0) {
+            $casePrice = $batches->sum(fn ($b) => (float) ($b['available_purchased'] ?? 0) * (float) ($b['case_buying_price'] ?? 0)) / $totalQty;
+            $ratePerBottle = $batches->sum(fn ($b) => (float) ($b['available_purchased'] ?? 0) * (float) ($b['rate_per_bottle'] ?? 0)) / $totalQty;
+        } else {
+            $casePrice = (float) ($batches->avg('case_buying_price') ?? 0);
+            $ratePerBottle = (float) ($batches->avg('rate_per_bottle') ?? 0);
+        }
+
+        return [
+            'case_buying_price' => $casePrice,
+            'rate_per_bottle' => $ratePerBottle,
+        ];
+    }
+
     public function getVariantInventory(int $productId, string $variant): ?array
     {
         $product = $this->find($productId);
@@ -305,12 +339,35 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         $initialPurchasedBottles = $purchasedCases * $bottlesPerCase;
         $initialFreeBottles = $variantData['total_free_bottles'] ?? 0;
 
+        // Weighted-average cost across all batches of this product+variant (same
+        // set the sale flow consumes), so the cart cost matches the stored profit.
+        $costBatches = Product::where('name', $product->name)
+            ->where('supplier_id', $product->supplier_id)
+            ->whereNotNull('metadata')
+            ->get()
+            ->map(function ($p) use ($variant) {
+                $vd = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $variant);
+                if (!$vd) {
+                    return null;
+                }
+                $cases = $vd['cases_without_free_bottles'] ?? 0;
+                $bpc = $vd['bottles_per_case'] ?? 0;
+                return [
+                    'available_purchased' => $vd['current_purchased_quantity'] ?? ($cases * $bpc),
+                    'case_buying_price'   => (float) ($vd['case_buying_price'] ?? 0),
+                    'rate_per_bottle'     => (float) ($vd['actual_rate_per_bottle'] ?? 0),
+                ];
+            })
+            ->filter()
+            ->values();
+        $weightedCost = $this->weightedVariantCost($costBatches);
+
         return [
             'purchased_bottles_available' => $variantData['current_purchased_quantity'] ?? $initialPurchasedBottles,
             'free_bottles_available' => $variantData['current_free_quantity'] ?? $initialFreeBottles,
             'bottles_per_case' => $variantData['bottles_per_case'] ?? 0,
-            'purchase_rate' => $variantData['actual_rate_per_bottle'] ?? 0,
-            'case_buying_price' => $variantData['case_buying_price'] ?? 0,
+            'purchase_rate' => $weightedCost['rate_per_bottle'],
+            'case_buying_price' => $weightedCost['case_buying_price'],
             'variant_data' => $variantData,
             'free_bottles_per_case' => $variantData['free_bottles_per_case'] ?? 0,
             'cases_without_free_bottles' => $variantData['cases_without_free_bottles'] ?? 0,

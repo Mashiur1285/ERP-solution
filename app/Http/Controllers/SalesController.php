@@ -219,8 +219,17 @@ class SalesController extends Controller
                 }
 
                 $bottlesPerCase          = $batches->first()['bottles_per_case'];
-                $purchaseRatePerBottle   = $batches->avg('purchase_rate');
-                $avgCaseBuyingPrice      = $batches->avg('case_buying_price');
+                // Weighted-average cost across batches (by available purchased
+                // bottles) — the same basis the sale modal shows, so the stored
+                // profit matches the report when a product was lifted at different
+                // prices.
+                $weightedCost            = $this->productPurchaseRepository->weightedVariantCost($batches->map(fn ($b) => [
+                    'available_purchased' => $b['purchased'],
+                    'case_buying_price'   => $b['case_buying_price'],
+                    'rate_per_bottle'     => $b['purchase_rate'],
+                ]));
+                $purchaseRatePerBottle   = $weightedCost['rate_per_bottle'];
+                $avgCaseBuyingPrice      = $weightedCost['case_buying_price'];
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
@@ -659,8 +668,15 @@ class SalesController extends Controller
                 }
 
                 $bottlesPerCase          = $batches->first()['bottles_per_case'];
-                $purchaseRatePerBottle   = $batches->avg('purchase_rate');
-                $avgCaseBuyingPrice      = $batches->avg('case_buying_price');
+                // Weighted-average cost across batches (by available purchased
+                // bottles) — matches the sale modal so stored profit == report.
+                $weightedCost            = $this->productPurchaseRepository->weightedVariantCost($batches->map(fn ($b) => [
+                    'available_purchased' => $b['purchased'],
+                    'case_buying_price'   => $b['case_buying_price'],
+                    'rate_per_bottle'     => $b['purchase_rate'],
+                ]));
+                $purchaseRatePerBottle   = $weightedCost['rate_per_bottle'];
+                $avgCaseBuyingPrice      = $weightedCost['case_buying_price'];
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
