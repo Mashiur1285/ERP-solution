@@ -17,6 +17,7 @@ use App\Models\Product;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -827,32 +828,101 @@ class SalesController extends Controller
 
     /**
      * Add a sale's sold bottles back to the product inventory metadata.
-     * Mirrors the deduction done at sale time by calling updateInventory() with
-     * negative quantities. Restores to the earliest matching batch (same
-     * convention used when re-deducting on edit). Only call for sales whose
-     * stock was actually deducted (i.e. non-draft sales).
+     *
+     * Stock is deducted at sale time FIFO *across batches* (oldest first), but a
+     * sale_item only records one product_id, so the per-batch split is lost. We
+     * therefore reverse the deduction by refilling batches in reverse-FIFO order
+     * (newest first), each capped at its originally-lifted capacity, so no batch
+     * is ever pushed above what was lifted into it and the returned bottles are
+     * valued at the correct per-batch rate (updateInventory recomputes total_cost
+     * from the batch's own rate). Only call for sales whose stock was actually
+     * deducted (i.e. non-draft sales).
      */
     private function restoreSaleInventory(\App\Models\Sale $sale): void
     {
         foreach ($sale->items as $item) {
-            if (!$item->product) continue;
+            // Resolve the product name even if the linked batch was soft-deleted,
+            // so its surviving siblings still receive the stock back.
+            $productName = $item->product?->name
+                ?? ($item->product_id ? Product::withTrashed()->find($item->product_id)?->name : null);
 
-            $restoreBatches = \App\Models\Product::where('name', $item->product->name)
+            if (!$productName) {
+                Log::warning('restoreSaleInventory: could not resolve product for sale_item', [
+                    'sale_id' => $sale->id,
+                    'sale_item_id' => $item->id,
+                    'product_id' => $item->product_id,
+                ]);
+                continue;
+            }
+
+            // Reverse-FIFO: newest batch first, so we undo the oldest-first deduction.
+            $restoreBatches = Product::where('name', $productName)
                 ->where('supplier_id', $sale->supplier_id)
                 ->whereNotNull('metadata')
-                ->orderBy('date', 'asc')
+                ->orderBy('date', 'desc')
                 ->get()
-                ->filter(fn($p) => collect($p->metadata['variants'] ?? [])->contains('variant', $item->variant))
+                ->filter(fn ($p) => collect($p->metadata['variants'] ?? [])
+                    ->contains(fn ($v) => (string) ($v['variant'] ?? '') === (string) $item->variant))
                 ->values();
 
-            if ($restoreBatches->isEmpty()) continue;
+            if ($restoreBatches->isEmpty()) {
+                Log::warning('restoreSaleInventory: no matching batches to restore stock', [
+                    'sale_id' => $sale->id,
+                    'sale_item_id' => $item->id,
+                    'product' => $productName,
+                    'variant' => $item->variant,
+                ]);
+                continue;
+            }
 
-            $this->productPurchaseRepository->updateInventory(
-                $restoreBatches->first(),
-                $item->variant,
-                -abs((int) $item->purchased_bottles_sold),
-                -abs((int) $item->free_bottles_sold)
-            );
+            $remainingPurchased = abs((int) $item->purchased_bottles_sold);
+            $remainingFree      = abs((int) $item->free_bottles_sold);
+
+            foreach ($restoreBatches as $batch) {
+                if ($remainingPurchased <= 0 && $remainingFree <= 0) break;
+
+                $variantData = collect($batch->metadata['variants'])
+                    ->first(fn ($v) => (string) ($v['variant'] ?? '') === (string) $item->variant);
+                if (!$variantData) continue;
+
+                // Purchased pool headroom = lifted capacity - current on hand.
+                $capacity = ($variantData['cases_without_free_bottles'] ?? 0) * ($variantData['bottles_per_case'] ?? 0);
+                $currentPurchased = $variantData['current_purchased_quantity'] ?? $capacity;
+                $headroomPurchased = max(0, (int) $capacity - (int) $currentPurchased);
+
+                // Free pool headroom.
+                $freeCapacity = $variantData['total_free_bottles'] ?? 0;
+                $currentFree = $variantData['current_free_quantity'] ?? $freeCapacity;
+                $headroomFree = max(0, (int) $freeCapacity - (int) $currentFree);
+
+                $addPurchased = min($remainingPurchased, $headroomPurchased);
+                $addFree      = min($remainingFree, $headroomFree);
+
+                if ($addPurchased > 0 || $addFree > 0) {
+                    $this->productPurchaseRepository->updateInventory(
+                        $batch,
+                        $item->variant,
+                        -$addPurchased,
+                        -$addFree
+                    );
+                    $remainingPurchased -= $addPurchased;
+                    $remainingFree      -= $addFree;
+                }
+            }
+
+            // Anything left means every batch is already at capacity (manual stock
+            // edits or pre-fix corruption). Don't inflate a batch past its lifted
+            // amount — leave it and log, preserving the "current <= lifted" invariant.
+            if ($remainingPurchased > 0 || $remainingFree > 0) {
+                Log::warning('restoreSaleInventory: batches at capacity, stock not fully restored', [
+                    'sale_id' => $sale->id,
+                    'sale_item_id' => $item->id,
+                    'product' => $productName,
+                    'variant' => $item->variant,
+                    'unrestored_purchased' => $remainingPurchased,
+                    'unrestored_free' => $remainingFree,
+                ]);
+            }
         }
     }
 
