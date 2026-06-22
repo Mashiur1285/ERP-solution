@@ -601,6 +601,81 @@ it('T18: extra-only sale (0 cases) calculates profit correctly', function () {
     expect($profit)->toBe(25.0);
 });
 
+it('T18a: selling a case WITHOUT its free bottles charges only the bottles sold, not the full case', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog = makeCatalog($supplier);
+    $liftUser = makeUser(['lift.add']);
+    $saleUser = makeUser(['sales.add']);
+    $shop     = makeShop();
+
+    // 24 bpc + 6 free/case, cost 600/case → blended rate = 600 / (24+6) = 20.0 (exact)
+    $this->actingAs($liftUser)
+         ->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+             'case_buying_price'     => 600,
+             'free_bottles_per_case' => 6,
+         ]))
+         ->assertRedirect();
+
+    $product = getProduct($supplier);
+
+    // Sell 1 case (24 purchased bottles) at ৳22/bottle, free bottles excluded.
+    // revenue = 24 × 22 = 528
+    // cost    = 24 × (600/30) = 24 × 20 = 480   (NOT the full case price 600)
+    // profit  = 48   (the old per-case formula charged 600 and showed a ৳72 LOSS)
+    $this->actingAs($saleUser)
+         ->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+             'cases_sold'               => 1,
+             'free_bottles_per_case'    => 6,
+             'total_bottles_to_sell'    => 24,
+             'selling_price_per_bottle' => 22,
+         ]))
+         ->assertRedirect();
+
+    $profit = (float) \App\Models\SaleItem::latest('id')->first()->profit;
+    expect($profit)->toBe(48.0);
+});
+
+it('T18b: selling a case WITH its free bottles still charges the full case cost (no regression)', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog = makeCatalog($supplier);
+    $liftUser = makeUser(['lift.add']);
+    $saleUser = makeUser(['sales.add']);
+    $shop     = makeShop();
+
+    // Same lift: 24 bpc + 6 free/case, cost 600/case → blended rate = 20.0
+    $this->actingAs($liftUser)
+         ->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+             'case_buying_price'     => 600,
+             'free_bottles_per_case' => 6,
+         ]))
+         ->assertRedirect();
+
+    $product = getProduct($supplier);
+
+    // Sell 1 effective case = 24 purchased + 6 free = 30 bottles at ৳22/bottle.
+    // revenue = 30 × 22 = 660
+    // cost    = 30 × 20 = 600   (full case cost, unchanged from old behaviour)
+    // profit  = 60
+    $payload = salePayload($supplier, $shop, $product, [
+        'cases_sold'               => 1,
+        'free_bottles_per_case'    => 6,
+        'total_bottles_to_sell'    => 30,
+        'selling_price_per_bottle' => 22,
+    ]);
+    $payload['include_free_bottles'] = true;
+
+    $this->actingAs($saleUser)
+         ->post(route('sales.store'), $payload)
+         ->assertRedirect();
+
+    $profit = (float) \App\Models\SaleItem::latest('id')->first()->profit;
+    expect($profit)->toBe(60.0);
+});
+
 // ── T19–T21: Validation ──────────────────────────────────────────────────────
 
 it('T19: sale with more bottles than available returns validation error', function () {

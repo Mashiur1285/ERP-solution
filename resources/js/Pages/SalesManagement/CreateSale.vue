@@ -1281,7 +1281,10 @@ const saleSummary = computed(() => {
         const subtotal = Math.round(targetBottles * pricePerBottle * 100) / 100;
         // Derive bottle rate directly from caseBuyingPrice (symmetric with revenue calc) to avoid pre-rounded purchaseRate errors
         const bottleRate = effectiveBPC > 0 ? caseBuyingPrice / effectiveBPC : purchaseRate;
-        const cost = Math.round((cases * caseBuyingPrice + extra * bottleRate) * 100) / 100;
+        // Cost = blended per-bottle rate × bottles actually sold (targetBottles).
+        // When free bottles are excluded they stay in stock and aren't charged here,
+        // so a case sold without its free bottles no longer shows a false loss.
+        const cost = Math.round(targetBottles * bottleRate * 100) / 100;
 
         totalCases += cases;
         totalBottles += targetBottles;

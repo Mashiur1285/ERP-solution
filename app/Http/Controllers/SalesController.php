@@ -271,7 +271,13 @@ class SalesController extends Controller
 
                 $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
-                $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
+                // Cost is the blended per-bottle rate × the bottles that actually
+                // leave inventory. When free bottles are excluded from the sale they
+                // stay in stock and must NOT be charged here — their cost is realized
+                // when they are sold later. (Charging the full case price per case
+                // would otherwise dump the retained free bottles' cost onto this sale
+                // and report a false loss.)
+                $purchaseCost   = round($actualTotalBottlesSold * $bottleRate, 2);
                 $profit         = round($totalSalePrice - $purchaseCost, 2);
 
                 $itemsData = [
@@ -718,7 +724,13 @@ class SalesController extends Controller
 
                 $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
-                $purchaseCost   = round(($casesSold * $avgCaseBuyingPrice) + ($extraBottlesFrontend * $bottleRate), 2);
+                // Cost is the blended per-bottle rate × the bottles that actually
+                // leave inventory. When free bottles are excluded from the sale they
+                // stay in stock and must NOT be charged here — their cost is realized
+                // when they are sold later. (Charging the full case price per case
+                // would otherwise dump the retained free bottles' cost onto this sale
+                // and report a false loss.)
+                $purchaseCost   = round($actualTotalBottlesSold * $bottleRate, 2);
                 $profit         = round($totalSalePrice - $purchaseCost, 2);
 
                 $itemsData = [
