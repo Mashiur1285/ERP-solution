@@ -458,8 +458,8 @@
                             </button>
                         </div>
 
-                        <!-- Variants Table -->
-                        <div class="overflow-x-auto">
+                        <!-- Variants: Desktop Table View -->
+                        <div class="hidden md:block overflow-x-auto">
                             <table class="w-full text-sm border-collapse">
                                 <thead>
                                     <tr class="bg-gray-50 border-b border-gray-200">
@@ -542,6 +542,96 @@
                             </table>
                         </div>
 
+                        <!-- Variants: Mobile Card View -->
+                        <div class="md:hidden space-y-3">
+                            <div v-for="(v, vIdx) in item.variants" :key="vIdx" 
+                                 class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                                <!-- Variant Name -->
+                                <div class="mb-4 pb-4 border-b border-gray-100">
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ t('variantName') }}</label>
+                                    <template v-if="isCustomVariant(v.variant)">
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                v-model="v.variant"
+                                                type="text"
+                                                placeholder="Variant name"
+                                                class="flex-1 px-2 py-1.5 rounded-md border border-green-300 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-green-50"
+                                            />
+                                            <button @click="v.variant = ''" class="text-gray-400 hover:text-gray-600" title="Switch to preset">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <select v-model="v.variant"
+                                            class="w-full pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
+                                            @change="onVariantSelect(itemIdx, vIdx)">
+                                            <option value="">{{ t('selectVariant') }}</option>
+                                            <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                            <option value="__custom__">+ Custom</option>
+                                        </select>
+                                    </template>
+                                </div>
+
+                                <!-- Three columns layout -->
+                                <div class="grid grid-cols-2 gap-3 mb-4">
+                                    <!-- Cases -->
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ t('numberOfCases') }}</label>
+                                        <input v-model.number="v.number_of_cases" type="number" min="0"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+
+                                    <!-- Extra Bottles -->
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ t('extraBottles') }}</label>
+                                        <input v-model.number="v.extra_bottles" type="number" min="0" :max="(v.bottles_per_case || 1) - 1" :placeholder="t('optional')"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 placeholder:text-gray-300" />
+                                    </div>
+
+                                    <!-- Case Buying Price -->
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ t('caseBuyingPrice') }}</label>
+                                        <div class="relative">
+                                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">৳</span>
+                                            <input v-model.number="v.case_buying_price" type="number" step="0.01" min="0"
+                                                class="w-full pl-6 pr-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottles Per Case -->
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ t('bottlesPerCase') }}</label>
+                                        <input v-model.number="v.bottles_per_case" type="number" min="1"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm bg-gray-100 focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+
+                                    <!-- Free Bottles Per Case -->
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ t('freeBottlesPerCase') }}</label>
+                                        <input v-model.number="v.free_bottles_per_case" type="number" min="0" step="any"
+                                            class="w-full px-2 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+                                </div>
+
+                                <!-- Total Cost & Delete -->
+                                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-1">{{ t('totalCost') }}</p>
+                                        <p class="text-base font-bold text-green-600">৳{{ toBengaliNumber(calcVariantCost(v), 2) }}</p>
+                                        <p v-if="calcFreeBottles(v) > 0" class="text-xs text-green-500 mt-1">+{{ calcFreeBottles(v) }} {{ t('free') }}</p>
+                                    </div>
+                                    <button v-if="item.variants.length > 1"
+                                        @click="removeVariant(itemIdx, vIdx)"
+                                        class="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Add Variant Button -->
                         <button @click="addVariant(itemIdx)" class="mt-2 text-sm text-green-600 font-medium hover:text-green-800 flex items-center gap-1 px-1">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,13 +674,19 @@
                         <div v-else>
                             <div v-for="(item, idx) in validItems" :key="idx" class="mb-3">
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ item.product_name }}</p>
-                                <div v-for="(v, vi) in item.validVariants" :key="vi" class="flex justify-between py-1.5 border-b border-dashed border-gray-100 last:border-0 text-sm">
-                                    <div>
-                                        <span class="text-gray-800">{{ v.variant || 'Variant' }}</span>
-                                        <span class="text-gray-400 text-xs ml-1">x{{ toBengaliNumber(effectiveCases(v), null) }} {{ t('case') }}</span>
-                                        <span v-if="calcFreeBottles(v) > 0" class="text-green-500 text-xs block">+{{ calcFreeBottles(v) }} {{ t('free') }}</span>
+                                <div v-for="(v, vi) in item.validVariants" :key="vi" class="flex flex-col gap-2 py-3 border-b border-dashed border-gray-100 last:border-0 text-sm">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <span class="text-gray-800">{{ v.variant || 'Variant' }}</span>
+                                            <span class="text-gray-400 text-xs ml-1">x{{ toBengaliNumber(effectiveCases(v), null) }} {{ t('case') }}</span>
+                                            <span v-if="calcFreeBottles(v) > 0" class="text-green-500 text-xs block">+{{ calcFreeBottles(v) }} {{ t('free') }}</span>
+                                        </div>
+                                        <span class="font-semibold text-gray-800">৳{{ toBengaliNumber(calcVariantCost(v), 2) }}</span>
                                     </div>
-                                    <span class="font-semibold text-gray-800">৳{{ toBengaliNumber(calcVariantCost(v), 2) }}</span>
+                                    <div class="flex items-center justify-between text-gray-500 text-xs">
+                                        <span>{{ t('unitPrice') }}</span>
+                                        <span>৳{{ toBengaliNumber(calcUnitPrice(v), 2) }}</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1172,6 +1268,10 @@ const calcTotalBottles = (v: LiftVariant) => {
     const purchased = (v.number_of_cases || 0) * (v.bottles_per_case || 0) + (v.extra_bottles || 0);
     return purchased + calcFreeBottles(v);
 };
+const calcUnitPrice = (v: LiftVariant) => {
+    const totalBottles = calcTotalBottles(v);
+    return totalBottles > 0 ? calcVariantCost(v) / totalBottles : 0;
+};
 
 const validItems = computed(() =>
     liftItems.value
@@ -1393,6 +1493,7 @@ const translations: Record<string, Record<string, string>> = {
         totalBottles: "Total Bottles",
         freeBottles: "Free Bottles",
         totalCost: "Total Cost",
+        unitPrice: "Unit Price",
         remainingDeposit: "Remaining Deposit",
         afterLift: "After this lift",
         sufficient: "Sufficient",
@@ -1470,6 +1571,7 @@ const translations: Record<string, Record<string, string>> = {
         totalBottles: "মোট বোতল",
         freeBottles: "বিনামূল্যে বোতল",
         totalCost: "মোট খরচ",
+        unitPrice: "একক মূল্য",
         remainingDeposit: "বাকি আমানত",
         afterLift: "এই লিফটের পর",
         sufficient: "যথেষ্ট",
