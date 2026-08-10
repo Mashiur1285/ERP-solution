@@ -1,4 +1,3 @@
-```vue
 <template>
     <div
         class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
@@ -898,4 +897,3 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 </style>
-```

@@ -1,4 +1,3 @@
-```vue
 <template>
     <div
         class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8"
@@ -456,4 +455,3 @@ const submit = () => {
         0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 </style>
-```

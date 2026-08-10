@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
     >
         <!-- Toast Notification -->
         <div
@@ -63,10 +63,10 @@
 
         <!-- Title and Add Button -->
         <div
-            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
+            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-lg sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-blue-100 rounded-full flex items-center justify-center"
@@ -111,14 +111,14 @@
         </div>
 
         <!-- Summary Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-4 gap-2 sm:gap-4 mb-4">
             <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-blue-200"
+                class="bg-gradient-to-br from-blue-50 to-blue-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-blue-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-blue-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-blue-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -131,11 +131,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-blue-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-blue-700">
                             Total Suppliers
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-blue-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-blue-900">
                             {{ Object.keys(groupedDeposits).length }}
                         </p>
                     </div>
@@ -143,12 +143,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                class="bg-gradient-to-br from-green-50 to-green-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-green-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-green-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -161,11 +161,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-green-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-green-700">
                             Total Deposits
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-green-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-green-900">
                             ৳{{ formatCurrency(totalDepositAmount) }}
                         </p>
                     </div>
@@ -173,12 +173,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-sm border border-orange-200"
+                class="bg-gradient-to-br from-orange-50 to-orange-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-orange-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-orange-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-orange-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -191,11 +191,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-orange-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-orange-700">
                             Total Used
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-orange-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-orange-900">
                             ৳{{ formatCurrency(totalUsedAmount) }}
                         </p>
                     </div>
@@ -203,12 +203,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
+                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-indigo-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-indigo-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -221,11 +221,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-indigo-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-indigo-700">
                             Total Remaining
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-indigo-900">
                             ৳{{ formatCurrency(totalRemainingAmount) }}
                         </p>
                     </div>
@@ -244,12 +244,12 @@
         />
 
         <!-- Deposit History -->
-        <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
+        <div class="bg-white rounded-xl shadow-sm p-2 sm:p-3 lg:p-6">
             <h2
-                class="text-2xl font-semibold text-gray-800 mb-6 flex items-center"
+                class="text-base sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-6 flex items-center"
             >
                 <svg
-                    class="w-6 h-6 mr-2 text-gray-600"
+                    class="w-4 h-4 sm:w-6 sm:h-6 mr-1.5 sm:mr-2 text-gray-600 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -346,6 +346,18 @@
                                                         ? "s"
                                                         : ""
                                                 }}
+                                            </p>
+
+                                            <!-- Phones hide the deposit/used columns,
+                                                 so surface both values here. -->
+                                            <p class="md:hidden mt-1 text-[10px] text-gray-500 leading-tight">
+                                                <span class="sm:hidden">
+                                                    Deposit
+                                                    <span class="font-semibold text-gray-800">৳{{ formatCurrency(supplierData.totalDeposit) }}</span>
+                                                    ·
+                                                </span>
+                                                Used
+                                                <span class="font-semibold text-gray-800">৳{{ formatCurrency(supplierData.totalUsed) }}</span>
                                             </p>
                                         </div>
                                     </div>

@@ -1,4 +1,3 @@
-```vue
 <template>
     <div
         v-if="totalCost > 0"
@@ -386,4 +385,3 @@ defineProps<{
     font-family: "Kalpurush", "Noto Sans Bengali", sans-serif;
 }
 </style>
-```

@@ -1,7 +1,6 @@
-```vue
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Flash Message -->
@@ -28,10 +27,10 @@
 
         <!-- Title and Language Toggle -->
         <div
-            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
+            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-lg sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -326,27 +325,27 @@
                                 v-if="expandedGroups[group.key]"
                                 class="bg-gray-50 border-t border-b border-gray-100"
                             >
-                                <td :colspan="4" class="px-2 py-3">
+                                <td :colspan="4" class="px-1.5 py-2 sm:px-2 sm:py-3">
                                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-x-auto">
-                                        <table class="w-full min-w-[360px] text-xs">
+                                        <table class="w-full sm:min-w-[360px] text-[10px] sm:text-xs">
                                             <thead class="bg-indigo-50 text-indigo-700">
                                                 <tr>
-                                                    <th class="px-3 py-2 font-semibold text-left whitespace-nowrap">{{ getTranslation('createdAt') }}</th>
-                                                    <th class="px-3 py-2 font-semibold text-left">{{ getTranslation('description') }}</th>
-                                                    <th class="px-3 py-2 font-semibold text-right whitespace-nowrap">{{ getTranslation('amount') }}</th>
-                                                    <th class="px-3 py-2 font-semibold text-center w-10">{{ getTranslation('actions') }}</th>
+                                                    <th class="px-1.5 sm:px-3 py-1.5 sm:py-2 font-semibold text-left whitespace-nowrap">{{ getTranslation('createdAt') }}</th>
+                                                    <th class="px-1.5 sm:px-3 py-1.5 sm:py-2 font-semibold text-left">{{ getTranslation('description') }}</th>
+                                                    <th class="px-1.5 sm:px-3 py-1.5 sm:py-2 font-semibold text-right whitespace-nowrap">{{ getTranslation('amount') }}</th>
+                                                    <th class="px-1.5 sm:px-3 py-1.5 sm:py-2 font-semibold text-center w-10">{{ getTranslation('actions') }}</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                                 <tr v-for="item in group.items" :key="item.id" class="hover:bg-indigo-50/30">
-                                                    <td class="px-3 py-2 whitespace-nowrap">{{ new Date(item.created_at).toLocaleDateString() }}</td>
-                                                    <td class="px-3 py-2">{{ item.description || '-' }}</td>
-                                                    <td class="px-3 py-2 font-semibold text-right whitespace-nowrap text-indigo-600">{{ toBengaliNumber(item.amount, 2) }} {{ getTranslation('currency') }}</td>
-                                                    <td class="px-3 py-2 text-center">
+                                                    <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 whitespace-nowrap">{{ new Date(item.created_at).toLocaleDateString() }}</td>
+                                                    <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 break-words">{{ item.description || '-' }}</td>
+                                                    <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 font-semibold text-right whitespace-nowrap text-indigo-600">{{ toBengaliNumber(item.amount, 2) }} {{ getTranslation('currency') }}</td>
+                                                    <td class="px-1 sm:px-3 py-1.5 sm:py-2 text-center">
                                                         <div class="flex items-center justify-center gap-1">
                                                             <button
                                                                 @click.stop="editExpense(item)"
-                                                                class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+                                                                class="p-1 sm:p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-all"
                                                                 :title="getTranslation('edit')"
                                                             >
                                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,7 +355,7 @@
                                                             </button>
                                                             <button
                                                                 @click.stop="deleteExpense(item.id)"
-                                                                class="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                                                class="p-1 sm:p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-all"
                                                                 title="Delete"
                                                             >
                                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -952,4 +951,3 @@ button:hover:not(:disabled) {
     transition-duration: 300ms;
 }
 </style>
-```

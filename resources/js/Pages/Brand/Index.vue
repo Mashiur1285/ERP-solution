@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Flash Message -->
@@ -27,10 +27,10 @@
 
         <!-- Title and Language Toggle -->
         <div
-            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
+            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-lg sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -133,14 +133,14 @@
         </div>
 
         <!-- Summary Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
             <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
+                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-indigo-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-indigo-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -153,11 +153,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-indigo-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalBrands") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-indigo-900">
                             {{ toBengaliNumber(totalBrands) }}
                         </p>
                     </div>
@@ -165,12 +165,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                class="bg-gradient-to-br from-green-50 to-green-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-green-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-green-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -183,11 +183,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-green-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-green-700">
                             {{ getTranslation("withDescription") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-green-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-green-900">
                             {{ toBengaliNumber(brandsWithDescription) }}
                         </p>
                     </div>
@@ -195,12 +195,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-blue-200"
+                class="bg-gradient-to-br from-blue-50 to-blue-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-blue-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-blue-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-blue-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -213,11 +213,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-blue-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-blue-700">
                             {{ getTranslation("recentlyAdded") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-blue-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-blue-900">
                             {{ toBengaliNumber(recentBrands) }}
                         </p>
                     </div>
@@ -225,12 +225,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-purple-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-purple-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-purple-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -243,11 +243,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-purple-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-purple-700">
                             {{ getTranslation("activeBrands") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-purple-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-purple-900">
                             {{ toBengaliNumber(totalBrands) }}
                         </p>
                     </div>
@@ -265,7 +265,7 @@
         />
 
         <!-- Brands Table -->
-        <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
+        <div class="bg-white rounded-xl shadow-sm p-2 sm:p-3 lg:p-6">
             <div class="w-full">
                 <table class="w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -304,10 +304,10 @@
                                 <td
                                     class="px-2 lg:px-3 py-3 text-xs lg:text-sm font-medium text-gray-900 w-1/4"
                                 >
-                                    <div class="flex items-center">
+                                    <div class="flex items-start">
                                         <svg
                                             :class="[
-                                                'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
+                                                'w-3 h-3 lg:w-4 lg:h-4 mt-0.5 mr-1 lg:mr-2 transition-transform flex-shrink-0',
                                                 expandedBrands[index]
                                                     ? 'rotate-90'
                                                     : '',
@@ -323,9 +323,7 @@
                                                 d="M9 5l7 7-7 7"
                                             />
                                         </svg>
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
+                                        <div class="flex items-start space-x-2 min-w-0 flex-1">
                                             <div
                                                 class="p-1 bg-indigo-100 rounded-lg flex-shrink-0"
                                             >
@@ -343,12 +341,18 @@
                                                     />
                                                 </svg>
                                             </div>
-                                            <div class="min-w-0">
+                                            <div class="min-w-0 flex-1">
                                                 <p
                                                     class="font-semibold text-gray-900 truncate"
                                                     :title="brand.brand_name"
                                                 >
                                                     {{ brand.brand_name }}
+                                                </p>
+                                                <!-- Description / created date are hidden
+                                                     columns below md, so surface them here. -->
+                                                <p class="md:hidden mt-0.5 text-[10px] text-gray-500 leading-tight break-words">
+                                                    <span class="sm:hidden">{{ brand.description || "-" }} · </span>
+                                                    {{ new Date(brand.created_at).toLocaleDateString() }}
                                                 </p>
                                             </div>
                                         </div>

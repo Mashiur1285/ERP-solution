@@ -1,7 +1,6 @@
-```vue
 <template>
     <div
-        class="p-4 bg-gray-100 min-h-screen"
+        class="p-3 sm:p-4 bg-gray-100 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Toast Notification -->
@@ -29,7 +28,7 @@
             v-if="showSupplierModal"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 p-4"
         >
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-semibold text-gray-800">
                         {{ t("addSupplier") }}
@@ -143,7 +142,7 @@
             <!-- LEFT SIDE: Form Area -->
             <div class="flex-1 min-w-0 space-y-4">
                 <!-- Product Information Section -->
-                <div class="bg-white rounded-xl shadow-sm p-5">
+                <div class="bg-white rounded-xl shadow-sm p-4 sm:p-5">
                     <div class="flex items-center mb-4">
                         <div class="p-2 mr-3 bg-indigo-100 rounded-lg">
                             <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +167,7 @@
                 </div>
 
                 <!-- Variants Section -->
-                <div class="bg-white rounded-xl shadow-sm p-5">
+                <div class="bg-white rounded-xl shadow-sm p-4 sm:p-5">
                     <VariantsSection
                         :product-form="productForm"
                         :is-submitted="isSubmitted"
@@ -222,7 +221,7 @@
                         <!-- Variant Line Items -->
                         <div v-else>
                             <!-- Table Header -->
-                            <div class="grid grid-cols-12 gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wider pb-2 border-b border-gray-200 mb-2">
+                            <div class="grid grid-cols-12 gap-1 text-[10px] font-semibold text-gray-500 uppercase tracking-tight leading-tight pb-2 border-b border-gray-200 mb-2">
                                 <div class="col-span-4">{{ t("variant") }}</div>
                                 <div class="col-span-2 text-center">{{ t("numberOfCases") }}</div>
                                 <div class="col-span-3 text-center">{{ t("bottlesPerCase") }}</div>
@@ -235,7 +234,7 @@
                                 :key="index"
                                 class="py-2 border-b border-dashed border-gray-100 last:border-0"
                             >
-                                <div v-if="variant.number_of_cases && variant.case_buying_price" class="grid grid-cols-12 gap-1 text-sm">
+                                <div v-if="variant.number_of_cases && variant.case_buying_price" class="grid grid-cols-12 gap-1 text-xs sm:text-sm">
                                     <div class="col-span-4">
                                         <p class="font-medium text-gray-800">{{ variant.variant || t("variant") + ' ' + (index + 1) }}</p>
                                         <p class="text-xs text-gray-400">৳{{ currentLanguage === 'bn' ? toBengaliNumber(variant.case_buying_price) : variant.case_buying_price }}/{{ t("case") }}</p>
@@ -1140,4 +1139,3 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 </style>
-```

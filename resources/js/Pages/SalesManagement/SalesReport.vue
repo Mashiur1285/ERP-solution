@@ -163,14 +163,14 @@
         </section>
 
         <!-- Total Metrics -->
-        <div v-if="viewMode !== 'summary'" class="print:hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div v-if="viewMode !== 'summary'" class="print:hidden grid grid-cols-4 gap-2 sm:gap-4 mb-4">
             <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200 hover:shadow-md transition-shadow"
+                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200 hover:shadow-md transition-shadow"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-indigo-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-indigo-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -183,11 +183,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-indigo-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-indigo-700">
                             {{ getTranslation("totalSales") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-indigo-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-indigo-900">
                             {{ toBengaliNumber(totalSales) }}
                         </p>
                     </div>
@@ -195,12 +195,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200 hover:shadow-md transition-shadow"
+                class="bg-gradient-to-br from-green-50 to-green-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-green-200 hover:shadow-md transition-shadow"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-green-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -213,11 +213,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-green-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-green-700">
                             {{ getTranslation("totalAmount") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-green-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-green-900">
                             ৳{{ toBengaliNumber(formatCurrency(totalAmount), 2) }}
                         </p>
                     </div>
@@ -225,12 +225,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200 hover:shadow-md transition-shadow"
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-purple-200 hover:shadow-md transition-shadow"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-purple-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-purple-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -243,12 +243,12 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-purple-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-purple-700">
                             {{ getTranslation("totalProfit") }}
                         </p>
                         <p
-                            class="text-lg lg:text-lg font-bold"
+                            class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all"
                             :class="
                                 totalProfit >= 0
                                     ? 'text-purple-900'
@@ -262,12 +262,12 @@
             </div>
 
             <div
-                class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-sm border border-orange-200 hover:shadow-md transition-shadow"
+                class="bg-gradient-to-br from-orange-50 to-orange-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-orange-200 hover:shadow-md transition-shadow"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-orange-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-orange-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -280,11 +280,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-orange-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-orange-700">
                             {{ getTranslation("totalItems") }}
                         </p>
-                        <p class="text-lg lg:text-lg font-bold text-orange-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-orange-900">
                             {{ toBengaliNumber(totalItemsSold) }}
                         </p>
                     </div>
@@ -295,11 +295,17 @@
         <!-- Filters -->
         <div
             v-if="viewMode !== 'summary'"
-            class="print:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6"
+            class="print:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 mb-4"
         >
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
-                    <div class="p-1.5 bg-indigo-100 rounded-lg mr-2">
+            <div class="flex items-center justify-between gap-2 sm:mb-4">
+                <!-- Tapping the title opens/closes the panel on phones; from sm up
+                     the panel is always open so the button is inert. -->
+                <button
+                    type="button"
+                    class="flex items-center min-w-0 text-left sm:pointer-events-none"
+                    @click="showFilters = !showFilters"
+                >
+                    <div class="p-1.5 bg-indigo-100 rounded-lg mr-2 flex-shrink-0">
                         <svg
                             class="w-4 h-4 text-indigo-600"
                             fill="none"
@@ -314,24 +320,39 @@
                             />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-semibold text-gray-800">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-800">
                         {{ getTranslation("filters") }}
                     </h2>
-                </div>
-                <div class="flex gap-2">
+                    <span
+                        v-if="activeFilterCount > 0"
+                        class="ml-2 px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-semibold leading-none"
+                    >
+                        {{ toBengaliNumber(activeFilterCount) }}
+                    </span>
+                    <svg
+                        class="w-4 h-4 ml-2 text-gray-400 transition-transform flex-shrink-0 sm:hidden"
+                        :class="showFilters ? 'rotate-180' : ''"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div :class="[showFilters ? 'flex' : 'hidden sm:flex', 'gap-2 flex-shrink-0']">
                     <button
                         @click="clearFilters"
-                        class="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+                        class="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
                     >
                         {{ getTranslation("clearFilters") }}
                     </button>
                     <button
                         @click="applyFilters"
-                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
+                        class="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
                     >
                         <span class="flex items-center">
                             <svg
-                                class="w-4 h-4 mr-1.5"
+                                class="w-4 h-4 mr-1.5 hidden sm:block"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -350,18 +371,18 @@
             </div>
 
             <!-- Filters -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div :class="[showFilters ? 'grid' : 'hidden sm:grid', 'grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-0']">
                 <div>
                     <label
                         for="shop_id"
-                        class="block text-xs font-medium text-gray-600 mb-1"
+                        class="block text-[10px] sm:text-xs font-medium text-gray-600 mb-0.5 sm:mb-1 truncate"
                     >
                         {{ getTranslation("shop") }}
                     </label>
                     <select
                         v-model="filters.shop_id"
                         id="shop_id"
-                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     >
                         <option value="">
                             {{ getTranslation("allShops") }}
@@ -379,14 +400,14 @@
                 <div>
                     <label
                         for="product_id"
-                        class="block text-xs font-medium text-gray-600 mb-1"
+                        class="block text-[10px] sm:text-xs font-medium text-gray-600 mb-0.5 sm:mb-1 truncate"
                     >
                         {{ getTranslation("product") }}
                     </label>
                     <select
                         v-model="filters.product_id"
                         id="product_id"
-                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     >
                         <option value="">
                             {{ getTranslation("allProducts") }}
@@ -404,14 +425,14 @@
                 <div>
                     <label
                         for="supplier_id"
-                        class="block text-xs font-medium text-gray-600 mb-1"
+                        class="block text-[10px] sm:text-xs font-medium text-gray-600 mb-0.5 sm:mb-1 truncate"
                     >
                         {{ getTranslation("supplier") }}
                     </label>
                     <select
                         v-model="filters.supplier_id"
                         id="supplier_id"
-                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     >
                         <option value="">
                             {{ getTranslation("allSuppliers") }}
@@ -429,14 +450,14 @@
         </div>
 
         <!-- Search & Filter Fields -->
-        <div v-if="viewMode !== 'summary'" class="print:hidden flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
-            <div class="flex items-center gap-3 flex-wrap">
+        <div v-if="viewMode !== 'summary'" class="print:hidden flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-4">
+            <div class="flex items-center gap-2 flex-nowrap">
                 <!-- Status Tabs -->
-                <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
+                <div class="flex items-center gap-1 sm:gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200 flex-shrink-0">
                     <button
                         @click="activeTab = 'completed'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                            'px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors',
                             activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
                         ]"
                     >
@@ -445,7 +466,7 @@
                     <button
                         @click="activeTab = 'draft'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                            'px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors',
                             activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
                         ]"
                     >
@@ -454,52 +475,58 @@
                 </div>
 
                 <!-- View Mode Toggle -->
-                <div class="flex items-center gap-1 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
+                <div class="flex items-center gap-1 rounded-xl bg-white p-1 shadow-sm border border-gray-200 flex-shrink-0">
                     <button
                         @click="viewMode = 'invoice'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5',
+                            'px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5',
                             viewMode === 'invoice' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
                         ]"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        {{ getTranslation("invoiceView") }}
+                        <span class="sm:hidden">{{ getTranslation("invoiceViewShort") }}</span>
+                        <span class="hidden sm:inline">{{ getTranslation("invoiceView") }}</span>
                     </button>
                     <button
                         @click="viewMode = 'product'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5',
+                            'px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5',
                             viewMode === 'product' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-100',
                         ]"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
-                        {{ getTranslation("productView") }}
+                        <span class="sm:hidden">{{ getTranslation("productViewShort") }}</span>
+                        <span class="hidden sm:inline">{{ getTranslation("productView") }}</span>
                     </button>
                 </div>
             </div>
-            <DateRangePicker
-                v-model:startDate="filters.start_date"
-                v-model:endDate="filters.end_date"
-                :language="currentLanguage"
-                @change="applyFilters"
-                class="w-full sm:w-auto"
-            />
-            <div class="relative w-full sm:w-80">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    :placeholder="getTranslation('searchSales')"
-                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+            <!-- Date range + search share a row on phones. `sm:contents` dissolves
+                 this wrapper from sm up, restoring the original 3-way split. -->
+            <div class="flex flex-row items-center gap-2 sm:contents">
+                <DateRangePicker
+                    v-model:startDate="filters.start_date"
+                    v-model:endDate="filters.end_date"
+                    :language="currentLanguage"
+                    @change="applyFilters"
+                    class="flex-1 min-w-0 sm:flex-none sm:w-auto"
                 />
+                <div class="relative flex-1 min-w-0 sm:flex-none sm:w-80">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-2.5 sm:pl-3 pointer-events-none">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        :placeholder="getTranslation('searchSales')"
+                        class="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-xs sm:text-sm font-medium hover:border-indigo-300 text-ellipsis"
+                    />
+                </div>
             </div>
         </div>
 
@@ -533,53 +560,59 @@
             </p>
         </div>
 
-        <div v-else-if="viewMode === 'summary'" class="print:hidden space-y-6">
-            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-                <DateRangePicker
-                    v-model:startDate="filters.start_date"
-                    v-model:endDate="filters.end_date"
-                    :language="currentLanguage"
-                    @change="applyFilters"
-                    class="w-full sm:w-auto"
-                />
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
+        <div v-else-if="viewMode === 'summary'" class="print:hidden space-y-3 sm:space-y-6">
+            <div class="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-2.5 sm:p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <!-- Row 1 on phones: date range + view toggle -->
+                <div class="flex items-center gap-2 min-w-0">
+                    <DateRangePicker
+                        v-model:startDate="filters.start_date"
+                        v-model:endDate="filters.end_date"
+                        :language="currentLanguage"
+                        @change="applyFilters"
+                        class="flex-1 min-w-0 sm:flex-none sm:w-auto"
+                    />
+                    <div class="flex items-center gap-1 rounded-lg bg-gray-100 p-1 flex-shrink-0">
                         <button
                             @click="summaryDisplayMode = 'invoice'"
                             :class="[
-                                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                'rounded-md px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition-colors',
                                 summaryDisplayMode === 'invoice' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:bg-white/70',
                             ]"
                         >
-                            {{ getTranslation("invoiceView") }}
+                            <span class="sm:hidden">{{ getTranslation("invoiceViewShort") }}</span>
+                            <span class="hidden sm:inline">{{ getTranslation("invoiceView") }}</span>
                         </button>
                         <button
                             @click="summaryDisplayMode = 'product'"
                             :class="[
-                                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                'rounded-md px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition-colors',
                                 summaryDisplayMode === 'product' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-600 hover:bg-white/70',
                             ]"
                         >
-                            {{ getTranslation("productView") }}
+                            <span class="sm:hidden">{{ getTranslation("productViewShort") }}</span>
+                            <span class="hidden sm:inline">{{ getTranslation("productView") }}</span>
                         </button>
                     </div>
+                </div>
+                <!-- Row 2 on phones: actions -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
                     <button
                         @click="clearFilters"
-                        class="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                        class="flex-1 sm:flex-none px-2 py-1.5 sm:px-3 sm:py-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap hover:bg-gray-200 transition-colors"
                     >
                         {{ getTranslation("clearFilters") }}
                     </button>
                     <button
                         @click="applyFilters"
-                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                        class="flex-1 sm:flex-none px-2 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap hover:bg-indigo-700 transition-colors"
                     >
                         {{ getTranslation("applyFilters") }}
                     </button>
                     <button
                         @click="printReport"
-                        class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg bg-slate-900 px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white whitespace-nowrap hover:bg-slate-800 transition-colors"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1m-10 0h10v4H10v-4z" />
                         </svg>
                         {{ getTranslation("printPdf") }}
@@ -588,17 +621,17 @@
             </div>
 
             <section class="sales-summary-sheet">
-            <div class="mb-5 flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ getTranslation("salesSummary") }}</p>
-                    <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ getTranslation("salesPerformanceSummary") }}</h2>
-                    <p class="mt-2 text-sm text-slate-500">
+            <div class="mb-3 sm:mb-5 flex flex-col gap-1 sm:gap-3 border-b border-gray-200 pb-2.5 sm:pb-4 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0">
+                    <p class="text-[9px] sm:text-xs font-semibold uppercase tracking-[0.12em] sm:tracking-[0.18em] text-slate-500">{{ getTranslation("salesSummary") }}</p>
+                    <h2 class="mt-0.5 sm:mt-1 text-base sm:text-2xl font-bold text-slate-900">{{ getTranslation("salesPerformanceSummary") }}</h2>
+                    <p class="mt-0.5 sm:mt-2 text-[11px] sm:text-sm text-slate-500">
                         {{ getTranslation("reportPeriod") }}:
                         {{ formatDate(filters.start_date || "") }}
                         <span v-if="filters.end_date">- {{ formatDate(filters.end_date || "") }}</span>
                     </p>
                 </div>
-                <div class="text-sm text-slate-500">
+                <div class="text-[11px] sm:text-sm text-slate-500 flex-shrink-0">
                     {{ getTranslation("generatedOn") }}: {{ printedAtLabel }}
                 </div>
             </div>
@@ -626,7 +659,8 @@
                 </div>
             </div>
 
-            <div v-if="summaryDisplayMode === 'invoice'" class="overflow-x-auto">
+            <template v-if="summaryDisplayMode === 'invoice'">
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full min-w-[920px] divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
@@ -671,7 +705,82 @@
                     </tfoot>
                 </table>
             </div>
-            <div v-else class="overflow-x-auto">
+
+            <!-- Invoice summary cards (mobile) -->
+            <div class="lg:hidden divide-y divide-slate-100">
+                <div
+                    v-for="(sale, index) in filteredSales"
+                    :key="`summary-m-${sale.id}`"
+                    class="px-2.5 py-2"
+                >
+                    <div class="flex items-start gap-2">
+                        <span class="text-[10px] font-medium text-slate-400 mt-0.5 flex-shrink-0">{{ toBengaliNumber(index + 1) }}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-semibold text-slate-800 break-words">{{ sale.shop_name }}</p>
+                            <p class="text-[10px] text-slate-500">#{{ sale.invoice_number }}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-xs font-bold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</p>
+                            <p class="text-[10px] font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                                ৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-1.5 text-[10px]">
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("supplier") }}</span>
+                            <span class="font-medium text-slate-700 break-words">{{ sale.supplier_name || "-" }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("saleDate") }}</span>
+                            <span class="font-medium text-slate-700">{{ formatDate(sale.sale_date) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalCost") }}</span>
+                            <span class="font-medium text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalCases") }}</span>
+                            <span class="font-medium text-slate-700">{{ toBengaliNumber(sale.items?.reduce((s, item) => s + (item.cases_sold || 0), 0) || 0) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("items") }}</span>
+                            <span class="font-medium text-slate-700">{{ toBengaliNumber(sale.items?.reduce((s, item) => s + (item.total_bottles_sold || item.quantity || 0), 0) || 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totals -->
+                <div class="px-2.5 py-2 bg-slate-50">
+                    <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">{{ getTranslation("total") }}</p>
+                    <div class="grid grid-cols-3 gap-x-2 gap-y-1 text-[10px]">
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalRevenue") }}</span>
+                            <span class="font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalCost") }}</span>
+                            <span class="font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalProfit") }}</span>
+                            <span class="font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalCases") }}</span>
+                            <span class="font-bold text-slate-900">{{ toBengaliNumber(printTotals.cases) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("items") }}</span>
+                            <span class="font-bold text-slate-900">{{ toBengaliNumber(printTotals.items) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </template>
+
+            <template v-else>
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full min-w-[920px] divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
@@ -706,6 +815,68 @@
                     </tfoot>
                 </table>
             </div>
+
+            <!-- Product summary cards (mobile) -->
+            <div class="lg:hidden divide-y divide-slate-100">
+                <div
+                    v-for="(row, index) in productSummary"
+                    :key="`summary-product-m-${row.product_id}-${row.variant}`"
+                    class="px-2.5 py-2"
+                >
+                    <div class="flex items-start gap-2">
+                        <span class="text-[10px] font-medium text-slate-400 mt-0.5 flex-shrink-0">{{ toBengaliNumber(index + 1) }}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-semibold text-slate-800 break-words">{{ row.product_name }}</p>
+                            <span
+                                v-if="row.variant"
+                                class="inline-flex items-center mt-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs font-medium"
+                            >
+                                {{ row.variant }}
+                            </span>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-xs font-bold text-slate-800">৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</p>
+                            <p class="text-[10px] font-semibold" :class="row.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                                ৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-1.5 text-[10px]">
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalCases") }}</span>
+                            <span class="font-medium text-slate-700">{{ toBengaliNumber(row.total_cases) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalQty") }}</span>
+                            <span class="font-medium text-slate-700">{{ toBengaliNumber(row.total_qty) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totals -->
+                <div class="px-2.5 py-2 bg-slate-50">
+                    <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">{{ getTranslation("total") }}</p>
+                    <div class="grid grid-cols-3 gap-x-2 gap-y-1 text-[10px]">
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalCases") }}</span>
+                            <span class="font-bold text-slate-900">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalQty") }}</span>
+                            <span class="font-bold text-slate-900">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalRevenue") }}</span>
+                            <span class="font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-slate-400">{{ getTranslation("totalProfit") }}</span>
+                            <span class="font-bold" :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </template>
             </section>
         </div>
 
@@ -726,12 +897,12 @@
                                 {{ getTranslation("supplier") }}
                             </th>
                             <th
-                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
                                 {{ getTranslation("totalAmount") }}
                             </th>
                             <th
-                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
                                 {{ getTranslation("totalProfit") }}
                             </th>
@@ -741,7 +912,7 @@
                                 {{ getTranslation("saleDate") }}
                             </th>
                             <th
-                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
                                 {{ getTranslation("status") }}
                             </th>
@@ -759,7 +930,7 @@
                                 @click="toggleItems(sale.id)"
                             >
                                 <td
-                                    class="px-3 py-4 text-sm font-medium text-gray-900"
+                                    class="px-2 py-2.5 md:px-3 md:py-4 text-sm font-medium text-gray-900"
                                 >
                                     <div class="flex items-start">
                                         <svg
@@ -780,9 +951,9 @@
                                                 d="M9 5l7 7-7 7"
                                             />
                                         </svg>
-                                        <div class="flex flex-col">
+                                        <div class="flex flex-col min-w-0">
                                             <span
-                                                class="font-semibold text-gray-800 break-all"
+                                                class="font-semibold text-gray-800 break-words"
                                                 :title="sale.shop_name"
                                                 >{{ sale.shop_name }}</span
                                             >
@@ -791,6 +962,35 @@
                                                 :title="sale.invoice_number"
                                                 >#{{ sale.invoice_number }}</span
                                             >
+
+                                            <!-- Phones hide the amount/profit/date/status
+                                                 columns, so surface them here instead. -->
+                                            <div class="md:hidden mt-1 space-y-0.5">
+                                                <div class="flex items-baseline gap-2 flex-wrap">
+                                                    <span class="text-sm font-bold text-gray-800">
+                                                        ৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}
+                                                    </span>
+                                                    <span
+                                                        class="text-xs font-semibold"
+                                                        :class="Number(sale.total_profit) >= 0 ? 'text-green-600' : 'text-red-600'"
+                                                    >
+                                                        ৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="text-xs text-gray-500 font-normal">{{ formatDate(sale.sale_date) }}</span>
+                                                    <span
+                                                        :class="{
+                                                            'bg-yellow-100 text-yellow-800': sale.status === 'pending',
+                                                            'bg-blue-100 text-blue-800': sale.status === 'in_progress',
+                                                            'bg-green-100 text-green-800': sale.status === 'completed',
+                                                        }"
+                                                        class="px-2 py-0.5 rounded-full text-[10px] font-medium capitalize"
+                                                    >
+                                                        {{ getTranslation(sale.status) }}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -803,7 +1003,7 @@
                                         >{{ sale.supplier_name }}</span
                                     >
                                 </td>
-                                <td class="px-3 py-4 text-sm text-gray-500">
+                                <td class="px-3 py-4 text-sm text-gray-500 hidden md:table-cell">
                                     <div class="text-right font-medium">
                                         ৳{{
                                             toBengaliNumber(
@@ -816,7 +1016,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="px-3 py-4 text-sm"
+                                    class="px-3 py-4 text-sm hidden md:table-cell"
                                     :class="
                                         Number(sale.total_profit) >= 0
                                             ? 'text-green-600'
@@ -840,7 +1040,7 @@
                                     {{ formatDate(sale.sale_date) }}
                                 </td>
                                 <td
-                                    class="px-3 py-4 text-sm hidden sm:table-cell"
+                                    class="px-3 py-4 text-sm hidden md:table-cell"
                                 >
                                     <span
                                         :class="{
@@ -856,9 +1056,9 @@
                                         {{ getTranslation(sale.status) }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-4 text-sm">
+                                <td class="px-2 py-2.5 md:px-3 md:py-4 text-sm align-top">
                                     <div
-                                        class="flex flex-col sm:flex-row gap-1"
+                                        class="flex flex-wrap gap-1 justify-end md:justify-start"
                                     >
                                         <button
                                             @click.stop="toggleItems(sale.id)"
@@ -910,168 +1110,35 @@
                                 v-if="expandedSale === sale.id"
                                 class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                <td :colspan="8" class="px-6 py-6">
-                                    <div class="ml-6">
-                                        <!-- Mobile Sale Details -->
-                                        <div
-                                            class="lg:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border-l-4 border-indigo-500"
-                                        >
-                                            <h4
-                                                class="font-semibold text-gray-800 mb-3 flex items-center"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                                {{
-                                                    getTranslation(
-                                                        "saleDetails"
-                                                    )
-                                                }}
-                                            </h4>
-                                            <div
-                                                class="grid grid-cols-2 gap-3 text-sm"
-                                            >
-                                                <div class="space-y-2">
-                                                    <div class="flex flex-col">
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "shop"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            class="text-gray-800 font-medium"
-                                                            >{{
-                                                                sale.shop_name
-                                                            }}</span
-                                                        >
-                                                    </div>
-                                                    <div
-                                                        class="xl:hidden flex flex-col"
-                                                    >
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "supplier"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            class="text-gray-800 font-medium"
-                                                            >{{
-                                                                sale.supplier_name
-                                                            }}</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div class="space-y-2">
-                                                    <div
-                                                        class="md:hidden flex flex-col"
-                                                    >
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "saleDate"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            class="text-gray-800 font-medium"
-                                                            >{{
-                                                                formatDate(
-                                                                    sale.sale_date
-                                                                )
-                                                            }}</span
-                                                        >
-                                                    </div>
-                                                    <div
-                                                        class="sm:hidden flex flex-col"
-                                                    >
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "status"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            :class="{
-                                                                'bg-yellow-100 text-yellow-800':
-                                                                    sale.status ===
-                                                                    'pending',
-                                                                'bg-blue-100 text-blue-800':
-                                                                    sale.status ===
-                                                                    'in_progress',
-                                                                'bg-green-100 text-green-800':
-                                                                    sale.status ===
-                                                                    'completed',
-                                                            }"
-                                                            class="px-2 py-1 rounded-full text-xs font-medium capitalize inline-block w-fit"
-                                                        >
-                                                            {{
-                                                                getTranslation(
-                                                                    sale.status
-                                                                )
-                                                            }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <td :colspan="7" class="px-2 py-3 md:px-6 md:py-6">
+                                    <div class="md:ml-6">
+                                        <!-- Supplier is the one column hidden until xl;
+                                             everything else already shows in the row. -->
+                                        <p class="xl:hidden mb-3 text-xs text-gray-500">
+                                            {{ getTranslation("supplier") }}:
+                                            <span class="font-semibold text-gray-800 break-words">{{ sale.supplier_name || "-" }}</span>
+                                        </p>
 
                                         <!-- Items Header -->
-                                        <div
-                                            class="mb-4 flex items-center justify-between"
-                                        >
-                                            <h4
-                                                class="text-lg font-semibold text-gray-800 flex items-center"
+                                        <h4 class="mb-2 flex items-center text-sm font-semibold text-gray-800">
+                                            <svg
+                                                class="w-4 h-4 mr-1.5 text-indigo-600 flex-shrink-0"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
                                             >
-                                                <svg
-                                                    class="w-5 h-5 mr-2 text-indigo-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                                                    />
-                                                </svg>
-                                                {{
-                                                    getTranslation("orderItems")
-                                                }}
-                                                <span
-                                                    class="ml-2 px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium"
-                                                >
-                                                    {{
-                                                        toBengaliNumber(
-                                                            sale.items
-                                                                ?.length || 0
-                                                        )
-                                                    }}
-                                                    {{
-                                                        getTranslation("items")
-                                                    }}
-                                                </span>
-                                            </h4>
-                                        </div>
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                                />
+                                            </svg>
+                                            {{ getTranslation("orderItems") }}
+                                            <span class="ml-1.5 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-medium">
+                                                {{ toBengaliNumber(sale.items?.length || 0) }}
+                                            </span>
+                                        </h4>
 
                                         <!-- Items List -->
                                         <div
@@ -1081,179 +1148,57 @@
                                             "
                                         >
                                             <!-- Mobile Cards -->
-                                            <div class="lg:hidden space-y-3">
+                                            <div class="lg:hidden space-y-1.5">
                                                 <div
-                                                    v-for="(
-                                                        item, itemIndex
-                                                    ) in sale.items"
+                                                    v-for="(item, itemIndex) in sale.items"
                                                     :key="`${item.product_id}-${item.variant}-${itemIndex}`"
-                                                    class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                                                    class="bg-white rounded-lg px-2.5 py-2 shadow-sm border border-gray-200"
                                                 >
-                                                    <div
-                                                        class="flex justify-between items-start mb-3"
-                                                    >
-                                                        <div
-                                                            class="flex-1 min-w-0"
-                                                        >
+                                                    <!-- product + variant + bottles -->
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <div class="flex items-baseline gap-1.5 min-w-0">
                                                             <h5
-                                                                class="font-semibold text-gray-900 truncate"
-                                                                :title="
-                                                                    item.product_name
-                                                                "
+                                                                class="text-xs font-semibold text-gray-900 truncate"
+                                                                :title="item.product_name"
                                                             >
-                                                                {{
-                                                                    item.product_name
-                                                                }}
+                                                                {{ item.product_name }}
                                                             </h5>
-                                                            <p
-                                                                class="text-sm text-gray-600 mt-1"
+                                                            <span
+                                                                v-if="item.variant"
+                                                                class="flex-shrink-0 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-medium"
                                                             >
-                                                                {{
-                                                                    item.variant
-                                                                }}
-                                                            </p>
+                                                                {{ item.variant }}
+                                                            </span>
                                                         </div>
-                                                        <div
-                                                            class="ml-3 text-right"
-                                                        >
-                                                            <div
-                                                                class="flex items-center justify-end mb-1"
-                                                            >
-                                                                <svg
-                                                                    class="w-4 h-4 mr-1 text-gray-400"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                                                    />
-                                                                </svg>
-                                                                <span
-                                                                    class="text-sm font-medium text-gray-700"
-                                                                >
-                                                                    {{
-                                                                        toBengaliNumber(
-                                                                            item.total_bottles_sold ||
-                                                                                item.quantity ||
-                                                                                0
-                                                                        )
-                                                                    }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
+                                                        <span class="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-gray-600">
+                                                            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                            </svg>
+                                                            {{ toBengaliNumber(item.total_bottles_sold || item.quantity || 0) }}
+                                                        </span>
                                                     </div>
-                                                    <div
-                                                        class="flex justify-between items-center pt-3 border-t border-gray-100"
-                                                    >
-                                                        <div
-                                                            class="text-center"
-                                                        >
-                                                            <p
-                                                                class="text-xs text-gray-500 font-medium"
-                                                            >
-                                                                {{
-                                                                    getTranslation(
-                                                                        "totalPrice"
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                            <p
-                                                                class="text-sm font-bold text-gray-900"
-                                                            >
-                                                                ৳{{
-                                                                    toBengaliNumber(
-                                                                        formatCurrency(
-                                                                            item.total_price
-                                                                        )
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                        </div>
-                                                        <div
-                                                            class="text-center"
-                                                        >
-                                                            <p
-                                                                class="text-xs text-gray-500 font-medium"
-                                                            >
-                                                                {{
-                                                                    getTranslation(
-                                                                        "profit"
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                            <p
-                                                                class="text-sm font-bold"
-                                                                :class="
-                                                                    parseFloat(
-                                                                        item.profit.toString()
-                                                                    ) >= 0
-                                                                        ? 'text-green-600'
-                                                                        : 'text-red-600'
-                                                                "
-                                                            >
-                                                                ৳{{
-                                                                    toBengaliNumber(
-                                                                        formatCurrency(
-                                                                            item.profit
-                                                                        )
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                        </div>
-                                                        <div
-                                                            v-if="
-                                                                item.cases_sold
-                                                            "
-                                                            class="text-center"
-                                                        >
-                                                            <p
-                                                                class="text-xs text-gray-500 font-medium"
-                                                            >
-                                                                {{
-                                                                    getTranslation(
-                                                                        "cases"
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                            <p
-                                                                class="text-sm font-bold text-blue-600"
-                                                            >
-                                                                {{
-                                                                    toBengaliNumber(
-                                                                        item.cases_sold
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                        </div>
-                                                        <div
-                                                            v-if="
-                                                                item.extra_bottles
-                                                            "
-                                                            class="text-center"
-                                                        >
-                                                            <p
-                                                                class="text-xs text-gray-500 font-medium"
-                                                            >
-                                                                {{
-                                                                    getTranslation(
-                                                                        "extraBottles"
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                            <p
-                                                                class="text-sm font-bold text-blue-600"
-                                                            >
-                                                                {{
-                                                                    toBengaliNumber(
-                                                                        item.extra_bottles
-                                                                    )
-                                                                }}
-                                                            </p>
-                                                        </div>
+
+                                                    <!-- figures on one wrapping line -->
+                                                    <div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[11px] text-gray-500">
+                                                        <span>
+                                                            {{ getTranslation("totalPrice") }}
+                                                            <span class="font-bold text-gray-900">৳{{ toBengaliNumber(formatCurrency(item.total_price)) }}</span>
+                                                        </span>
+                                                        <span>
+                                                            {{ getTranslation("profit") }}
+                                                            <span
+                                                                class="font-bold"
+                                                                :class="parseFloat(item.profit.toString()) >= 0 ? 'text-green-600' : 'text-red-600'"
+                                                            >৳{{ toBengaliNumber(formatCurrency(item.profit)) }}</span>
+                                                        </span>
+                                                        <span v-if="item.cases_sold">
+                                                            {{ getTranslation("cases") }}
+                                                            <span class="font-bold text-blue-600">{{ toBengaliNumber(item.cases_sold) }}</span>
+                                                        </span>
+                                                        <span v-if="item.extra_bottles">
+                                                            {{ getTranslation("extraBottles") }}
+                                                            <span class="font-bold text-blue-600">{{ toBengaliNumber(item.extra_bottles) }}</span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1884,6 +1829,17 @@ const filters = ref<Filters>({
     supplier_id: props.filters?.supplier_id || "",
 });
 
+// The filter panel eats most of a phone screen before any data shows, so it
+// collapses on mobile. From `sm` up it is always open and this is ignored.
+const showFilters = ref(false);
+
+const activeFilterCount = computed(
+    () =>
+        [filters.value.shop_id, filters.value.product_id, filters.value.supplier_id].filter(
+            (value) => value !== "" && value !== null && value !== undefined
+        ).length
+);
+
 // Translations
 const translations = {
     en: {
@@ -1935,6 +1891,8 @@ const translations = {
         noItemsFound: "No items found for this sale",
         invoiceView: "Invoice View",
         productView: "Product View",
+        invoiceViewShort: "Invoice",
+        productViewShort: "Product",
         salesSummary: "Sales Summary",
         productSummaryTitle: "Product Summary",
         totalQty: "Total Qty (Bottles)",
@@ -1999,6 +1957,8 @@ const translations = {
         noItemsFound: "এই বিক্রয়ের জন্য কোন আইটেম পাওয়া যায়নি",
         invoiceView: "ইনভয়েস ভিউ",
         productView: "পণ্য ভিউ",
+        invoiceViewShort: "ইনভয়েস",
+        productViewShort: "পণ্য",
         salesSummary: "সেলস সামারি",
         productSummaryTitle: "পণ্য সারসংক্ষেপ",
         totalQty: "মোট পরিমাণ (বোতল)",
@@ -2436,11 +2396,30 @@ onMounted(() => {
 
 @media (max-width: 640px) {
     .sales-summary-sheet {
-        padding: 16px;
+        padding: 12px;
+        border-radius: 12px;
     }
 
+    /* Three across instead of stacked: five stacked stats cost ~320px of
+       scrolling before a single row of data appears. */
     .sales-summary-stats {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .sales-summary-stat {
+        padding-bottom: 8px;
+    }
+
+    .sales-summary-stat span {
+        font-size: 9px;
+        letter-spacing: 0.04em;
+    }
+
+    .sales-summary-stat strong {
+        margin-top: 2px;
+        font-size: 0.8125rem;
+        word-break: break-all;
     }
 }
 </style>

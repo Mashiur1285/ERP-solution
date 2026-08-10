@@ -1,4 +1,3 @@
-```vue
 <template>
     <div class="mt-10">
         <div
@@ -357,4 +356,3 @@ onMounted(() => {
     --tw-gradient-to: #ede9fe;
 }
 </style>
-```

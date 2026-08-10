@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 bg-gray-100 min-h-screen" :class="{ 'bangla-font': lang === 'bn' }">
+    <div class="p-3 sm:p-4 bg-gray-100 min-h-screen" :class="{ 'bangla-font': lang === 'bn' }">
         <!-- Toast -->
         <div v-if="toast.show" class="fixed top-20 right-4 z-[200] animate-slide-in print:hidden">
             <div class="px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium flex items-center space-x-2"
@@ -11,7 +11,7 @@
 
         <!-- Create Product Modal -->
         <div v-if="showCreateProductModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 p-4 print:hidden">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-800">{{ t('createNewProduct') }}</h3>
                     <button class="p-2 rounded-full hover:bg-gray-100" @click="showCreateProductModal = false">
@@ -80,7 +80,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('category') }}</label>
                             <select v-model="newProduct.category_id" class="w-full rounded-lg border-2 border-gray-200 px-3 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200">
@@ -147,7 +147,7 @@
 
         <!-- Quick Create Supplier Modal -->
         <div v-if="showQuickSupplierModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 p-4 print:hidden">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-800">{{ t('createNewSupplier') }}</h3>
                     <button class="p-2 rounded-full hover:bg-gray-100" @click="showQuickSupplierModal = false">
@@ -233,7 +233,7 @@
             <!-- LEFT SIDE -->
             <div class="flex-1 min-w-0 space-y-4 print:hidden">
                 <!-- Step 1: Supplier Selection -->
-                <div class="bg-white rounded-xl shadow-sm p-5">
+                <div class="bg-white rounded-xl shadow-sm p-4 sm:p-5">
                     <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center justify-between">
                         <span class="flex items-center">
                             <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</span>
@@ -301,7 +301,7 @@
                 </div>
 
                 <!-- Step 2: Product Selection & Variant Picker -->
-                <div v-if="selectedSupplier" class="bg-white rounded-xl shadow-sm p-5">
+                <div v-if="selectedSupplier" class="bg-white rounded-xl shadow-sm p-4 sm:p-5">
                     <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
                         <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs flex items-center justify-center mr-2">2</span>
                         {{ t('addProducts') }}
@@ -318,11 +318,12 @@
                                 class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all" />
                         </div>
                         <button @click="openCreateProductModal"
+                            :title="t('createNewProduct')"
                             class="px-3 py-2 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 flex items-center gap-1.5 text-sm font-medium flex-shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            {{ t('createNewProduct') }}
+                            <span class="hidden sm:inline">{{ t('createNewProduct') }}</span>
                         </button>
                     </div>
 
@@ -444,7 +445,7 @@
 
                 <!-- Step 3: Cart Items -->
                 <div v-if="liftItems.length" class="space-y-3">
-                    <div v-for="(item, itemIdx) in liftItems" :key="itemIdx" class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-400">
+                    <div v-for="(item, itemIdx) in liftItems" :key="itemIdx" class="bg-white rounded-xl shadow-sm p-4 sm:p-5 border-l-4 border-green-400">
                         <!-- Product Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div>
@@ -458,8 +459,8 @@
                             </button>
                         </div>
 
-                        <!-- Variants Table -->
-                        <div class="overflow-x-auto">
+                        <!-- Variants Table (Desktop) -->
+                        <div class="hidden lg:block overflow-x-auto">
                             <table class="w-full text-sm border-collapse">
                                 <thead>
                                     <tr class="bg-gray-50 border-b border-gray-200">
@@ -542,8 +543,82 @@
                             </table>
                         </div>
 
+                        <!-- Variant Cards (Mobile / Tablet) -->
+                        <div class="lg:hidden space-y-3">
+                            <div v-for="(v, vIdx) in item.variants" :key="`m-${vIdx}`"
+                                class="rounded-xl border border-gray-200 bg-gray-50/70 p-3">
+                                <!-- Card header: variant + remove -->
+                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{{ t('variantName') }}</span>
+                                    <button v-if="item.variants.length > 1"
+                                        @click="removeVariant(itemIdx, vIdx)"
+                                        class="-mr-1 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <template v-if="isCustomVariant(v.variant)">
+                                    <div class="flex items-center gap-1">
+                                        <input v-model="v.variant" type="text" placeholder="Variant name"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-green-300 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-green-50" />
+                                        <button @click="v.variant = ''" class="p-2 text-gray-400 hover:text-gray-600 flex-shrink-0" title="Switch to preset">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                                <select v-else v-model="v.variant"
+                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-200 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
+                                    @change="onVariantSelect(itemIdx, vIdx)">
+                                    <option value="">{{ t('selectVariant') }}</option>
+                                    <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                    <option value="__custom__">+ Custom</option>
+                                </select>
+
+                                <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 mt-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('numberOfCases') }}</label>
+                                        <input v-model.number="v.number_of_cases" type="number" inputmode="decimal" min="0"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('caseBuyingPrice') }} (৳)</label>
+                                        <input v-model.number="v.case_buying_price" type="number" inputmode="decimal" step="0.01" min="0"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('extraBottles') }}</label>
+                                        <input v-model.number="v.extra_bottles" type="number" inputmode="numeric" min="0" :max="(v.bottles_per_case || 1) - 1" :placeholder="t('optional')"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200 placeholder:text-gray-300" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('freeBottlesPerCase') }}</label>
+                                        <input v-model.number="v.free_bottles_per_case" type="number" inputmode="decimal" min="0" step="any"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('bottlesPerCase') }}</label>
+                                        <input v-model.number="v.bottles_per_case" type="number" inputmode="numeric" min="1"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base bg-gray-100 focus:border-green-500 focus:ring-1 focus:ring-green-200" />
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-200">
+                                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{{ t('totalCost') }}</span>
+                                    <div class="text-right">
+                                        <span class="text-base font-bold text-green-600">৳{{ toBengaliNumber(calcVariantCost(v), 2) }}</span>
+                                        <div v-if="calcFreeBottles(v) > 0" class="text-xs text-green-500">
+                                            +{{ calcFreeBottles(v) }} {{ t('free') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Add Variant Button -->
-                        <button @click="addVariant(itemIdx)" class="mt-2 text-sm text-green-600 font-medium hover:text-green-800 flex items-center gap-1 px-1">
+                        <button @click="addVariant(itemIdx)"
+                            class="mt-3 w-full sm:w-auto flex items-center justify-center sm:justify-start gap-1 rounded-lg border border-dashed border-green-300 py-2.5 text-sm font-medium text-green-600 hover:text-green-800 hover:bg-green-50 transition-colors sm:mt-2 sm:border-0 sm:py-0 sm:px-1 sm:hover:bg-transparent">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
@@ -571,7 +646,7 @@
                     </div>
 
                     <!-- Invoice Body -->
-                    <div class="px-5 py-4 max-h-[calc(100vh-320px)] overflow-y-auto">
+                    <div class="px-4 sm:px-5 py-4 lg:max-h-[calc(100vh-320px)] lg:overflow-y-auto">
                         <!-- Empty State -->
                         <div v-if="!validItems.length" class="text-center py-8 text-gray-400">
                             <svg class="w-14 h-14 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -658,7 +733,7 @@
                     </div>
 
                     <!-- Invoice Footer -->
-                    <div class="px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-2 print:hidden">
+                    <div class="px-4 sm:px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-2 print:hidden">
                         <button @click="openConfirmModal"
                             class="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all flex items-center justify-center space-x-2 shadow-md"
                             :disabled="isLoading || !validItems.length || !selectedSupplier">
@@ -670,7 +745,7 @@
                             </svg>
                             <span>{{ isLoading ? t('processing') : editingCompletedLift ? t('updateLift') : t('confirmLift') }}</span>
                         </button>
-                        <div class="flex gap-2">
+                        <div class="flex flex-col sm:flex-row gap-2">
                             <button v-if="!editingCompletedLift" @click="saveDraft"
                                 class="flex-1 py-2.5 border-2 border-amber-300 rounded-lg text-amber-700 font-medium hover:bg-amber-50 transition-all flex items-center justify-center space-x-2 text-sm"
                                 :disabled="isLoading || !selectedSupplier || !validItems.length">

@@ -79,13 +79,21 @@ class ShopController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Blank optional fields must land as NULL, otherwise two shops that both
+        // left the phone/email empty would collide on the unique indexes.
+        foreach (['road', 'owner_name', 'shop_address', 'phone_number', 'email', 'website', 'national_id', 'trade_license', 'tax_id', 'notes'] as $field) {
+            if ($request->has($field) && is_string($request->input($field)) && trim($request->input($field)) === '') {
+                $request->merge([$field => null]);
+            }
+        }
+
         $data = $request->validate([
-            'shop_name' => 'required|string|max:255',
+            'shop_name' => 'required|string|max:30',
             'road' => 'nullable|string|max:100',
-            'owner_name' => 'nullable|string|max:255',
-            'shop_address' => 'nullable|string|max:255',
+            'owner_name' => 'nullable|string|max:30',
+            'shop_address' => 'nullable|string|max:100',
             'phone_number' => [
-                'required',
+                'nullable',
                 'string',
                 'max:20',
                 Rule::unique('shops', 'phone_number')->ignore($id),

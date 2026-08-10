@@ -1,16 +1,16 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-4 sm:p-6 space-y-6 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
     >
         <!-- Toast Notification -->
         <div
             v-if="showToast"
-            class="fixed top-6 right-6 px-7 py-5 rounded-lg shadow-lg flex items-center space-x-3 animate-toast-in z-50"
+            class="fixed top-20 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md px-4 py-4 sm:px-7 sm:py-5 rounded-lg shadow-lg flex items-center space-x-3 animate-toast-in z-[200]"
             :class="toastClasses"
             role="alert"
         >
             <svg
-                class="w-5 h-5 text-white"
+                class="w-5 h-5 text-white flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -38,10 +38,10 @@
                     d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
             </svg>
-            <span class="font-medium text-white">{{ toastMessage }}</span>
+            <span class="font-medium text-white flex-1 min-w-0 text-sm sm:text-base">{{ toastMessage }}</span>
             <button
                 @click="closeToast"
-                class="ml-2 text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
+                class="ml-2 flex-shrink-0 text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
                 aria-label="Close notification"
             >
                 <svg
@@ -63,16 +63,16 @@
 
         <!-- Header -->
         <div
-            class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"
+            class="flex justify-between items-center mb-6 sm:mb-8 border-b border-gray-200 pb-4"
         >
             <h1
-                class="text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
-                    class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
+                    class="p-2 mr-2 sm:mr-3 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0"
                 >
                     <svg
-                        class="w-8 h-8 text-indigo-600"
+                        class="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -91,7 +91,7 @@
 
         <!-- Main Form Container -->
         <div
-            class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl relative overflow-hidden"
+            class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 transition-all duration-300 hover:shadow-xl relative overflow-hidden"
         >
             <!-- Background Pattern -->
             <svg
@@ -108,12 +108,12 @@
 
             <div class="relative z-10">
                 <!-- Section Header -->
-                <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center justify-between mb-6 sm:mb-8">
                     <h2
-                        class="text-2xl font-semibold text-gray-800 flex items-center"
+                        class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 flex items-center"
                     >
                         <div
-                            class="p-2 mr-3 bg-indigo-200 rounded-full flex items-center justify-center"
+                            class="p-2 mr-2 sm:mr-3 bg-indigo-200 rounded-full flex items-center justify-center flex-shrink-0"
                         >
                             <svg
                                 class="w-6 h-6 text-indigo-700"
@@ -137,7 +137,7 @@
                 <div class="space-y-8">
                     <!-- Basic Information -->
                     <div
-                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
+                        class="bg-indigo-50 p-4 sm:p-6 rounded-xl border border-indigo-100"
                     >
                         <h3
                             class="text-lg font-semibold text-gray-800 mb-4 flex items-center"
@@ -157,7 +157,7 @@
                             </svg>
                             Company Information
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label
                                     for="company_name"
@@ -185,7 +185,7 @@
                                     type="text"
                                     id="company_name"
                                     placeholder="Enter company name"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.company_name,
@@ -240,7 +240,7 @@
                                     type="text"
                                     id="branch_name"
                                     placeholder="Enter branch name"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.branch_name,
@@ -272,7 +272,7 @@
 
                     <!-- Contact Information -->
                     <div
-                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
+                        class="bg-indigo-50 p-4 sm:p-6 rounded-xl border border-indigo-100"
                     >
                         <h3
                             class="text-lg font-semibold text-gray-800 mb-4 flex items-center"
@@ -292,7 +292,7 @@
                             </svg>
                             Contact Details
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label
                                     for="phone_number"
@@ -320,7 +320,7 @@
                                     type="tel"
                                     id="phone_number"
                                     placeholder="Enter phone number"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.phone_number,
@@ -375,7 +375,7 @@
                                     type="tel"
                                     id="emergency_phone_number"
                                     placeholder="Enter emergency phone number"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.emergency_phone_number,
@@ -434,7 +434,7 @@
                                     type="email"
                                     id="email"
                                     placeholder="Enter email address"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.email,
@@ -489,7 +489,7 @@
                                     type="url"
                                     id="website"
                                     placeholder="Enter website URL"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.website,
@@ -521,7 +521,7 @@
 
                     <!-- Location Information -->
                     <div
-                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100"
+                        class="bg-indigo-50 p-4 sm:p-6 rounded-xl border border-indigo-100"
                     >
                         <h3
                             class="text-lg font-semibold text-gray-800 mb-4 flex items-center"
@@ -547,7 +547,7 @@
                             </svg>
                             Location & Address
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                             <div>
                                 <label
                                     for="city"
@@ -575,7 +575,7 @@
                                     type="text"
                                     id="city"
                                     placeholder="Enter city"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.city,
@@ -630,7 +630,7 @@
                                     type="text"
                                     id="country"
                                     placeholder="Enter country"
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
+                                    class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300"
                                     :class="{
                                         'border-red-400 focus:border-red-500 focus:ring-red-200':
                                             form.errors.country,
@@ -691,7 +691,7 @@
                                 v-model="form.address"
                                 id="address"
                                 placeholder="Enter complete address"
-                                class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 resize-vertical"
+                                class="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300 hover:border-indigo-300 resize-y"
                                 :class="{
                                     'border-red-400 focus:border-red-500 focus:ring-red-200':
                                         form.errors.address,
@@ -723,11 +723,11 @@
 
                     <!-- Action Buttons -->
                     <div
-                        class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 pt-6 border-t border-gray-200"
+                        class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6 border-t border-gray-200"
                     >
                         <Link
                             href="/suppliers/index"
-                            class="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap"
+                            class="w-full sm:w-auto px-4 py-3 sm:py-2 border-2 border-gray-300 rounded-lg text-sm text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap"
                         >
                             <svg
                                 class="w-4 h-4"
@@ -746,7 +746,7 @@
                         </Link>
                         <button
                             @click="submitForm"
-                            class="px-4 py-2 bg-indigo-600 text-sm text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-indigo-600 text-sm text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             :disabled="form.processing"
                         >
                             <svg
@@ -869,8 +869,9 @@ const submitForm = () => {
 
     form.post("/suppliers/store", {
         onSuccess: () => {
+            // The server redirects to the supplier list, which shows the
+            // success flash message. No toast here — this page is gone.
             form.reset();
-            showToastWithType("Supplier Created Successfully", "success");
         },
         onError: (errors) => {
             console.error("Form submission errors:", errors);

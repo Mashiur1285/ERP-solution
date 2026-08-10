@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 sm:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+    <div class="p-3 sm:p-6 space-y-3 sm:space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': lang === 'bn' }">
 
         <!-- ═══════════════════════ SCREEN UI ═══════════════════════ -->
@@ -8,7 +8,7 @@
         <div class="print:hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-200 pb-4">
             <div>
                 <p class="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-1">{{ t('financialReport') }}</p>
-                <h1 class="text-2xl font-bold text-gray-900">{{ t('profitAndLoss') }}</h1>
+                <h1 class="text-lg sm:text-2xl font-bold text-gray-900">{{ t('profitAndLoss') }}</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ selectedMonthLabel }}</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
@@ -40,71 +40,72 @@
 
         <!-- KPI Cards -->
         <div class="print:hidden grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-blue-600">{{ t('netRevenue') }}</p>
-                <p class="text-xl font-bold text-gray-900 mt-2">৳{{ fmt(report.net_revenue) }}</p>
-                <p class="text-xs text-gray-400 mt-1">{{ t('afterDiscount') }} ৳{{ fmt(report.discount) }}</p>
+            <div class="bg-white rounded-xl border border-gray-200 p-2.5 sm:p-4 shadow-sm">
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-blue-600">{{ t('netRevenue') }}</p>
+                <p class="text-base sm:text-xl font-bold text-gray-900 mt-1 sm:mt-2">৳{{ fmt(report.net_revenue) }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">{{ t('afterDiscount') }} ৳{{ fmt(report.discount) }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-orange-600">{{ t('cogs') }}</p>
-                <p class="text-xl font-bold text-gray-900 mt-2">৳{{ fmt(report.cogs) }}</p>
-                <p class="text-xs text-gray-400 mt-1">{{ t('costOfGoods') }}</p>
+            <div class="bg-white rounded-xl border border-gray-200 p-2.5 sm:p-4 shadow-sm">
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-orange-600">{{ t('cogs') }}</p>
+                <p class="text-base sm:text-xl font-bold text-gray-900 mt-1 sm:mt-2">৳{{ fmt(report.cogs) }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">{{ t('costOfGoods') }}</p>
             </div>
-            <div :class="['rounded-xl border p-4 shadow-sm', report.gross_profit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200']">
+            <div :class="['rounded-xl border p-2.5 sm:p-4 shadow-sm', report.gross_profit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200']">
                 <p :class="['text-xs font-semibold uppercase tracking-wide', report.gross_profit >= 0 ? 'text-emerald-700' : 'text-red-700']">{{ t('grossProfit') }}</p>
-                <p :class="['text-xl font-bold mt-2', report.gross_profit >= 0 ? 'text-emerald-800' : 'text-red-800']">৳{{ fmt(report.gross_profit) }}</p>
-                <p :class="['text-xs mt-1', report.gross_profit >= 0 ? 'text-emerald-600' : 'text-red-600']">{{ t('margin') }}: {{ report.gross_margin }}%</p>
+                <p :class="['text-base sm:text-xl font-bold mt-1 sm:mt-2', report.gross_profit >= 0 ? 'text-emerald-800' : 'text-red-800']">৳{{ fmt(report.gross_profit) }}</p>
+                <p :class="['text-[10px] sm:text-xs mt-0.5 sm:mt-1', report.gross_profit >= 0 ? 'text-emerald-600' : 'text-red-600']">{{ t('margin') }}: {{ report.gross_margin }}%</p>
             </div>
-            <div :class="['rounded-xl border p-4 shadow-sm', report.net_profit >= 0 ? 'bg-indigo-50 border-indigo-200' : 'bg-red-50 border-red-200']">
+            <div :class="['rounded-xl border p-2.5 sm:p-4 shadow-sm', report.net_profit >= 0 ? 'bg-indigo-50 border-indigo-200' : 'bg-red-50 border-red-200']">
                 <p :class="['text-xs font-semibold uppercase tracking-wide', report.net_profit >= 0 ? 'text-indigo-700' : 'text-red-700']">{{ t('netProfit') }}</p>
-                <p :class="['text-2xl font-bold mt-2', report.net_profit >= 0 ? 'text-indigo-900' : 'text-red-900']">৳{{ fmt(report.net_profit) }}</p>
-                <p :class="['text-xs mt-1', report.net_profit >= 0 ? 'text-indigo-600' : 'text-red-600']">{{ t('netMargin') }}: {{ report.net_margin }}%</p>
+                <p :class="['text-base sm:text-2xl font-bold mt-1 sm:mt-2', report.net_profit >= 0 ? 'text-indigo-900' : 'text-red-900']">৳{{ fmt(report.net_profit) }}</p>
+                <p :class="['text-[10px] sm:text-xs mt-0.5 sm:mt-1', report.net_profit >= 0 ? 'text-indigo-600' : 'text-red-600']">{{ t('netMargin') }}: {{ report.net_margin }}%</p>
             </div>
         </div>
 
         <!-- Screen P&L Table -->
         <div class="print:hidden bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                <h2 class="text-base font-bold text-gray-800">{{ t('plStatement') }}</h2>
+            <div class="px-3 sm:px-5 py-2.5 sm:py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-2">
+                <h2 class="text-sm sm:text-base font-bold text-gray-800">{{ t('plStatement') }}</h2>
                 <span class="text-xs text-gray-400">{{ selectedMonthLabel }}</span>
             </div>
-            <table class="w-full text-sm">
+            <div class="overflow-x-auto">
+            <table class="w-full text-xs sm:text-sm">
                 <thead>
                     <tr class="bg-indigo-600 text-white text-xs uppercase tracking-wider">
-                        <th class="px-5 py-3 text-left font-semibold w-1/2">{{ t('particulars') }}</th>
-                        <th class="px-5 py-3 text-right font-semibold">{{ t('amount') }} (BDT)</th>
-                        <th class="px-5 py-3 text-right font-semibold">%</th>
+                        <th class="px-2 sm:px-5 py-2 sm:py-3 text-left font-semibold">{{ t('particulars') }}</th>
+                        <th class="px-2 sm:px-5 py-2 sm:py-3 text-right font-semibold">{{ t('amount') }} (BDT)</th>
+                        <th class="px-1.5 sm:px-5 py-2 sm:py-3 text-right font-semibold w-10 sm:w-auto">%</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- Revenue -->
                     <tr class="bg-blue-50">
-                        <td colspan="3" class="px-5 py-2 text-xs font-bold uppercase tracking-widest text-blue-700">{{ t('revenue') }}</td>
+                        <td colspan="3" class="px-2 sm:px-5 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-widest text-blue-700">{{ t('revenue') }}</td>
                     </tr>
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-5 py-2.5 text-gray-700 pl-10">{{ t('totalSales') }}</td>
-                        <td class="px-5 py-2.5 text-right text-gray-900 font-medium">৳{{ fmt(report.revenue) }}</td>
-                        <td class="px-5 py-2.5 text-right text-gray-400 text-xs">—</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-gray-700 pl-3 sm:pl-10">{{ t('totalSales') }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-gray-900 font-medium">৳{{ fmt(report.revenue) }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-gray-400 text-xs">—</td>
                     </tr>
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-5 py-2.5 text-gray-500 pl-10">(−) {{ t('discount') }}</td>
-                        <td class="px-5 py-2.5 text-right text-red-500 font-medium">(৳{{ fmt(report.discount) }})</td>
-                        <td class="px-5 py-2.5 text-right text-gray-400 text-xs">—</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-gray-500 pl-3 sm:pl-10">(−) {{ t('discount') }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-red-500 font-medium">(৳{{ fmt(report.discount) }})</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-gray-400 text-xs">—</td>
                     </tr>
                     <tr class="bg-blue-100 font-bold border-b-2 border-blue-200">
-                        <td class="px-5 py-3 text-blue-900">{{ t('netRevenue') }}</td>
-                        <td class="px-5 py-3 text-right text-blue-900">৳{{ fmt(report.net_revenue) }}</td>
-                        <td class="px-5 py-3 text-right text-blue-600 text-xs">100%</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-blue-900">{{ t('netRevenue') }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right text-blue-900">৳{{ fmt(report.net_revenue) }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right text-blue-600 text-xs">100%</td>
                     </tr>
 
                     <!-- COGS -->
                     <tr class="bg-orange-50">
-                        <td colspan="3" class="px-5 py-2 text-xs font-bold uppercase tracking-widest text-orange-700">{{ t('cogs') }}</td>
+                        <td colspan="3" class="px-2 sm:px-5 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-widest text-orange-700">{{ t('cogs') }}</td>
                     </tr>
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-5 py-2.5 text-gray-500 pl-10">(−) {{ t('costOfGoods') }}</td>
-                        <td class="px-5 py-2.5 text-right text-orange-600 font-medium">(৳{{ fmt(report.cogs) }})</td>
-                        <td class="px-5 py-2.5 text-right text-gray-400 text-xs">{{ pct(report.cogs) }}%</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-gray-500 pl-3 sm:pl-10">(−) {{ t('costOfGoods') }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-orange-600 font-medium">(৳{{ fmt(report.cogs) }})</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-gray-400 text-xs">{{ pct(report.cogs) }}%</td>
                     </tr>
 
                     <!-- Gross Profit -->
@@ -116,34 +117,35 @@
 
                     <!-- Expenses -->
                     <tr class="bg-rose-50">
-                        <td colspan="3" class="px-5 py-2 text-xs font-bold uppercase tracking-widest text-rose-700">{{ t('operatingExpenses') }}</td>
+                        <td colspan="3" class="px-2 sm:px-5 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-widest text-rose-700">{{ t('operatingExpenses') }}</td>
                     </tr>
                     <tr v-for="exp in report.expense_breakdown" :key="exp.name" class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-5 py-2.5 text-gray-600 pl-10 flex items-center gap-2">
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-gray-600 pl-3 sm:pl-10 flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-rose-400 inline-block flex-shrink-0 mt-px"></span>
                             (−) {{ exp.name }}
                             <span class="text-xs text-gray-400 font-normal">({{ exp.count }} {{ t('entries') }})</span>
                         </td>
-                        <td class="px-5 py-2.5 text-right text-rose-600 font-medium">(৳{{ fmt(exp.amount) }})</td>
-                        <td class="px-5 py-2.5 text-right text-gray-400 text-xs">{{ pct(exp.amount) }}%</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-rose-600 font-medium">(৳{{ fmt(exp.amount) }})</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-2.5 text-right text-gray-400 text-xs">{{ pct(exp.amount) }}%</td>
                     </tr>
                     <tr v-if="!report.expense_breakdown.length" class="border-b border-gray-100">
-                        <td colspan="3" class="px-5 py-3 text-gray-400 text-center text-xs">{{ t('noExpenses') }}</td>
+                        <td colspan="3" class="px-2 sm:px-5 py-2 sm:py-3 text-gray-400 text-center text-xs">{{ t('noExpenses') }}</td>
                     </tr>
                     <tr class="bg-rose-100 font-semibold border-b-2 border-rose-300">
-                        <td class="px-5 py-3 text-rose-800 pl-10">(−) {{ t('totalExpenses') }}</td>
-                        <td class="px-5 py-3 text-right text-rose-800">(৳{{ fmt(report.total_expenses) }})</td>
-                        <td class="px-5 py-3 text-right text-rose-600 text-xs">{{ pct(report.total_expenses) }}%</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-rose-800 pl-3 sm:pl-10">(−) {{ t('totalExpenses') }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right text-rose-800">(৳{{ fmt(report.total_expenses) }})</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right text-rose-600 text-xs">{{ pct(report.total_expenses) }}%</td>
                     </tr>
 
                     <!-- Net Profit -->
                     <tr :class="['font-bold text-base', report.net_profit >= 0 ? 'bg-indigo-600' : 'bg-red-600']">
                         <td :class="['px-5 py-4', report.net_profit >= 0 ? 'text-white' : 'text-white']">{{ t('netProfit') }}</td>
-                        <td class="px-5 py-4 text-right text-white text-lg">৳{{ fmt(report.net_profit) }}</td>
-                        <td class="px-5 py-4 text-right text-white/80 text-sm">{{ report.net_margin }}%</td>
+                        <td class="px-2 sm:px-5 py-2.5 sm:py-4 text-right text-white text-lg">৳{{ fmt(report.net_profit) }}</td>
+                        <td class="px-2 sm:px-5 py-2.5 sm:py-4 text-right text-white/80 text-sm">{{ report.net_margin }}%</td>
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
 

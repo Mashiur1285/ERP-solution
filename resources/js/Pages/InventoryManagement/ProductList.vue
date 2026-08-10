@@ -1,14 +1,14 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <div
             v-if="editModalOpen"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         >
-            <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
-                <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-6 sm:py-4">
                     <h3 class="text-lg font-semibold text-gray-900">{{ getTranslation("editProduct") }}</h3>
                     <button
                         class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
@@ -73,7 +73,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ getTranslation("productName") }}</label>
                             <input
@@ -137,8 +137,8 @@
             v-if="stockEditModal.open"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         >
-            <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl">
-                <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-6 sm:py-4">
                     <h3 class="text-base font-semibold text-gray-900">{{ getTranslation("adjustInventory") }}</h3>
                     <button class="rounded-full p-2 text-gray-400 hover:bg-gray-100" @click="closeStockEditModal">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,10 +209,10 @@
         </div>
 
         <div
-            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
+            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-lg sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -235,37 +235,37 @@
             </h1>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="grid grid-cols-4 gap-2 sm:gap-4">
             <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
+                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-2 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200"
             >
-                <p class="text-sm font-medium text-indigo-700">{{ getTranslation("totalProducts") }}</p>
-                <p class="text-lg font-bold text-indigo-900">{{ toBengaliNumber(totalProducts) }}</p>
+                <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-indigo-700">{{ getTranslation("totalProducts") }}</p>
+                <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-indigo-900">{{ toBengaliNumber(totalProducts) }}</p>
             </div>
             <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                class="bg-gradient-to-br from-green-50 to-green-100 p-2 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-green-200"
             >
-                <p class="text-sm font-medium text-green-700">{{ getTranslation("withImages") }}</p>
-                <p class="text-lg font-bold text-green-900">{{ toBengaliNumber(totalWithImages) }}</p>
+                <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-green-700">{{ getTranslation("withImages") }}</p>
+                <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-green-900">{{ toBengaliNumber(totalWithImages) }}</p>
             </div>
             <div
-                class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-sm border border-orange-200"
+                class="bg-gradient-to-br from-orange-50 to-orange-100 p-2 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-orange-200"
             >
-                <p class="text-sm font-medium text-orange-700">{{ getTranslation("totalVariants") }}</p>
-                <p class="text-lg font-bold text-orange-900">{{ toBengaliNumber(totalVariants) }}</p>
+                <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-orange-700">{{ getTranslation("totalVariants") }}</p>
+                <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-orange-900">{{ toBengaliNumber(totalVariants) }}</p>
             </div>
             <div
-                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-2 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-purple-200"
             >
-                <p class="text-sm font-medium text-purple-700">{{ getTranslation("activeProducts") }}</p>
-                <p class="text-lg font-bold text-purple-900">{{ toBengaliNumber(totalActiveProducts) }}</p>
+                <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-purple-700">{{ getTranslation("activeProducts") }}</p>
+                <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-purple-900">{{ toBengaliNumber(totalActiveProducts) }}</p>
             </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4">
             <div class="relative w-full sm:w-96">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
@@ -273,7 +273,7 @@
                     v-model="searchQuery"
                     type="text"
                     :placeholder="getTranslation('searchProducts')"
-                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                    class="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-xs sm:text-sm font-medium hover:border-indigo-300"
                 />
             </div>
             <label class="flex items-center gap-2.5 cursor-pointer select-none shrink-0">
@@ -287,7 +287,7 @@
                         :class="showOutOfStock ? 'translate-x-4' : 'translate-x-1'"
                     />
                 </div>
-                <span class="text-sm font-medium text-gray-600">{{ getTranslation('showOutOfStock') }}</span>
+                <span class="text-xs sm:text-sm font-medium text-gray-600">{{ getTranslation('showOutOfStock') }}</span>
             </label>
         </div>
 
@@ -296,14 +296,14 @@
         </div>
 
         <div v-else class="space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-5">
             <div
                 v-for="product in products.data"
                 :key="product.id"
                 class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:scale-[1.01] transition-all duration-200"
             >
-                <div class="flex gap-4 p-5">
-                    <div class="h-20 w-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                <div class="flex gap-3 sm:gap-4 p-3 sm:p-5">
+                    <div class="h-14 w-14 sm:h-20 sm:w-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
                             <img
                                 v-if="product.image_url"
                                 :src="product.image_url"
@@ -355,7 +355,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 text-sm">
+                        <div class="grid grid-cols-2 gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2.5 mt-2.5 sm:mt-4 text-xs sm:text-sm">
                             <div>
                                 <p class="text-gray-400">{{ getTranslation("category") }}</p>
                                 <p class="mt-1 font-medium text-gray-700 break-words">{{ product.category_name }}</p>
@@ -384,18 +384,18 @@
                     </div>
                 </div>
 
-                <div class="px-5 pb-5">
-                    <div class="mb-4 rounded-xl border border-gray-100 bg-gray-50/80 px-3.5 py-3">
+                <div class="px-3 pb-3 sm:px-5 sm:pb-5">
+                    <div class="mb-2.5 sm:mb-4 rounded-xl border border-gray-100 bg-gray-50/80 px-2.5 py-2 sm:px-3.5 sm:py-3">
                         <div class="flex items-center justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-xs font-medium uppercase tracking-wide text-gray-400">
                                     {{ getTranslation("variantPurchaseDetails") }}
                                 </p>
-                                <div v-if="product.default_variants.length" class="mt-2 flex flex-col gap-2">
+                                <div v-if="product.default_variants.length" class="mt-1.5 flex flex-col gap-1.5">
                                     <div
                                         v-for="variant in getVisibleVariants(product)"
                                         :key="`${product.id}-${variant.variant}`"
-                                        class="flex flex-col gap-1.5 rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200"
+                                        class="flex flex-col gap-1 rounded-lg bg-white px-2 py-1.5 sm:px-3 sm:py-2 ring-1 ring-gray-200"
                                     >
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-xs font-semibold text-gray-700">{{ variant.variant }}</span>

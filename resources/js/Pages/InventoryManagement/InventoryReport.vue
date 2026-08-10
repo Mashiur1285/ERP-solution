@@ -1,7 +1,6 @@
-```vue
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle -->
@@ -32,10 +31,10 @@
 
         <!-- Title -->
         <div
-            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
+            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-lg sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -59,10 +58,10 @@
         </div>
 
         <!-- Search & Filter Fields -->
-        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-6 gap-4">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-6 gap-2 sm:gap-4">
             <div class="w-full sm:w-auto">
-                <div class="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <div class="flex items-center gap-2 sm:gap-3 rounded-xl border-2 border-gray-200 bg-white px-2.5 sm:px-4 py-2 sm:py-3 shadow-sm">
+                    <div class="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2z" />
                         </svg>
@@ -92,23 +91,23 @@
                     v-model="searchQuery"
                     type="text"
                     :placeholder="getTranslation('searchProducts')"
-                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                    class="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-xs sm:text-sm font-medium hover:border-indigo-300"
                 />
             </div>
         </div>
 
         <!-- Total Metrics -->
-        <div class="space-y-6 mb-6">
+        <div class="space-y-3 sm:space-y-6 mb-3 sm:mb-6">
 
             <!-- Total Metrics -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div class="grid grid-cols-5 gap-1.5 sm:gap-4">
                 <div
-                    class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
+                    class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200"
                 >
-                    <div class="flex items-center">
-                        <div class="p-2 bg-indigo-500 rounded-lg mr-3">
+                    <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                        <div class="p-1 sm:p-2 bg-indigo-500 rounded-lg sm:mr-3 flex-shrink-0">
                             <svg
-                                class="w-6 h-6 text-white"
+                                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -121,12 +120,12 @@
                                 />
                             </svg>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-indigo-700">
+                        <div class="min-w-0">
+                            <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-indigo-700">
                                 {{ getTranslation("totalProducts") }}
                             </p>
                             <p
-                                class="text-lg lg:text-lg font-bold text-indigo-900 metric-value"
+                                class="text-[10px] sm:text-base md:text-lg font-bold leading-tight break-all text-indigo-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalProducts.toString().length > 10,
@@ -138,12 +137,12 @@
                     </div>
                 </div>
                 <div
-                    class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                    class="bg-gradient-to-br from-green-50 to-green-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-green-200"
                 >
-                    <div class="flex items-center">
-                        <div class="p-2 bg-green-500 rounded-lg mr-3">
+                    <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                        <div class="p-1 sm:p-2 bg-green-500 rounded-lg sm:mr-3 flex-shrink-0">
                             <svg
-                                class="w-6 h-6 text-white"
+                                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -156,12 +155,12 @@
                                 />
                             </svg>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-green-700">
+                        <div class="min-w-0">
+                            <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-green-700">
                                 {{ getTranslation("totalQuantity") }}
                             </p>
                             <p
-                                class="text-lg lg:text-lg font-bold text-green-900 metric-value"
+                                class="text-[10px] sm:text-base md:text-lg font-bold leading-tight break-all text-green-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalQuantity.toString().length > 10,
@@ -173,12 +172,12 @@
                     </div>
                 </div>
                 <div
-                    class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-blue-200"
+                    class="bg-gradient-to-br from-blue-50 to-blue-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-blue-200"
                 >
-                    <div class="flex items-center">
-                        <div class="p-2 bg-blue-500 rounded-lg mr-3">
+                    <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                        <div class="p-1 sm:p-2 bg-blue-500 rounded-lg sm:mr-3 flex-shrink-0">
                             <svg
-                                class="w-6 h-6 text-white"
+                                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -191,12 +190,12 @@
                                 />
                             </svg>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-blue-700">
+                        <div class="min-w-0">
+                            <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-blue-700">
                                 {{ getTranslation("totalCases") }}
                             </p>
                             <p
-                                class="text-lg lg:text-lg font-bold text-blue-900 metric-value"
+                                class="text-[10px] sm:text-base md:text-lg font-bold leading-tight break-all text-blue-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalCases.toString().length > 10,
@@ -208,12 +207,12 @@
                     </div>
                 </div>
                 <div
-                    class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl shadow-sm border border-amber-200"
+                    class="bg-gradient-to-br from-amber-50 to-amber-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-amber-200"
                 >
-                    <div class="flex items-center">
-                        <div class="p-2 bg-amber-500 rounded-lg mr-3">
+                    <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                        <div class="p-1 sm:p-2 bg-amber-500 rounded-lg sm:mr-3 flex-shrink-0">
                             <svg
-                                class="w-6 h-6 text-white"
+                                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -226,23 +225,23 @@
                                 />
                             </svg>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-amber-700">
+                        <div class="min-w-0">
+                            <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-amber-700">
                                 {{ getTranslation("totalSold") }}
                             </p>
-                            <p class="text-lg lg:text-lg font-bold text-amber-900 metric-value">
+                            <p class="text-[10px] sm:text-base md:text-lg font-bold leading-tight break-all text-amber-900 metric-value">
                                 {{ toBengaliNumber(totalSold) }}
                             </p>
                         </div>
                     </div>
                 </div>
                 <div
-                    class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
+                    class="bg-gradient-to-br from-purple-50 to-purple-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-purple-200"
                 >
-                    <div class="flex items-center">
-                        <div class="p-2 bg-purple-500 rounded-lg mr-3">
+                    <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                        <div class="p-1 sm:p-2 bg-purple-500 rounded-lg sm:mr-3 flex-shrink-0">
                             <svg
-                                class="w-6 h-6 text-white"
+                                class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -255,12 +254,12 @@
                                 />
                             </svg>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-purple-700">
+                        <div class="min-w-0">
+                            <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-purple-700">
                                 {{ getTranslation("totalPurchaseValue") }}
                             </p>
                             <p
-                                class="text-lg lg:text-lg font-bold text-purple-900 metric-value"
+                                class="text-[10px] sm:text-base md:text-lg font-bold leading-tight break-all text-purple-900 metric-value"
                                 :class="{
                                     'large-number':
                                         totalPurchaseValue.toString().length >
@@ -276,43 +275,43 @@
         </div>
 
         <!-- Inventory Table -->
-        <div class="bg-white rounded-xl shadow-sm p-3 lg:p-6">
+        <div class="bg-white rounded-xl shadow-sm p-2 sm:p-3 lg:p-6">
             <div class="w-full overflow-x-auto">
-                <table class="w-full min-w-[1100px] divide-y divide-gray-200 table-fixed">
+                <table class="w-full lg:min-w-[1100px] divide-y divide-gray-200 lg:table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
                             <th
-                                class="w-[24rem] px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="lg:w-[24rem] px-2 lg:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("productName") }}
                             </th>
                             <th
-                                class="hidden w-28 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider sm:table-cell"
+                                class="hidden w-28 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider lg:table-cell"
                             >
                                 {{ getTranslation("variantCount") }}
                             </th>
                             <th
-                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="hidden lg:table-cell w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("quantity") }}
                             </th>
                             <th
-                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="hidden lg:table-cell w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("cases") }}
                             </th>
                             <th
-                                class="w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="hidden lg:table-cell w-24 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("sold") }}
                             </th>
                             <th
-                                class="w-36 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="hidden lg:table-cell w-36 px-2 lg:px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("stockStatus") }}
                             </th>
                             <th
-                                class="w-36 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                class="hidden lg:table-cell w-36 px-2 lg:px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {{ getTranslation("totalValue") }}
                             </th>
@@ -328,12 +327,12 @@
                                 @click="toggleVariants(index)"
                             >
                                 <td
-                                    class="w-[24rem] px-2 lg:px-3 py-3 text-xs font-medium text-gray-900 lg:text-sm"
+                                    class="lg:w-[24rem] px-2 lg:px-3 py-2.5 lg:py-3 text-xs font-medium text-gray-900 lg:text-sm"
                                 >
-                                    <div class="flex min-w-0 items-center gap-3">
+                                    <div class="flex min-w-0 items-start lg:items-center gap-2 lg:gap-3">
                                         <svg
                                             :class="[
-                                                'w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2 transition-transform flex-shrink-0',
+                                                'w-3 h-3 lg:w-4 lg:h-4 mt-1 lg:mt-0 mr-0.5 lg:mr-2 transition-transform flex-shrink-0',
                                                 expandedVariants[index]
                                                     ? 'rotate-90'
                                                     : '',
@@ -349,7 +348,7 @@
                                                 d="M9 5l7 7-7 7"
                                             />
                                         </svg>
-                                        <div class="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                        <div class="h-9 w-9 lg:h-12 lg:w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
                                             <img
                                                 v-if="item.image_url"
                                                 :src="item.image_url"
@@ -358,7 +357,7 @@
                                             />
                                             <svg
                                                 v-else
-                                                class="w-5 h-5 text-gray-300"
+                                                class="w-4 h-4 lg:w-5 lg:h-5 text-gray-300"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
@@ -371,16 +370,46 @@
                                                 />
                                             </svg>
                                         </div>
-                                        <span
-                                            class="min-w-0 break-words font-medium text-gray-900"
-                                            :title="item.product_name"
-                                        >
-                                            {{ item.product_name }}
-                                        </span>
+                                        <div class="min-w-0 flex-1">
+                                            <span
+                                                class="block min-w-0 break-words font-medium text-gray-900"
+                                                :title="item.product_name"
+                                            >
+                                                {{ item.product_name }}
+                                            </span>
+
+                                            <!-- Every other column is hidden below lg,
+                                                 so its value surfaces here instead. -->
+                                            <div class="lg:hidden mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-gray-500">
+                                                <span>
+                                                    {{ getTranslation("quantity") }}
+                                                    <span class="font-bold text-gray-800">{{ toBengaliNumber(item.total_available_bottles) }}</span>
+                                                </span>
+                                                <span>
+                                                    {{ getTranslation("cases") }}
+                                                    <span class="font-bold text-gray-800">{{ toBengaliNumber(item.total_available_cases) }}</span>
+                                                </span>
+                                                <span>
+                                                    {{ getTranslation("sold") }}
+                                                    <span class="font-bold text-amber-600">{{ toBengaliNumber(item.total_sold) }}</span>
+                                                </span>
+                                                <span>
+                                                    {{ getTranslation("variantCount") }}
+                                                    <span class="font-bold text-gray-800">{{ toBengaliNumber(item.variants.length) }}</span>
+                                                </span>
+                                                <span class="font-bold text-gray-900">৳{{ toBengaliNumber(item.total_value, 2) }}</span>
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                                                    :class="stockStatusClass(item.stock_status)"
+                                                >
+                                                    {{ getTranslation(item.stock_status) }}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td
-                                    class="hidden w-28 px-2 lg:px-3 py-3 text-xs text-gray-500 sm:table-cell lg:text-sm"
+                                    class="hidden w-28 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:table-cell lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -391,7 +420,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
+                                    class="hidden lg:table-cell w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -402,7 +431,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
+                                    class="hidden lg:table-cell w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium">
                                         {{
@@ -413,7 +442,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
+                                    class="hidden lg:table-cell w-24 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-center font-medium text-amber-600">
                                         {{
@@ -424,7 +453,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
+                                    class="hidden lg:table-cell w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="flex justify-center">
                                         <span
@@ -436,7 +465,7 @@
                                     </div>
                                 </td>
                                 <td
-                                    class="w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
+                                    class="hidden lg:table-cell w-36 px-2 lg:px-3 py-3 text-xs text-gray-500 lg:text-sm"
                                 >
                                     <div class="text-right font-medium">
                                         ৳{{
@@ -450,120 +479,17 @@
                                 v-if="expandedVariants[index]"
                                 class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
                             >
-                                <td :colspan="8" class="px-2 lg:px-6 py-6">
-                                    <div class="ml-2 lg:ml-6">
-                                        <!-- Mobile view for hidden columns -->
-                                        <div
-                                            class="sm:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border-l-4 border-indigo-500"
-                                        >
-                                            <h4
-                                                class="font-semibold text-gray-800 mb-3 flex items-center"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                                {{
-                                                    getTranslation(
-                                                        "productDetails"
-                                                    )
-                                                }}
-                                            </h4>
-                                            <div
-                                                class="grid grid-cols-2 gap-3 text-sm"
-                                            >
-                                                <div class="space-y-2">
-                                                    <div class="flex flex-col">
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "variantCount"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            class="text-gray-800 font-medium"
-                                                            >{{
-                                                                toBengaliNumber(
-                                                                    item
-                                                                        .variants
-                                                                        .length
-                                                                )
-                                                            }}</span
-                                                        >
-                                                    </div>
-                                                    <div class="flex flex-col">
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "cases"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            class="text-gray-800 font-medium"
-                                                            >{{
-                                                                toBengaliNumber(
-                                                                    item.total_available_cases
-                                                                )
-                                                            }}</span
-                                                        >
-                                                    </div>
-                                                    <div class="flex flex-col">
-                                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("sold") }}</span>
-                                                        <span class="text-amber-600 font-medium">{{ toBengaliNumber(item.total_sold) }}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="space-y-2">
-                                                    <div class="flex flex-col">
-                                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("stockStatus") }}</span>
-                                                        <span
-                                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit"
-                                                            :class="stockStatusClass(item.stock_status)"
-                                                        >
-                                                            {{ getTranslation(item.stock_status) }}
-                                                        </span>
-                                                    </div>
-                                                    <div
-                                                        class="lg:hidden flex flex-col"
-                                                    >
-                                                        <span
-                                                            class="text-xs text-gray-500 font-medium"
-                                                            >{{
-                                                                getTranslation(
-                                                                    "unitPrice"
-                                                                )
-                                                            }}</span
-                                                        >
-                                                        <span
-                                                            class="text-gray-400"
-                                                            >-</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
+                                <td :colspan="8" class="px-2 py-2.5 lg:px-6 lg:py-6">
+                                    <div class="lg:ml-6">
                                         <!-- Variants Header -->
                                         <div
-                                            class="mb-4 flex items-center justify-between"
+                                            class="mb-2 flex items-center justify-between"
                                         >
                                             <h4
-                                                class="text-lg font-semibold text-gray-800 flex items-center"
+                                                class="text-sm font-semibold text-gray-800 flex items-center"
                                             >
                                                 <svg
-                                                    class="w-5 h-5 mr-2 text-indigo-600"
+                                                    class="w-4 h-4 mr-1.5 text-indigo-600 flex-shrink-0"
                                                     fill="none"
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
@@ -598,18 +524,18 @@
                                         </div>
 
                                         <!-- Variants Cards for Mobile -->
-                                        <div class="lg:hidden space-y-3">
+                                        <div class="lg:hidden space-y-1.5">
                                             <div
                                                 v-for="variant in item.variants"
                                                 :key="variant.variant"
-                                                class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                                                class="bg-white rounded-lg px-2.5 py-2 shadow-sm border border-gray-200"
                                             >
                                                 <div
-                                                    class="flex justify-between items-start mb-3"
+                                                    class="flex justify-between items-start gap-2"
                                                 >
                                                     <div class="flex-1 min-w-0">
                                                         <h5
-                                                            class="font-semibold text-gray-900 truncate"
+                                                            class="text-xs font-semibold text-gray-900 truncate"
                                                             :title="
                                                                 variant.variant
                                                             "
@@ -619,7 +545,7 @@
                                                             }}
                                                         </h5>
                                                         <p
-                                                            class="text-sm text-gray-600 mt-1"
+                                                            class="text-[11px] text-gray-600 mt-0.5"
                                                         >
                                                             {{
                                                                 getTranslation(
@@ -633,7 +559,7 @@
                                                             }}
                                                         </p>
                                                         <p
-                                                            class="text-sm text-gray-600 mt-1"
+                                                            class="text-[11px] text-gray-600 mt-0.5"
                                                         >
                                                             {{ getTranslation("sold") }}:
                                                             {{
@@ -643,7 +569,7 @@
                                                             }}
                                                         </p>
                                                         <p
-                                                            class="text-sm text-gray-600 mt-1"
+                                                            class="text-[11px] text-gray-600 mt-0.5"
                                                         >
                                                             {{
                                                                 getTranslation(
@@ -658,21 +584,21 @@
                                                         </p>
                                                     </div>
                                                     <div
-                                                        class="ml-3 text-right"
+                                                        class="text-right flex-shrink-0"
                                                     >
-                                                        <div class="mb-2">
+                                                        <div class="mb-1">
                                                             <span
-                                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                                class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
                                                                 :class="stockStatusClass(getStockStatus(variant.cases_available))"
                                                             >
                                                                 {{ getTranslation(getStockStatus(variant.cases_available)) }}
                                                             </span>
                                                         </div>
                                                         <div
-                                                            class="flex items-center justify-end mb-1"
+                                                            class="flex items-center justify-end"
                                                         >
                                                             <svg
-                                                                class="w-4 h-4 mr-1 text-gray-400"
+                                                                class="w-3 h-3 mr-1 text-gray-400"
                                                                 fill="none"
                                                                 stroke="currentColor"
                                                                 viewBox="0 0 24 24"
@@ -1315,4 +1241,3 @@ function toggleVariants(index) {
     }
 }
 </style>
-```

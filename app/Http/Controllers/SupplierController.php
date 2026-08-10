@@ -48,9 +48,11 @@ class SupplierController extends Controller
      */
     public function store(StoreSupplierRequest $request)
     {
-        $data= $request->validated();
-;
+        $data = $request->validated();
+
         $this->supplierRepository->create($data);
+
+        return to_route('suppliers.index')->with('success', 'Supplier created successfully');
     }
 
     public function quickStore(StoreSupplierRequest $request)

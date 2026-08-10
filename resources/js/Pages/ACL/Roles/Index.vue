@@ -1,8 +1,8 @@
 <template>
-    <div class="p-6 space-y-6">
+    <div class="p-3 sm:p-6 space-y-3 sm:space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-800">Role Management</h1>
+                <h1 class="text-lg sm:text-2xl font-semibold text-gray-800">Role Management</h1>
                 <p class="text-sm text-gray-500">Manage role-based access for ERP modules.</p>
             </div>
             <Link
@@ -27,7 +27,52 @@
             <div v-if="filteredRoles.length === 0" class="p-8 text-center text-sm text-gray-500">
                 No roles found.
             </div>
-            <div v-else class="overflow-x-auto">
+            <template v-else>
+            <!-- Cards (mobile) -->
+            <div class="sm:hidden divide-y divide-gray-100">
+                <div v-for="role in filteredRoles" :key="`m-${role.id}`" class="px-3 py-2.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 break-words">{{ role.name }}</p>
+                            <p class="text-[11px] text-gray-500 break-words">{{ role.description || '—' }}</p>
+                        </div>
+                        <span
+                            class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
+                            :class="role.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                        >
+                            {{ role.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </div>
+                    <div v-if="role.permissions?.length" class="mt-1.5 flex flex-wrap gap-1">
+                        <span
+                            v-for="permission in role.permissions"
+                            :key="`m-${role.id}-${permission}`"
+                            class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"
+                        >
+                            {{ permission }}
+                        </span>
+                    </div>
+                    <div class="mt-2 flex gap-1.5">
+                        <Link
+                            v-if="can('role.update')"
+                            :href="route('roles.edit', role.id)"
+                            class="flex-1 text-center px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-semibold hover:bg-blue-100"
+                        >
+                            Edit
+                        </Link>
+                        <button
+                            v-if="can('role.delete')"
+                            type="button"
+                            class="flex-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 text-[11px] font-semibold hover:bg-red-100"
+                            @click="destroy(role)"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden sm:block overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -88,6 +133,7 @@
                     </tbody>
                 </table>
             </div>
+            </template>
         </div>
     </div>
 </template>

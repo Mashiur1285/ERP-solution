@@ -31,6 +31,7 @@
         <CreateShopModal
             :show="showCreateShopModal"
             :initial-road="selectedRoad"
+            :road-options="existingRoadNames"
             :t="t"
             @close="showCreateShopModal = false"
             @shop-created="onShopCreated"
@@ -60,10 +61,10 @@
         </div>
 
         <!-- POS Layout -->
-        <div class="flex flex-col lg:flex-row flex-1 gap-4 p-4 min-h-0">
+        <div class="flex flex-col lg:flex-row flex-1 gap-4 p-3 sm:p-4 min-h-0">
 
             <!-- LEFT: Product search + cart -->
-            <div class="flex-1 space-y-4 overflow-y-auto">
+            <div class="flex-1 min-w-0 space-y-4 lg:overflow-y-auto">
 
                 <!-- Products -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -132,7 +133,7 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                         <label v-for="v in pendingProduct.variants" :key="v.variant"
                             :class="['flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none',
                                 variantSelections[v.variant]
@@ -167,7 +168,24 @@
                 </div>
 
                 <div v-if="cartItems.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="overflow-x-auto">
+                    <!-- Cart header: item count + free bottles toggle -->
+                    <div class="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            {{ cartItems.length }} {{ t('product') }}
+                        </span>
+                        <button
+                            type="button"
+                            @click="includeFreeBottles = !includeFreeBottles"
+                            class="flex items-center gap-2 -my-1 py-1 pl-2 pr-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                            <span class="text-xs font-medium text-gray-600">{{ t('includeFreeBottles') }}</span>
+                            <span :class="['relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors', includeFreeBottles ? 'bg-orange-500' : 'bg-gray-300']">
+                                <span :class="['inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform', includeFreeBottles ? 'translate-x-4' : 'translate-x-1']" />
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="hidden lg:block overflow-x-auto">
                         <table class="w-full min-w-[800px] text-sm border-collapse">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200">
@@ -295,13 +313,127 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Cart Cards (Mobile / Tablet) -->
+                    <div class="lg:hidden divide-y divide-gray-100">
+                        <div
+                            v-for="(item, index) in cartItems"
+                            :key="`m-${index}`"
+                            class="p-3"
+                            :class="{ 'bg-red-50/40': isSubmitted && (!item.selected_variant || !(item.cases > 0) || !(item.price_per_case > 0)) }"
+                        >
+                            <!-- Header: index + product + remove -->
+                            <div class="flex items-start gap-2">
+                                <span class="w-5 h-5 mt-0.5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    {{ index + 1 }}
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-semibold text-gray-800 text-sm leading-tight break-words">{{ item.product_name }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">{{ item.supplier_name }}</p>
+                                </div>
+                                <button
+                                    @click="removeCartItem(index)"
+                                    class="-mr-1 -mt-1 p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Variant + bottles per case -->
+                            <div class="flex flex-wrap items-center gap-2 mt-2">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100">
+                                    {{ item.selected_variant }}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    {{ t('bpc') }}:
+                                    <span class="font-medium text-gray-700">{{ item.bottles_per_case || '—' }}</span>
+                                </span>
+                            </div>
+
+                            <!-- Editable fields -->
+                            <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 mt-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('cases') }}</label>
+                                    <input
+                                        v-model.number="item.cases"
+                                        type="number"
+                                        inputmode="decimal"
+                                        min="0"
+                                        :max="getMaxCases(item)"
+                                        :placeholder="t('cases')"
+                                        class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
+                                        :class="{
+                                            'border-red-300 bg-red-50': (isSubmitted && !(item.cases > 0 || item.extra_bottles > 0)) || itemExceedsStock(item),
+                                            'border-orange-300': !itemExceedsStock(item) && item.cases > 0
+                                        }"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('extraBottles') }}</label>
+                                    <input
+                                        v-model.number="item.extra_bottles"
+                                        type="number"
+                                        inputmode="numeric"
+                                        min="0"
+                                        :max="(item.bottles_per_case || 1) - 1"
+                                        :placeholder="t('optional')"
+                                        class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
+                                        :class="{
+                                            'border-red-300 bg-red-50': itemExceedsStock(item),
+                                            'border-orange-300': !itemExceedsStock(item) && item.extra_bottles > 0
+                                        }"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('pricePerCase') }} (৳)</label>
+                                    <input
+                                        v-model.number="item.price_per_case"
+                                        type="number"
+                                        inputmode="decimal"
+                                        min="0"
+                                        :placeholder="t('pricePerCase')"
+                                        class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
+                                        :class="{ 'border-red-300 bg-red-50': isSubmitted && !(item.price_per_case > 0) }"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ t('free') }}</label>
+                                    <input
+                                        v-model.number="item.free_bottles_per_case"
+                                        type="number"
+                                        inputmode="numeric"
+                                        min="0"
+                                        :placeholder="t('free')"
+                                        class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Stock hint -->
+                            <p v-if="getVariantData(item)" class="text-xs mt-2"
+                                :class="itemExceedsStock(item) ? 'text-red-500 font-medium' : 'text-gray-400'">
+                                {{ itemExceedsStock(item) ? t('exceedsStock') : `${getMaxCases(item)} ${getCasesAvailableLabel(item)}` }}
+                            </p>
+
+                            <!-- Subtotal -->
+                            <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-100">
+                                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{{ t('subtotal') }}</span>
+                                <span v-if="getItemSubtotal(item) > 0" class="text-base font-bold text-orange-600">
+                                    ৳{{ formatNumber(getItemSubtotal(item)) }}
+                                </span>
+                                <span v-else class="text-gray-300 text-sm">৳0.00</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
             <!-- RIGHT: Sticky invoice panel -->
             <div class="w-full lg:w-72 lg:flex-shrink-0">
-                <div class="sticky top-4 space-y-3">
+                <div class="space-y-3 lg:sticky lg:top-4">
 
                     <!-- Sale Details card -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-3">
@@ -417,17 +549,6 @@
                                 class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none"
                                 :class="{ 'border-red-300': isSubmitted && !saleDate }"
                             />
-                        </div>
-
-                        <!-- Free bottles toggle -->
-                        <div class="flex items-center justify-between py-1">
-                            <span class="text-xs font-medium text-gray-600">{{ t('includeFreeBottles') }}</span>
-                            <button
-                                @click="includeFreeBottles = !includeFreeBottles"
-                                :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors', includeFreeBottles ? 'bg-orange-500' : 'bg-gray-300']"
-                            >
-                                <span :class="['inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform', includeFreeBottles ? 'translate-x-4' : 'translate-x-1']" />
-                            </button>
                         </div>
                     </div>
 
@@ -643,6 +764,11 @@ const translations: Record<string, Record<string, string>> = {
         selectShop: "Select a shop",
         noRoadsFound: "No roads found",
         noShopsFound: "No shops found",
+        addShop: "Add New Shop",
+        createShop: "Create Shop",
+        phoneNumber: "Phone Number",
+        newRoadWillBeCreated: "New road — it will appear in the road list once this shop is saved.",
+        shopCreatedSuccess: "Shop created successfully",
         saleDate: "Sale Date",
         includeFreeBottles: "Include Free Bottles",
         saleDetails: "Sale Details",
@@ -710,6 +836,11 @@ const translations: Record<string, Record<string, string>> = {
         selectShop: "দোকান নির্বাচন করুন",
         noRoadsFound: "কোনো রোড পাওয়া যায়নি",
         noShopsFound: "কোনো দোকান পাওয়া যায়নি",
+        addShop: "নতুন দোকান যোগ",
+        createShop: "দোকান তৈরি করুন",
+        phoneNumber: "ফোন নম্বর",
+        newRoadWillBeCreated: "নতুন রোড — এই দোকানটি সেভ হলে রোড তালিকায় দেখা যাবে।",
+        shopCreatedSuccess: "দোকান সফলভাবে তৈরি হয়েছে",
         saleDate: "বিক্রয়ের তারিখ",
         includeFreeBottles: "বিনামূল্যে বোতল",
         saleDetails: "বিক্রয়ের তথ্য",
@@ -809,7 +940,11 @@ const onShopCreated = (newShop: Shop) => {
     router.reload({
         only: ['shops'],
         onSuccess: () => {
-            selectedRoad.value = newShop.road || "__UNASSIGNED__";
+            const roadValue = normalizeRoadValue(newShop.road);
+            selectedRoad.value = roadValue;
+            // Keep the road box in sync - the new shop may have introduced a road
+            // that wasn't in the list a moment ago.
+            roadSearchQuery.value = roadLabelFor(roadValue);
             shopId.value = newShop.id;
             shopSearchQuery.value = newShop.shop_name;
             showToastMessage('shopCreatedSuccess', 'success');
@@ -820,20 +955,21 @@ const onShopCreated = (newShop: Shop) => {
 const normalizeRoadValue = (road: string | null | undefined) =>
     road && road.trim() ? road.trim() : "__UNASSIGNED__";
 
+const roadLabelFor = (value: string) =>
+    value === "__UNASSIGNED__"
+        ? currentLanguage.value === "bn"
+            ? "রোড সেট করা হয়নি"
+            : "Unassigned Road"
+        : value;
+
 const roadOptions = computed(() => {
     const roads = new Map<string, string>();
 
     props.shops.forEach((shop) => {
         const value = normalizeRoadValue(shop.road);
-        const label =
-            value === "__UNASSIGNED__"
-                ? currentLanguage.value === "bn"
-                    ? "রোড সেট করা হয়নি"
-                    : "Unassigned Road"
-                : value;
 
         if (!roads.has(value)) {
-            roads.set(value, label);
+            roads.set(value, roadLabelFor(value));
         }
     });
 
@@ -841,6 +977,14 @@ const roadOptions = computed(() => {
         .map(([value, label]) => ({ value, label }))
         .sort((a, b) => a.label.localeCompare(b.label));
 });
+
+// Real road names only - the quick-create modal offers these as suggestions so a
+// road gets reused instead of retyped into a near-duplicate.
+const existingRoadNames = computed(() =>
+    roadOptions.value
+        .filter((road) => road.value !== "__UNASSIGNED__")
+        .map((road) => road.value)
+);
 
 const filteredRoadOptions = computed(() => {
     const query = roadSearchQuery.value.trim().toLowerCase();
@@ -1344,7 +1488,15 @@ const openModal = () => {
         return;
     }
 
-    showModal.value = true;
+    // A new sale goes straight through — /sales/store redirects to the payment
+    // page, so a separate "are you sure" step just adds a tap. Edit mode still
+    // opens the modal: it carries the payment adjustment fields.
+    if (isEditMode.value) {
+        showModal.value = true;
+        return;
+    }
+
+    confirmSale();
 };
 
 const confirmSale = () => {

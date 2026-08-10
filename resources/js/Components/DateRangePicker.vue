@@ -1,10 +1,10 @@
 <template>
-    <div class="date-range-picker bg-white rounded-lg shadow-sm border border-gray-200 p-2.5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="date-range-picker bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-2.5">
+        <div class="flex flex-row items-center justify-between gap-2 sm:gap-3">
             <!-- Header & Display -->
-            <div class="flex items-center justify-between sm:justify-start">
+            <div class="flex items-center justify-start min-w-0">
                 <div class="flex items-center">
-                    <div class="p-1 bg-indigo-50 rounded mr-2">
+                    <div class="p-1 bg-indigo-50 rounded mr-1.5 sm:mr-2 flex-shrink-0">
                         <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -13,18 +13,18 @@
                     <span class="text-xs font-semibold text-gray-700 whitespace-nowrap hidden sm:inline-block mr-3">{{ label }}</span>
                 </div>
                 
-                <span v-if="activePreset !== 'custom'" class="text-[10px] text-indigo-600 font-medium bg-indigo-50 px-1.5 py-0.5 rounded whitespace-nowrap">
+                <span v-if="activePreset !== 'custom'" class="hidden sm:inline-block text-[10px] text-indigo-600 font-medium bg-indigo-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                     {{ displayRange }}
                 </span>
             </div>
 
             <!-- Preset Dropdown -->
-            <div class="flex items-center flex-1 sm:justify-end mt-2 sm:mt-0">
-                <div class="relative w-full sm:w-auto min-w-[140px]">
+            <div class="flex items-center flex-1 justify-end">
+                <div class="relative w-full sm:w-auto min-w-0 sm:min-w-[140px]">
                     <select
                         v-model="activePreset"
                         @change="selectPreset(activePreset)"
-                        class="w-full px-3 py-1.5 text-xs font-medium bg-gray-50 border border-gray-200 rounded cursor-pointer text-gray-700 hover:bg-white hover:border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        class="w-full px-2 sm:px-3 py-1.5 text-xs font-medium bg-gray-50 border border-gray-200 rounded cursor-pointer text-gray-700 hover:bg-white hover:border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     >
                         <option v-for="preset in presets" :key="preset.key" :value="preset.key">
                             {{ preset.label }}

@@ -1,4 +1,3 @@
-```vue
 <template>
     <div
         v-if="show"
@@ -487,4 +486,3 @@ defineEmits(["close", "confirm"]);
     animation: fadeIn 0.3s ease-out;
 }
 </style>
-```

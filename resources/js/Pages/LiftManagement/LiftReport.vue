@@ -1,14 +1,14 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
+        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Title -->
         <div
-            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
+            class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-lg sm:text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -118,14 +118,14 @@
         </section>
 
         <!-- Total Metrics -->
-        <div class="print:hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="print:hidden grid grid-cols-4 gap-2 sm:gap-4 mb-4">
             <div
-                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
+                class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-indigo-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-indigo-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -138,23 +138,23 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-indigo-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-indigo-700">
                             {{ t("totalLifts") }}
                         </p>
-                        <p class="text-lg font-bold text-indigo-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-indigo-900">
                             {{ toBn(totalLifts) }}
                         </p>
                     </div>
                 </div>
             </div>
             <div
-                class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-sm border border-orange-200"
+                class="bg-gradient-to-br from-orange-50 to-orange-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-orange-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-orange-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-orange-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -167,23 +167,23 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-orange-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-orange-700">
                             {{ t("totalCases") }}
                         </p>
-                        <p class="text-lg font-bold text-orange-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-orange-900">
                             {{ toBn(totalCases) }}
                         </p>
                     </div>
                 </div>
             </div>
             <div
-                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-purple-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-purple-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-purple-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -196,23 +196,23 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-purple-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-purple-700">
                             {{ t("totalBottles") }}
                         </p>
-                        <p class="text-lg font-bold text-purple-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-purple-900">
                             {{ toBn(totalBottles) }}
                         </p>
                     </div>
                 </div>
             </div>
             <div
-                class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                class="bg-gradient-to-br from-green-50 to-green-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-green-200"
             >
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-500 rounded-lg mr-3">
+                <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
+                    <div class="p-1.5 sm:p-2 bg-green-500 rounded-lg sm:mr-3 flex-shrink-0">
                         <svg
-                            class="w-6 h-6 text-white"
+                            class="w-4 h-4 sm:w-6 sm:h-6 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -225,11 +225,11 @@
                             />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-green-700">
+                    <div class="min-w-0">
+                        <p class="text-[9px] leading-tight sm:text-xs md:text-sm font-medium text-green-700">
                             {{ t("totalAmount") }}
                         </p>
-                        <p class="text-lg font-bold text-green-900">
+                        <p class="text-[11px] sm:text-base md:text-lg font-bold leading-tight break-all text-green-900">
                             ৳{{ toBn(totalAmount.toFixed(2)) }}
                         </p>
                     </div>
@@ -238,36 +238,40 @@
         </div>
 
         <!-- Search & Filter Fields -->
-        <div class="print:hidden flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
-            <div class="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200">
-                <button
-                    @click="activeTab = 'completed'"
-                    :class="[
-                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                        activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
-                    ]"
-                >
-                    {{ t("completedTab") }}
-                </button>
-                <button
-                    @click="activeTab = 'draft'"
-                    :class="[
-                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                        activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
-                    ]"
-                >
-                    {{ t("draftTab") }}
-                </button>
+        <div class="print:hidden flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 gap-2 sm:gap-4">
+            <!-- Tabs + date range share a row on phones; `sm:contents` dissolves
+                 this wrapper from sm up so the original 3-way split is kept. -->
+            <div class="flex items-center gap-2 sm:contents">
+                <div class="flex items-center gap-1 sm:gap-2 rounded-xl bg-white p-1 shadow-sm border border-gray-200 flex-shrink-0">
+                    <button
+                        @click="activeTab = 'completed'"
+                        :class="[
+                            'px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors',
+                            activeTab === 'completed' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                        ]"
+                    >
+                        {{ t("completedTab") }}
+                    </button>
+                    <button
+                        @click="activeTab = 'draft'"
+                        :class="[
+                            'px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors',
+                            activeTab === 'draft' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100',
+                        ]"
+                    >
+                        {{ t("draftTab") }}
+                    </button>
+                </div>
+                <DateRangePicker
+                    v-model:startDate="dateStart"
+                    v-model:endDate="dateEnd"
+                    :language="currentLanguage"
+                    class="flex-1 min-w-0 sm:flex-none sm:w-auto"
+                />
             </div>
-            <DateRangePicker
-                v-model:startDate="dateStart"
-                v-model:endDate="dateEnd"
-                :language="currentLanguage"
-                class="w-full sm:w-auto"
-            />
             <div class="relative w-full sm:w-80">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-2.5 sm:pl-3 pointer-events-none">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
@@ -275,13 +279,13 @@
                     v-model="searchQuery"
                     type="text"
                     :placeholder="t('searchLifts')"
-                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                    class="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-xs sm:text-sm font-medium hover:border-indigo-300"
                 />
             </div>
         </div>
 
         <!-- Lift Cards -->
-        <div class="print:hidden space-y-4">
+        <div class="print:hidden space-y-2 sm:space-y-4">
             <div
                 v-if="!filteredLifts.length"
                 class="text-center text-gray-500 py-8 text-sm bg-white rounded-xl shadow-sm"
@@ -296,13 +300,13 @@
             >
                 <!-- Lift Header (clickable) -->
                 <div
-                    class="flex items-center justify-between px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                    class="px-3 lg:px-6 py-2.5 lg:py-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     @click="toggleLift(lift.id)"
                 >
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-start gap-2 lg:gap-4">
                         <svg
                             :class="[
-                                'w-4 h-4 transition-transform flex-shrink-0 text-gray-500',
+                                'w-4 h-4 mt-0.5 transition-transform flex-shrink-0 text-gray-500',
                                 expandedLifts[lift.id] ? 'rotate-90' : '',
                             ]"
                             fill="none"
@@ -316,48 +320,49 @@
                                 d="M9 5l7 7-7 7"
                             />
                         </svg>
-                        <div>
-                            <div class="flex items-center space-x-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 lg:gap-3 min-w-0">
                                 <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                                    class="inline-flex items-center px-2 lg:px-2.5 py-0.5 rounded-full text-[10px] lg:text-xs font-medium bg-indigo-100 text-indigo-800 flex-shrink-0"
                                 >
                                     {{ lift.lift_number }}
                                 </span>
-                                <span class="text-sm font-semibold text-gray-900">
+                                <span class="text-xs lg:text-sm font-semibold text-gray-900 truncate">
                                     {{ lift.supplier?.company_name || '-' }}
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="text-[10px] lg:text-xs text-gray-500 mt-0.5 lg:mt-1">
                                 {{ formatDate(lift.lift_date) }}
-                                <span v-if="lift.items" class="ml-2">
+                                <span v-if="lift.items">
                                     · {{ toBn(lift.items.length) }} {{ t("items") }}
                                 </span>
                             </p>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="flex items-center justify-end gap-2 mb-2">
-                            <button
-                                class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium transition-colors"
-                                :class="lift.status === 'draft' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'"
-                                @click.stop="editLift(lift)"
-                            >
-                                {{ lift.status === 'draft' ? t("editDraft") : t("editLift") }}
-                            </button>
-                            <button
-                                class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-                                @click.stop="deleteLift(lift.id)"
-                            >
-                                {{ t("deleteLift") }}
-                            </button>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-sm lg:text-lg font-bold text-green-600 leading-tight">
+                                ৳{{ toBn(Number(lift.total_amount || 0).toFixed(2)) }}
+                            </p>
+                            <p class="text-[10px] lg:text-xs text-gray-500">
+                                {{ toBn(getLiftTotalCases(lift)) }} {{ t("cases") }}
+                                · {{ toBn(getLiftTotalBottles(lift)) }} {{ t("bottles") }}
+                            </p>
                         </div>
-                        <p class="text-lg font-bold text-green-600">
-                            ৳{{ toBn(Number(lift.total_amount || 0).toFixed(2)) }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            {{ toBn(getLiftTotalCases(lift)) }} {{ t("cases") }}
-                            · {{ toBn(getLiftTotalBottles(lift)) }} {{ t("bottles") }}
-                        </p>
+                    </div>
+                    <!-- Actions get their own row so the header above can never squeeze -->
+                    <div class="flex items-center justify-end gap-1.5 lg:gap-2 mt-1.5 lg:mt-2">
+                        <button
+                            class="inline-flex items-center px-2 lg:px-3 py-1 rounded-lg text-[11px] lg:text-xs font-medium whitespace-nowrap transition-colors"
+                            :class="lift.status === 'draft' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'"
+                            @click.stop="editLift(lift)"
+                        >
+                            {{ lift.status === 'draft' ? t("editDraft") : t("editLift") }}
+                        </button>
+                        <button
+                            class="inline-flex items-center px-2 lg:px-3 py-1 rounded-lg text-[11px] lg:text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                            @click.stop="deleteLift(lift.id)"
+                        >
+                            {{ t("deleteLift") }}
+                        </button>
                     </div>
                 </div>
 
@@ -369,7 +374,7 @@
                     <!-- Notes -->
                     <div
                         v-if="lift.notes"
-                        class="px-4 lg:px-6 py-2 bg-yellow-50 border-b border-yellow-100 text-sm text-yellow-800"
+                        class="px-3 lg:px-6 py-1.5 lg:py-2 bg-yellow-50 border-b border-yellow-100 text-[11px] lg:text-sm text-yellow-800"
                     >
                         <span class="font-medium">{{ t("notes") }}:</span> {{ lift.notes }}
                     </div>
@@ -461,50 +466,50 @@
                     </div>
 
                     <!-- Items Cards (Mobile) -->
-                    <div class="lg:hidden p-4 space-y-3">
+                    <div class="lg:hidden p-2.5 space-y-1.5">
                         <div
                             v-for="item in lift.items"
                             :key="item.id"
-                            class="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                            class="px-2.5 py-2 bg-gray-50 rounded-lg border border-gray-200"
                         >
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <p class="font-semibold text-gray-900 text-sm">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-baseline gap-1.5 min-w-0">
+                                    <p class="font-semibold text-gray-900 text-xs truncate">
                                         {{ item.product_catalog?.name || '-' }}
                                     </p>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs font-medium mt-1">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-200 text-gray-600 text-[10px] font-medium flex-shrink-0">
                                         {{ item.variant }}
                                     </span>
                                 </div>
-                                <p class="font-bold text-green-600">
+                                <p class="font-bold text-green-600 text-xs flex-shrink-0">
                                     ৳{{ toBn(Number(item.total_cost || 0).toFixed(2)) }}
                                 </p>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <div class="flex flex-col">
-                                    <span class="text-gray-500">{{ t("cases") }}</span>
-                                    <span class="font-medium text-gray-800">{{ toBn(item.number_of_cases) }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-gray-500">{{ t("pricePerCase") }}</span>
-                                    <span class="font-medium text-gray-800">৳{{ toBn(Number(item.case_buying_price).toFixed(2)) }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-gray-500">{{ t("totalBottles") }}</span>
-                                    <span class="font-medium text-gray-800">{{ toBn(item.total_bottles) }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-gray-500">{{ t("freeBottles") }}</span>
-                                    <span class="font-medium text-gray-800">{{ toBn(item.total_free_bottles || 0) }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-gray-500">{{ t("ratePerBottle") }}</span>
-                                    <span class="font-medium text-gray-800">৳{{ toBn(Number(item.actual_rate_per_bottle || 0).toFixed(2)) }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-gray-500">{{ t("bottlesPerCase") }}</span>
-                                    <span class="font-medium text-gray-800">{{ toBn(item.bottles_per_case) }}</span>
-                                </div>
+                            <div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[11px] text-gray-500">
+                                <span>
+                                    {{ t("cases") }}
+                                    <span class="font-bold text-gray-800">{{ toBn(item.number_of_cases) }}</span>
+                                </span>
+                                <span>
+                                    {{ t("pricePerCase") }}
+                                    <span class="font-bold text-gray-800">৳{{ toBn(Number(item.case_buying_price).toFixed(2)) }}</span>
+                                </span>
+                                <span>
+                                    {{ t("totalBottles") }}
+                                    <span class="font-bold text-gray-800">{{ toBn(item.total_bottles) }}</span>
+                                </span>
+                                <span>
+                                    {{ t("freeBottles") }}
+                                    <span class="font-bold text-gray-800">{{ toBn(item.total_free_bottles || 0) }}</span>
+                                </span>
+                                <span>
+                                    {{ t("ratePerBottle") }}
+                                    <span class="font-bold text-gray-800">৳{{ toBn(Number(item.actual_rate_per_bottle || 0).toFixed(2)) }}</span>
+                                </span>
+                                <span>
+                                    {{ t("bottlesPerCase") }}
+                                    <span class="font-bold text-gray-800">{{ toBn(item.bottles_per_case) }}</span>
+                                </span>
                             </div>
                         </div>
                     </div>

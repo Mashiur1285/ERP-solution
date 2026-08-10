@@ -1,4 +1,3 @@
-```vue
 <template>
     <div
         class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
@@ -1092,4 +1091,3 @@ textarea::-webkit-scrollbar-track {
     background: #f3f4f6;
 }
 </style>
-```

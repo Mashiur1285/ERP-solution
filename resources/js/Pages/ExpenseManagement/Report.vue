@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 sm:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+    <div class="p-3 sm:p-6 space-y-3 sm:space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': lang === 'bn' }">
 
         <!-- ═══════ SCREEN UI ═══════ -->
@@ -8,13 +8,13 @@
         <div class="print:hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-200 pb-4">
             <div>
                 <p class="text-xs font-bold uppercase tracking-widest text-rose-600 mb-1">Financial Report</p>
-                <h1 class="text-2xl font-bold text-gray-900">{{ t('title') }}</h1>
+                <h1 class="text-lg sm:text-2xl font-bold text-gray-900">{{ t('title') }}</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ selectedMonthLabel }}</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
                 <button @click="setLang('en')" :class="['px-3 py-1.5 rounded-md text-xs font-semibold transition-colors', lang === 'en' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">EN</button>
                 <button @click="setLang('bn')" :class="['px-3 py-1.5 rounded-md text-xs font-semibold transition-colors', lang === 'bn' ? 'bg-rose-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">বাং</button>
-                <button @click="printPage" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2">
+                <button @click="printPage" class="px-1.5 sm:px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1m-10 0h10v4H10v-4z" />
                     </svg>
@@ -40,54 +40,54 @@
 
         <!-- KPI Cards -->
         <div class="print:hidden grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-rose-600">{{ t('totalAmount') }}</p>
-                <p class="text-2xl font-bold text-gray-900 mt-2">৳{{ fmt(report.total) }}</p>
-                <p class="text-xs text-gray-400 mt-1">{{ selectedMonthLabel }}</p>
+            <div class="bg-white rounded-xl border border-gray-200 p-2.5 sm:p-4 shadow-sm">
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-rose-600">{{ t('totalAmount') }}</p>
+                <p class="text-base sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">৳{{ fmt(report.total) }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">{{ selectedMonthLabel }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">{{ t('totalEntries') }}</p>
-                <p class="text-2xl font-bold text-gray-900 mt-2">{{ report.detailed.length }}</p>
-                <p class="text-xs text-gray-400 mt-1">{{ t('expenseRecords') }}</p>
+            <div class="bg-white rounded-xl border border-gray-200 p-2.5 sm:p-4 shadow-sm">
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-indigo-600">{{ t('totalEntries') }}</p>
+                <p class="text-base sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{{ report.detailed.length }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">{{ t('expenseRecords') }}</p>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm col-span-2 md:col-span-1">
-                <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">{{ t('largestCategory') }}</p>
-                <p class="text-xl font-bold text-gray-900 mt-2 truncate">{{ largestCategory }}</p>
-                <p class="text-xs text-gray-400 mt-1">৳{{ fmt(largestAmount) }}</p>
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-amber-600">{{ t('largestCategory') }}</p>
+                <p class="text-base sm:text-xl font-bold text-gray-900 mt-1 sm:mt-2 truncate">{{ largestCategory }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">৳{{ fmt(largestAmount) }}</p>
             </div>
         </div>
 
         <!-- Screen Table -->
         <div class="print:hidden bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                <h2 class="text-base font-bold text-gray-800">{{ t('breakdownByCategory') }}</h2>
+            <div class="px-3 sm:px-5 py-2.5 sm:py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-2">
+                <h2 class="text-sm sm:text-base font-bold text-gray-800">{{ t('breakdownByCategory') }}</h2>
                 <span class="text-xs text-gray-400">{{ selectedMonthLabel }}</span>
             </div>
             <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-xs sm:text-sm">
                 <thead>
                     <tr class="bg-rose-600 text-white text-xs uppercase tracking-wider">
-                        <th class="px-5 py-3 text-left font-semibold">#</th>
-                        <th class="px-5 py-3 text-left font-semibold">{{ t('category') }}</th>
-                        <th class="px-5 py-3 text-center font-semibold">{{ t('entries') }}</th>
-                        <th class="px-5 py-3 text-right font-semibold w-44">{{ t('amount') }}</th>
-                        <th class="px-5 py-3 text-right font-semibold w-20">%</th>
+                        <th class="hidden sm:table-cell px-2 sm:px-5 py-2 sm:py-3 text-left font-semibold">#</th>
+                        <th class="px-2 sm:px-5 py-2 sm:py-3 text-left font-semibold">{{ t('category') }}</th>
+                        <th class="px-2 sm:px-5 py-2 sm:py-3 text-center font-semibold">{{ t('entries') }}</th>
+                        <th class="px-2 sm:px-5 py-2 sm:py-3 text-right font-semibold sm:w-44">{{ t('amount') }}</th>
+                        <th class="px-2 sm:px-5 py-2 sm:py-3 text-right font-semibold sm:w-20">%</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     <tr v-for="(amount, cat, idx) in report.summary" :key="cat" class="hover:bg-rose-50/30 transition-colors">
-                        <td class="px-5 py-3 text-gray-400 text-xs">{{ idx + 1 }}</td>
-                        <td class="px-5 py-3">
+                        <td class="hidden sm:table-cell px-2 sm:px-5 py-2 sm:py-3 text-gray-400 text-xs">{{ idx + 1 }}</td>
+                        <td class="px-2 sm:px-5 py-3">
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-rose-400 flex-shrink-0"></span>
                                 <span class="font-medium text-gray-800">{{ cat }}</span>
                             </div>
                         </td>
-                        <td class="px-5 py-3 text-center text-gray-500">
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-center text-gray-500">
                             {{ countByCategory(cat) }}
                         </td>
-                        <td class="px-5 py-3 text-right font-bold text-rose-700">৳{{ fmt(amount) }}</td>
-                        <td class="px-5 py-3 text-right">
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right font-bold text-rose-700">৳{{ fmt(amount) }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <div class="w-16 bg-gray-100 rounded-full h-1.5 hidden sm:block">
                                     <div class="bg-rose-400 h-1.5 rounded-full" :style="{ width: pct(amount) + '%' }"></div>
@@ -97,14 +97,15 @@
                         </td>
                     </tr>
                     <tr v-if="!Object.keys(report.summary).length">
-                        <td colspan="5" class="px-5 py-10 text-center text-gray-400">{{ t('noExpenses') }}</td>
+                        <td colspan="5" class="px-2 sm:px-5 py-10 text-center text-gray-400">{{ t('noExpenses') }}</td>
                     </tr>
                 </tbody>
                 <tfoot class="bg-rose-50 border-t-2 border-rose-200">
                     <tr>
-                        <td colspan="3" class="px-5 py-3 font-bold text-rose-800">{{ t('total') }}</td>
-                        <td class="px-5 py-3 text-right font-bold text-rose-800">৳{{ fmt(report.total) }}</td>
-                        <td class="px-5 py-3 text-right text-xs text-rose-600">100%</td>
+                        <td colspan="2" class="sm:hidden px-2 py-2 font-bold text-rose-800">{{ t('total') }}</td>
+                        <td colspan="3" class="hidden sm:table-cell px-5 py-3 font-bold text-rose-800">{{ t('total') }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right font-bold text-rose-800">৳{{ fmt(report.total) }}</td>
+                        <td class="px-2 sm:px-5 py-2 sm:py-3 text-right text-xs text-rose-600">100%</td>
                     </tr>
                 </tfoot>
             </table>
@@ -113,41 +114,45 @@
 
         <!-- Detailed Table -->
         <div class="print:hidden bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
-                <h2 class="text-base font-bold text-gray-800">{{ t('allEntries') }}</h2>
+            <div class="px-2 sm:px-5 py-2.5 sm:py-4 border-b border-gray-100 bg-gray-50">
+                <h2 class="text-sm sm:text-base font-bold text-gray-800">{{ t('allEntries') }}</h2>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-xs sm:text-sm">
                     <thead class="bg-gradient-to-r from-gray-700 to-gray-600 text-white text-xs uppercase">
                         <tr>
-                            <th class="px-4 py-3 text-left">#</th>
-                            <th class="px-4 py-3 text-left">{{ t('reason') }}</th>
-                            <th class="px-4 py-3 text-left">{{ t('category') }}</th>
-                            <th class="px-4 py-3 text-left hidden sm:table-cell">{{ t('description') }}</th>
-                            <th class="px-4 py-3 text-left">{{ t('date') }}</th>
-                            <th class="px-4 py-3 text-right">{{ t('amount') }}</th>
+                            <th class="hidden sm:table-cell px-1.5 sm:px-4 py-3 text-left">#</th>
+                            <th class="px-1.5 sm:px-4 py-3 text-left">{{ t('reason') }}</th>
+                            <th class="px-1.5 sm:px-4 py-3 text-left">{{ t('category') }}</th>
+                            <th class="px-1.5 sm:px-4 py-3 text-left hidden sm:table-cell">{{ t('description') }}</th>
+                            <th class="hidden sm:table-cell px-1.5 sm:px-4 py-3 text-left">{{ t('date') }}</th>
+                            <th class="px-1.5 sm:px-4 py-3 text-right">{{ t('amount') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         <tr v-for="(expense, idx) in report.detailed" :key="expense.id" class="hover:bg-gray-50">
-                            <td class="px-4 py-2.5 text-gray-400 text-xs">{{ idx + 1 }}</td>
-                            <td class="px-4 py-2.5 font-medium text-gray-900">{{ expense.reason }}</td>
-                            <td class="px-4 py-2.5">
+                            <td class="hidden sm:table-cell px-1.5 sm:px-4 py-2.5 text-gray-400 text-xs">{{ idx + 1 }}</td>
+                            <td class="px-1.5 sm:px-4 py-2.5 font-medium text-gray-900">
+                                {{ expense.reason }}
+                                <span class="sm:hidden block text-[10px] font-normal text-gray-400">{{ formatDate(expense.created_at) }}</span>
+                            </td>
+                            <td class="px-1.5 sm:px-4 py-2.5">
                                 <span v-if="expense.category" class="px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">{{ expense.category }}</span>
                                 <span v-else class="text-gray-400 text-xs">—</span>
                             </td>
-                            <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell text-xs">{{ expense.description || '—' }}</td>
-                            <td class="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(expense.created_at) }}</td>
-                            <td class="px-4 py-2.5 text-right font-bold text-rose-600">৳{{ fmt(expense.amount) }}</td>
+                            <td class="px-1.5 sm:px-4 py-2.5 text-gray-500 hidden sm:table-cell text-xs">{{ expense.description || '—' }}</td>
+                            <td class="hidden sm:table-cell px-1.5 sm:px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(expense.created_at) }}</td>
+                            <td class="px-1.5 sm:px-4 py-2.5 text-right font-bold text-rose-600">৳{{ fmt(expense.amount) }}</td>
                         </tr>
                         <tr v-if="!report.detailed.length">
-                            <td colspan="6" class="px-4 py-10 text-center text-gray-400">{{ t('noExpenses') }}</td>
+                            <td colspan="6" class="px-1.5 sm:px-4 py-10 text-center text-gray-400">{{ t('noExpenses') }}</td>
                         </tr>
                     </tbody>
                     <tfoot class="bg-gray-50 font-bold border-t-2 border-gray-200">
                         <tr>
-                            <td colspan="5" class="px-4 py-3 text-gray-700">{{ t('total') }}</td>
-                            <td class="px-4 py-3 text-right text-rose-700">৳{{ fmt(report.total) }}</td>
+                            <td colspan="2" class="sm:hidden px-1.5 py-2 text-gray-700">{{ t('total') }}</td>
+                            <td colspan="5" class="hidden sm:table-cell px-4 py-3 text-gray-700">{{ t('total') }}</td>
+                            <td class="px-1.5 sm:px-4 py-3 text-right text-rose-700">৳{{ fmt(report.total) }}</td>
                         </tr>
                     </tfoot>
                 </table>

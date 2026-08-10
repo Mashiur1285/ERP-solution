@@ -1,4 +1,3 @@
-```vue
 <template>
     <div class="mt-10">
         <div
@@ -1260,4 +1259,3 @@ watch(
     animation: slideDown 0.3s ease-out;
 }
 </style>
-```

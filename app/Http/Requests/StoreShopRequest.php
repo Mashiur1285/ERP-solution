@@ -15,16 +15,32 @@ class StoreShopRequest extends FormRequest
     }
 
     /**
+     * Blank optional fields arrive as "" from the quick-create modal. Store them
+     * as NULL so the unique indexes on phone_number/email don't collide across
+     * shops that simply left the field empty.
+     */
+    protected function prepareForValidation(): void
+    {
+        $nullable = ['road', 'owner_name', 'shop_address', 'phone_number', 'email', 'website', 'national_id', 'trade_license', 'tax_id', 'notes'];
+
+        foreach ($nullable as $field) {
+            if ($this->has($field) && is_string($this->input($field)) && trim($this->input($field)) === '') {
+                $this->merge([$field => null]);
+            }
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
     {
         return [
-            'shop_name' => 'required|string|max:255',
+            'shop_name' => 'required|string|max:30',
             'road' => 'nullable|string|max:100',
-            'owner_name' => 'nullable|string|max:255',
-            'shop_address' => 'nullable|string|max:255',
-            'phone_number' => 'required|string|max:20|unique:shops,phone_number',
+            'owner_name' => 'nullable|string|max:30',
+            'shop_address' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:20|unique:shops,phone_number',
             'email' => 'nullable|email|max:255|unique:shops,email',
             'website' => 'nullable|url|max:255',
             'national_id' => 'nullable|string|max:50',
