@@ -18,7 +18,7 @@
         </Transition>
 
         <div
-            class="flex flex-col min-h-screen justify-between transition-all duration-200 px-4 sm:ml-72 pt-[72px] print:p-0 print:sm:ml-0"
+            class="flex flex-col min-h-screen justify-between transition-all duration-200 px-3 sm:px-4 md:px-6 lg:px-8 sm:ml-72 pt-[72px] print:p-0 print:sm:ml-0"
         >
             <div class="flex-1">
                 <slot />

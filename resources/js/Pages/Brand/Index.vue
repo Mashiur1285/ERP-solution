@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-6 space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="p-3 sm:p-4 md:p-6 space-y-6 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Flash Message -->
@@ -30,7 +30,7 @@
             class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
         >
             <h1
-                class="text-2xl lg:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
+                class="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 flex items-center tracking-tight animate-fade-in"
             >
                 <div
                     class="p-2 mr-3 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -53,11 +53,11 @@
             </h1>
 
             <!-- Language Toggle -->
-            <div class="flex space-x-2">
+            <div class="flex flex-wrap gap-2 sm:gap-2">
                 <button
                     @click="changeLanguage('en')"
                     :class="[
-                        'px-4 py-2 rounded-md font-medium transition-colors',
+                        'px-3 sm:px-4 py-2 min-h-10 rounded-md font-medium transition-colors text-sm sm:text-base',
                         currentLanguage === 'en'
                             ? 'bg-indigo-600 text-white'
                             : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
@@ -68,7 +68,7 @@
                 <button
                     @click="changeLanguage('bn')"
                     :class="[
-                        'px-4 py-2 rounded-md font-medium transition-colors',
+                        'px-3 sm:px-4 py-2 min-h-10 rounded-md font-medium transition-colors text-sm sm:text-base',
                         currentLanguage === 'bn'
                             ? 'bg-indigo-600 text-white'
                             : 'bg-gray-200 text-gray-800 hover:bg-gray-300',
@@ -81,10 +81,10 @@
 
         <!-- Search and Add Button -->
         <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6"
         >
             <!-- Search Field -->
-            <div class="relative w-full sm:w-80">
+            <div class="relative w-full sm:flex-1 sm:max-w-80">
                 <div
                     class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                 >
@@ -106,14 +106,14 @@
                     v-model="searchQuery"
                     type="text"
                     :placeholder="getTranslation('searchBrands')"
-                    class="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm font-medium hover:border-indigo-300"
+                    class="w-full pl-10 pr-4 py-3 min-h-10 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-sm sm:text-base font-medium hover:border-indigo-300"
                 />
             </div>
 
             <!-- Add Brand Button -->
             <button
                 @click="showBrandModal = true"
-                class="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                class="w-full sm:w-auto px-4 sm:px-6 py-3 min-h-10 bg-indigo-600 text-white text-sm sm:text-base rounded-xl hover:bg-indigo-700 transition duration-200 flex items-center justify-center sm:justify-start space-x-2 shadow-lg hover:shadow-xl"
             >
                 <svg
                     class="w-5 h-5"
@@ -133,7 +133,7 @@
         </div>
 
         <!-- Summary Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div
                 class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-indigo-200"
             >
@@ -425,82 +425,15 @@
                                 </td>
                             </tr>
 
-                            <!-- Expanded brand details -->
+                            <!-- Expanded brand details - Desktop/Tablet (inside table) -->
                             <tr
                                 v-if="expandedBrands[index]"
-                                class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down"
+                                class="bg-gradient-to-r from-gray-50 to-gray-100 animate-slide-down hidden sm:table-row"
                             >
                                 <td :colspan="4" class="px-2 lg:px-6 py-6">
                                     <div class="ml-2 lg:ml-6">
-                                        <!-- Mobile view for hidden columns -->
-                                        <div
-                                            class="sm:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border-l-4 border-indigo-500"
-                                        >
-                                            <h4
-                                                class="font-semibold text-gray-800 mb-3 flex items-center"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4 mr-2 text-indigo-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                                {{
-                                                    getTranslation(
-                                                        "brandDetails"
-                                                    )
-                                                }}
-                                            </h4>
-                                            <div class="space-y-3 text-sm">
-                                                <div class="flex flex-col">
-                                                    <span
-                                                        class="text-xs text-gray-500 font-medium"
-                                                        >{{
-                                                            getTranslation(
-                                                                "description"
-                                                            )
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="text-gray-800 font-medium"
-                                                        >{{
-                                                            brand.description ||
-                                                            "-"
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div
-                                                    class="md:hidden flex flex-col"
-                                                >
-                                                    <span
-                                                        class="text-xs text-gray-500 font-medium"
-                                                        >{{
-                                                            getTranslation(
-                                                                "createdAt"
-                                                            )
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="text-gray-800 font-medium"
-                                                        >{{
-                                                            new Date(
-                                                                brand.created_at
-                                                            ).toLocaleDateString()
-                                                        }}</span
-                                                    >
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <!-- Brand Details -->
-                                        <div class="hidden sm:block">
+                                        <div>
                                             <div
                                                 class="mb-4 flex items-center justify-between"
                                             >
@@ -615,8 +548,43 @@
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                            </tr>
+                                </td>                            </tr>
+                            <!-- Expanded brand details - Mobile (below table as card) -->
+                            <div
+                                v-if="expandedBrands[index]"
+                                class="sm:hidden mb-4 mt-2 mx-2 p-4 bg-white rounded-lg shadow-md border-l-4 border-indigo-500 animate-slide-down"
+                            >
+                                <h4 class="font-semibold text-gray-800 mb-3 flex items-center text-sm">
+                                    <svg
+                                        class="w-4 h-4 mr-2 text-indigo-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    {{ getTranslation("brandDetails") }}
+                                </h4>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("description") }}</span>
+                                        <span class="text-gray-800 font-medium">{{ brand.description || "-" }}</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("createdAt") }}</span>
+                                        <span class="text-gray-800 font-medium">{{ new Date(brand.created_at).toLocaleDateString() }}</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500 font-medium">{{ getTranslation("brandId") }}</span>
+                                        <span class="text-gray-800 font-medium">#{{ toBengaliNumber(brand.id) }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </template>
                     </tbody>
                 </table>

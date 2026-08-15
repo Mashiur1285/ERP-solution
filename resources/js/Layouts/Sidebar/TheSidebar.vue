@@ -21,7 +21,7 @@
             <!-- Close button (mobile only) -->
             <button
                 @click="$emit('close')"
-                class="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors focus:outline-none"
+                class="sm:hidden inline-flex items-center justify-center min-h-10 min-w-10 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
                 aria-label="Close sidebar"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -31,8 +31,8 @@
         </div>
 
         <!-- Navigation Items -->
-        <div class="h-[calc(100vh-64px)] px-3 pb-4 overflow-y-auto bg-white">
-            <ul class="space-y-1 pt-3 font-medium">
+        <div class="h-[calc(100vh-64px)] px-3 sm:px-4 pb-4 overflow-y-auto bg-white">
+            <ul class="space-y-1 pt-3 font-medium text-sm sm:text-base">
                 <!-- Dashboard -->
                 <SidebarSingleLink
                     v-if="hasPermission('dashboard.view')"
@@ -107,7 +107,7 @@
 
             <!-- User info at bottom (mobile only) -->
             <div class="sm:hidden mt-6 pt-4 border-t border-gray-100">
-                <div class="flex items-center gap-3 px-2 py-3 rounded-lg bg-indigo-50">
+                <div class="flex items-center gap-3 px-2 py-3 rounded-lg bg-indigo-50 text-sm">
                     <div class="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>

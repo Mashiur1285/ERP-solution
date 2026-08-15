@@ -3,13 +3,13 @@
         id="the-navbar"
         class="fixed top-0 z-[100] w-full bg-white border-b border-gray-200 shadow"
     >
-        <div class="px-3 py-2 lg:px-5 lg:pl-3">
+        <div class="px-3 py-2 sm:px-4 md:px-6 lg:px-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center justify-start gap-2">
                     <!-- Hamburger Button (Mobile Only) -->
                     <button
                         type="button"
-                        class="inline-flex items-center p-2 text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors"
+                        class="inline-flex items-center p-2 min-h-10 min-w-10 text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors"
                         aria-label="Toggle sidebar"
                         @click="$emit('toggle-sidebar')"
                     >
@@ -30,7 +30,7 @@
 
                     <!-- Logo / Brand Name -->
                     <Link :href="route('dashboard')" class="flex md:mr-24">
-                        <span class="text-xl font-bold text-gray-800 whitespace-nowrap">
+                        <span class="text-base sm:text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">
                             ERP Solution
                         </span>
                     </Link>
@@ -82,7 +82,7 @@
                         <template #trigger>
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 focus:outline-none transition"
+                                class="inline-flex items-center justify-center min-h-10 min-w-10 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition"
                                 aria-label="User menu"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
