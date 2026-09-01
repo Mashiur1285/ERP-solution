@@ -18,6 +18,7 @@ use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -138,7 +139,10 @@ class SalesController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'draft_id' => 'nullable|exists:sales,id',
+            // Only a real draft may be continued. With a bare exists rule a stale
+            // draft_id pointing at an already-confirmed sale would silently rewrite
+            // that sale's items without ever restoring its deducted stock.
+            'draft_id' => ['nullable', Rule::exists('sales', 'id')->where('status', SalesStatus::DRAFT->value)],
             'save_as_draft' => 'nullable|boolean',
             'shop_id' => 'required|exists:shops,id',
             'supplier_id' => 'required|exists:suppliers,id',
@@ -152,6 +156,8 @@ class SalesController extends Controller
             'items.*.total_bottles_to_sell' => 'required|integer|min:1',
             'items.*.selling_price_per_bottle' => 'required|numeric|min:0',
             'items.*.free_bottles_per_case' => 'nullable|integer|min:0',
+        ], [
+            'draft_id.exists' => 'This draft is no longer available, it may have already been completed.',
         ]);
 
         $saveAsDraft = $request->boolean('save_as_draft');
@@ -540,6 +546,13 @@ class SalesController extends Controller
             return redirect()->route('sales.report')->with('error', 'Sale not found');
         }
 
+        // A draft is edited through the draft flow, which posts back with draft_id
+        // and so updates this same row. Rendering it as a normal edit would let the
+        // "Save Draft" button spawn a second draft instead of updating this one.
+        if ($sale->status === SalesStatus::DRAFT->value) {
+            return redirect()->route('sales.index', ['draft' => $sale->id]);
+        }
+
         $shops = $this->shopRepository->all()->map(function ($shop) {
             return [
                 'id' => $shop->id,
@@ -563,6 +576,7 @@ class SalesController extends Controller
             'supplier_id' => $sale->supplier_id,
             'sale_date' => optional($sale->sale_date)->format('Y-m-d'),
             'invoice_number' => $sale->invoice_number,
+            'status' => $sale->status,
             'paid_amount' => $sale->paid_amount,
             'discount' => 0, // Not explicitly tracked in DB right now, infer if needed or default 0
             'payment' => $latestPayment ? [
@@ -631,8 +645,12 @@ class SalesController extends Controller
                 return redirect()->route('sales.report')->with('error', 'Sale not found');
             }
 
-            // 1. Restore previous inventory
-            $this->restoreSaleInventory($sale);
+            // 1. Restore previous inventory. A draft never deducted any, so
+            // restoring it would hand back bottles that were never sold and
+            // inflate the batches another sale had drawn down.
+            if ($sale->status !== SalesStatus::DRAFT->value) {
+                $this->restoreSaleInventory($sale);
+            }
 
             // 2. Delete old items
             $sale->items()->delete();
@@ -1000,6 +1018,8 @@ class SalesController extends Controller
                 'supplier_name' => $sale->supplier ? $sale->supplier->company_name : 'Unknown',
                 'invoice_number' => $sale->invoice_number,
                 'total_amount' => $sale->total_amount,
+                'paid_amount' => $sale->paid_amount,
+                'due_amount' => $sale->due_amount,
                 'total_profit' => $sale->items->sum('profit'),
                 'sale_date' => $sale->sale_date->format('Y-m-d'),
                 'status' => $sale->status,

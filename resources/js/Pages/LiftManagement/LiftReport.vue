@@ -3,6 +3,8 @@
         class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
+        <FlashToast />
+
         <!-- Title -->
         <div
             class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-4 sm:mb-8 border-b border-gray-200 pb-3 sm:pb-4 gap-3 sm:gap-4"
@@ -522,6 +524,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
+import FlashToast from "../../Components/FlashToast.vue";
 import Layout from "../../Layout.vue";
 import DateRangePicker from "../../Components/DateRangePicker.vue";
 

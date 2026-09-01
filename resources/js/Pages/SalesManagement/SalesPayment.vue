@@ -33,14 +33,18 @@
                                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
-                            Total Amount
+                            Payable Amount
                         </label>
                         <input
-                            :value="formatCurrency(sale.total_amount)"
+                            :value="formatCurrency(maxPaymentAmount)"
                             type="text"
                             class="mt-2 block w-full rounded-lg border-gray-200 bg-gray-100 py-4 px-5 text-lg text-gray-800 font-medium shadow-sm cursor-not-allowed"
                             readonly
                         />
+                        <p v-if="isCollectingDue" class="mt-1 text-sm text-gray-500">
+                            {{ formatCurrency(sale.total_amount) }} total &minus;
+                            {{ formatCurrency(sale.paid_amount) }} already paid
+                        </p>
                     </div>
                     <div>
                         <label
@@ -60,7 +64,7 @@
                                     d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                                 />
                             </svg>
-                            Payment Amount*
+                            Amount*
                         </label>
                         <input
                             v-model.number="paymentForm.amount"
@@ -259,7 +263,7 @@
                             d="M6 18L18 6M6 6l12 12"
                         />
                     </svg>
-                    Skip Payment
+                    {{ isCollectingDue ? "Back to Report" : "Skip Payment" }}
                 </button>
             </div>
         </div>
@@ -287,16 +291,6 @@ const props = defineProps<{
     };
 }>();
 
-const paymentForm = ref({
-    amount: 0,
-    payment_method: "",
-    mfs_provider: "",
-});
-
-const dueAmount = ref(props.sale.due_amount ?? 0);
-const paymentError = ref<string | null>(null);
-const isSubmitting = ref(false);
-
 // Use integer math (paisa) to avoid float representation errors.
 const toPaysa = (v: number) => Math.round(Number(v) * 100);
 
@@ -305,6 +299,18 @@ const maxPaymentAmount = computed(() => {
     const paidPaysa  = toPaysa(props.sale.paid_amount  ?? 0);
     return Math.max(0, (totalPaysa - paidPaysa)) / 100;
 });
+
+// A sale is normally settled in full and in cash right after it's created, so
+// the form opens that way. Both fields stay editable for a partial payment.
+const paymentForm = ref({
+    amount: maxPaymentAmount.value,
+    payment_method: "cash",
+    mfs_provider: "",
+});
+
+const dueAmount = ref(Math.max(0, maxPaymentAmount.value - paymentForm.value.amount));
+const paymentError = ref<string | null>(null);
+const isSubmitting = ref(false);
 
 const formatCurrency = (value: number) => `৳${Number(value).toFixed(2)}`;
 
@@ -391,8 +397,14 @@ const submitPayment = () => {
     );
 };
 
+// Reached from "Due Collection" the sale is already recorded, so the way out is
+// back to the report. Only a brand-new sale should drop you on the sale screen.
+const isCollectingDue = computed(
+    () => (parseFloat(String(props.sale.paid_amount ?? 0)) || 0) > 0
+);
+
 const skipPayment = () => {
-    router.visit("/sales");
+    router.visit(isCollectingDue.value ? "/sales/report" : "/sales");
 };
 </script>
 

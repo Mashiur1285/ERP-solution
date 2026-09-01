@@ -3,6 +3,8 @@
         class="p-4 lg:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
+        <FlashToast />
+
         <!-- Title -->
         <div
             class="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-8 border-b border-gray-200 pb-4 gap-4"
@@ -77,6 +79,10 @@
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</strong>
                 </div>
                 <div class="sales-print-card">
+                    <span>{{ getTranslation("totalDue") }}</span>
+                    <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.due), 2) }}</strong>
+                </div>
+                <div class="sales-print-card">
                     <span>{{ getTranslation("totalItems") }}</span>
                     <strong>{{ toBengaliNumber(printTotals.items) }}</strong>
                 </div>
@@ -94,6 +100,8 @@
                         <th>{{ getTranslation("totalRevenue") }}</th>
                         <th>{{ getTranslation("totalCost") }}</th>
                         <th>{{ getTranslation("totalProfit") }}</th>
+                        <th>{{ getTranslation("due") }}</th>
+                        <th>{{ getTranslation("paymentStatus") }}</th>
                         <th>{{ getTranslation("items") }}</th>
                     </tr>
                 </thead>
@@ -111,6 +119,8 @@
                         <td>৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(saleDue(sale)), 2) }}</td>
+                        <td>{{ paymentStateOf(sale) ? getTranslation(paymentStateOf(sale)!) : "—" }}</td>
                         <td>{{ toBengaliNumber(sale.items?.length || 0) }}</td>
                     </tr>
                 </tbody>
@@ -122,6 +132,8 @@
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
+                        <td>৳{{ toBengaliNumber(formatCurrency(printTotals.due), 2) }}</td>
+                        <td>—</td>
                         <td>{{ toBengaliNumber(printTotals.items) }}</td>
                     </tr>
                 </tfoot>
@@ -904,6 +916,11 @@
                             <th
                                 class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
+                                {{ getTranslation("due") }}
+                            </th>
+                            <th
+                                class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                            >
                                 {{ getTranslation("totalProfit") }}
                             </th>
                             <th
@@ -915,6 +932,11 @@
                                 class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
                                 {{ getTranslation("status") }}
+                            </th>
+                            <th
+                                class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                            >
+                                {{ getTranslation("paymentStatus") }}
                             </th>
                             <th
                                 class="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -989,6 +1011,16 @@
                                                     >
                                                         {{ getTranslation(sale.status) }}
                                                     </span>
+                                                    <span
+                                                        v-if="paymentStateOf(sale)"
+                                                        :class="paymentStateClass(paymentStateOf(sale))"
+                                                        class="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                                                    >
+                                                        {{ getTranslation(paymentStateOf(sale)!) }}
+                                                    </span>
+                                                </div>
+                                                <div v-if="saleDue(sale) > 0" class="text-xs font-semibold text-red-600">
+                                                    {{ getTranslation("due") }}: ৳{{ toBengaliNumber(formatCurrency(saleDue(sale)), 2) }}
                                                 </div>
                                             </div>
                                         </div>
@@ -1013,6 +1045,14 @@
                                                 2
                                             )
                                         }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 text-sm hidden md:table-cell">
+                                    <div
+                                        class="text-right font-medium"
+                                        :class="saleDue(sale) > 0 ? 'text-red-600' : 'text-gray-400'"
+                                    >
+                                        ৳{{ toBengaliNumber(formatCurrency(saleDue(sale)), 2) }}
                                     </div>
                                 </td>
                                 <td
@@ -1056,6 +1096,18 @@
                                         {{ getTranslation(sale.status) }}
                                     </span>
                                 </td>
+                                <td
+                                    class="px-3 py-4 text-sm hidden md:table-cell"
+                                >
+                                    <span
+                                        v-if="paymentStateOf(sale)"
+                                        :class="paymentStateClass(paymentStateOf(sale))"
+                                        class="px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                                    >
+                                        {{ getTranslation(paymentStateOf(sale)!) }}
+                                    </span>
+                                    <span v-else class="text-gray-400">—</span>
+                                </td>
                                 <td class="px-2 py-2.5 md:px-3 md:py-4 text-sm align-top">
                                     <div
                                         class="flex flex-wrap gap-1 justify-end md:justify-start"
@@ -1088,6 +1140,13 @@
                                             class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs hover:bg-green-200 transition duration-200 whitespace-nowrap"
                                         >
                                             {{ getTranslation("view") }}
+                                        </button>
+                                        <button
+                                            v-if="paymentStateOf(sale) === 'due'"
+                                            @click.stop="collectDue(sale.id)"
+                                            class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium hover:bg-blue-200 transition duration-200 whitespace-nowrap"
+                                        >
+                                            {{ getTranslation("dueCollection") }}
                                         </button>
                                         <button
                                             @click.stop="router.visit(`/sales/${sale.id}/edit`)"
@@ -1625,6 +1684,7 @@ import { ref, computed, onMounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 import DateRangePicker from "../../Components/DateRangePicker.vue";
+import FlashToast from "../../Components/FlashToast.vue";
 
 defineOptions({
     layout: Layout,
@@ -1653,6 +1713,8 @@ interface Sale {
     supplier_name: string;
     invoice_number: string;
     total_amount: string | number;
+    paid_amount?: string | number | null;
+    due_amount?: string | number | null;
     total_profit: string | number;
     sale_date: string;
     status: string;
@@ -1880,6 +1942,11 @@ const translations = {
         in_progress: "In Progress",
         completed: "Completed",
         draft: "Draft",
+        paymentStatus: "Payment",
+        due: "Due",
+        totalDue: "Total Due",
+        paid: "Paid",
+        dueCollection: "Due Collection",
         actions: "Actions",
         show: "Show",
         hide: "Hide",
@@ -1945,6 +2012,11 @@ const translations = {
         in_progress: "চলমান",
         completed: "সম্পন্ন",
         draft: "ড্রাফট",
+        paymentStatus: "পেমেন্ট",
+        due: "বকেয়া",
+        totalDue: "মোট বকেয়া",
+        paid: "পরিশোধিত",
+        dueCollection: "বকেয়া আদায়",
         actions: "কর্ম",
         show: "দেখান",
         hide: "লুকান",
@@ -2069,6 +2141,12 @@ function viewCashMemo(saleId: number): void {
     router.visit(`/sales/cash-memo/${saleId}`);
 }
 
+// Straight to the existing payment screen, which opens with the outstanding
+// balance already filled in.
+function collectDue(saleId: number): void {
+    router.visit(`/sales/payment/${saleId}`);
+}
+
 function continueDraft(saleId: number): void {
     router.visit(`/sales?draft=${saleId}`);
 }
@@ -2083,6 +2161,36 @@ function deleteSale(saleId: number): void {
 function printReport(): void {
     window.print();
 }
+
+type PaymentState = "paid" | "due";
+
+/**
+ * What is still owed on a sale. If the server ever omits due_amount, fall back to
+ * total - paid rather than treating the missing field as zero - reading "nothing
+ * owed" off absent data hides real money and is the one wrong answer that looks
+ * fine on screen.
+ */
+const saleDue = (sale: Sale): number => {
+    if (sale.due_amount !== undefined && sale.due_amount !== null) {
+        return parseFloat(String(sale.due_amount)) || 0;
+    }
+    const total = parseFloat(String(sale.total_amount ?? 0)) || 0;
+    const paid = parseFloat(String(sale.paid_amount ?? 0)) || 0;
+    return Math.max(0, total - paid);
+};
+
+/**
+ * Either the sale is settled or money is still owed on it. A draft has not been
+ * billed yet, so it has no payment state at all - showing one would put every
+ * draft on the money-owed list.
+ */
+const paymentStateOf = (sale: Sale): PaymentState | null => {
+    if (sale.status === "draft") return null;
+    return saleDue(sale) <= 0 ? "paid" : "due";
+};
+
+const paymentStateClass = (state: PaymentState | null): string =>
+    state === "paid" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
 
 const printTotals = computed(() => {
     const revenue = filteredSales.value.reduce(
@@ -2109,11 +2217,14 @@ const printTotals = computed(() => {
         0
     );
 
+    const due = filteredSales.value.reduce((sum, sale) => sum + saleDue(sale), 0);
+
     return {
         revenue,
         profit,
         items,
         cases,
+        due,
         cost: revenue - profit,
     };
 });

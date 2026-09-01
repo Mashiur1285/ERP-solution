@@ -212,8 +212,10 @@ class LiftController extends Controller
             }
         });
 
+        // Both a draft and a recorded lift land on the report, so the user sees
+        // the row they just created instead of an empty form.
         return redirect()
-            ->route($saveAsDraft ? 'lifts.report' : 'lifts.index')
+            ->route('lifts.report')
             ->with('success', $saveAsDraft ? 'Lift draft saved successfully' : 'Lift recorded successfully');
     }
 

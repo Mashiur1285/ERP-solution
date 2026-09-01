@@ -368,7 +368,7 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 mb-4">
-                            <label v-for="opt in variantOptions" :key="opt.value"
+                            <label v-for="opt in pickerVariants" :key="opt.value"
                                 :class="['flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none',
                                     variantSelections[opt.value]?.checked
                                         ? 'border-green-400 bg-green-50'
@@ -478,7 +478,7 @@
                                     <tr v-for="(v, vIdx) in item.variants" :key="vIdx"
                                         class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td class="px-2 py-2">
-                                            <template v-if="isCustomVariant(v.variant)">
+                                            <template v-if="isCustomVariant(v.variant, itemIdx)">
                                                 <div class="flex items-center gap-1">
                                                     <input
                                                         v-model="v.variant"
@@ -496,7 +496,7 @@
                                                     class="w-full min-w-[120px] pl-2 pr-8 py-1.5 rounded-md border border-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
                                                     @change="onVariantSelect(itemIdx, vIdx)">
                                                     <option value="">{{ t('selectVariant') }}</option>
-                                                    <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                                    <option v-for="opt in itemVariantOptions(itemIdx)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                                                     <option value="__custom__">+ Custom</option>
                                                 </select>
                                             </template>
@@ -559,7 +559,7 @@
                                     </button>
                                 </div>
 
-                                <template v-if="isCustomVariant(v.variant)">
+                                <template v-if="isCustomVariant(v.variant, itemIdx)">
                                     <div class="flex items-center gap-1">
                                         <input v-model="v.variant" type="text" placeholder="Variant name"
                                             class="w-full px-3 py-2.5 rounded-lg border border-green-300 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-green-50" />
@@ -572,7 +572,7 @@
                                     class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-200 text-base focus:border-green-500 focus:ring-1 focus:ring-green-200 bg-white"
                                     @change="onVariantSelect(itemIdx, vIdx)">
                                     <option value="">{{ t('selectVariant') }}</option>
-                                    <option v-for="opt in variantOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                    <option v-for="opt in itemVariantOptions(itemIdx)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                                     <option value="__custom__">+ Custom</option>
                                 </select>
 
@@ -778,7 +778,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import Layout from "../../Layout.vue";
 
@@ -816,6 +816,8 @@ interface LiftVariant {
 
 interface LiftItem {
     product_catalog_id: number;
+    /** Sizes this product has been lifted at before, offered as presets. */
+    saved_variants?: DefaultVariant[];
     product_name: string;
     image_url?: string | null;
     category_name: string;
@@ -830,6 +832,7 @@ interface DraftLift {
     supplier_id: number;
     lift_date: string;
     status?: string;
+    total_amount?: number | string;
     notes?: string | null;
     items: Array<{
         product_catalog_id: number;
@@ -855,12 +858,42 @@ const props = defineProps<{
 defineOptions({ layout: Layout });
 
 // Variant options
-const variantOptions = [
+interface VariantOption {
+    value: string;
+    label: string;
+    bottles_per_case: number;
+}
+
+const variantOptions: VariantOption[] = [
     { value: "250ml", label: "250 ml", bottles_per_case: 24 },
     { value: "500ml", label: "500 ml", bottles_per_case: 24 },
     { value: "1000ml", label: "1000 ml", bottles_per_case: 12 },
     { value: "2000ml", label: "2000 ml", bottles_per_case: 6 },
 ];
+
+const fixedVariantValues = new Set(variantOptions.map((o) => o.value));
+
+/**
+ * The four standard sizes, followed by any other size this product has already
+ * been lifted at. The backend keeps those on product_catalog.default_variants,
+ * so a custom size like 550ml only ever has to be typed once.
+ */
+const optionsFor = (saved?: DefaultVariant[]): VariantOption[] => {
+    const seen = new Set(fixedVariantValues);
+    const extra: VariantOption[] = [];
+
+    for (const dv of saved ?? []) {
+        if (!dv?.variant || seen.has(dv.variant)) continue;
+        seen.add(dv.variant);
+        extra.push({
+            value: dv.variant,
+            label: dv.variant,
+            bottles_per_case: dv.bottles_per_case || 24,
+        });
+    }
+
+    return [...variantOptions, ...extra];
+};
 
 // Template refs for click-outside detection
 const supplierDDRef = ref<HTMLElement | null>(null);
@@ -894,6 +927,19 @@ const showToast = (message: string, type: "success" | "error" = "success") => {
 const supplierSearch = ref("");
 const showSupplierDD = ref(false);
 const selectedSupplier = ref<Supplier | null>(null);
+
+// Recording a lift draws the supplier's deposit down and Inertia hands back fresh
+// props, but selectedSupplier is a copy taken when the supplier was picked - so
+// without this it keeps showing the pre-lift balance until a manual reload.
+watch(
+    () => props.suppliers,
+    (suppliers) => {
+        const current = selectedSupplier.value;
+        if (!current) return;
+        const fresh = suppliers.find((s) => s.id === current.id);
+        if (fresh) selectedSupplier.value = { ...fresh };
+    }
+);
 const localSuppliers = ref<Supplier[]>([...props.suppliers]);
 const showQuickSupplierModal = ref(false);
 const isQuickSupplierLoading = ref(false);
@@ -968,6 +1014,7 @@ const selectSupplier = (s: Supplier) => {
     showSupplierDD.value = false;
     draftLiftId.value = null;
     loadedLiftStatus.value = null;
+    alreadyDrawnFromDeposit.value = 0;
     liftItems.value = [];
     productSearch.value = "";
     activeProduct.value = null;
@@ -983,6 +1030,8 @@ const fillDraft = (draft: DraftLift) => {
     supplierSearch.value = supplier.company_name;
     draftLiftId.value = draft.id;
     loadedLiftStatus.value = draft.status || null;
+    alreadyDrawnFromDeposit.value =
+        draft.status === "completed" ? parseFloat(String(draft.total_amount ?? 0)) || 0 : 0;
     liftDate.value = draft.lift_date || getTodayString();
     liftItems.value = [];
 
@@ -1016,7 +1065,17 @@ const fillDraft = (draft: DraftLift) => {
     });
 
     liftItems.value = Array.from(groupedItems.values());
-    fetchProducts("");
+
+    // A draft only stores the sizes it used, not the catalog's list, so pull the
+    // presets back in - otherwise a saved 550ml reopens as free text.
+    fetchProducts("").then(() => {
+        for (const item of liftItems.value) {
+            const catalogEntry = productSearchResults.value.find(
+                (p) => p.id === item.product_catalog_id
+            );
+            if (catalogEntry) item.saved_variants = catalogEntry.default_variants ?? [];
+        }
+    });
 };
 
 // Product Search
@@ -1059,8 +1118,10 @@ interface VariantCheckState {
 }
 const activeProduct = ref<CatalogProduct | null>(null);
 const variantSelections = ref<Record<string, VariantCheckState>>({});
+const pickerVariants = computed(() => optionsFor(activeProduct.value?.default_variants));
+
 const hasCheckedVariants = computed(() => {
-    const fixed = variantOptions.some((opt) => variantSelections.value[opt.value]?.checked);
+    const fixed = pickerVariants.value.some((opt) => variantSelections.value[opt.value]?.checked);
     const custom = variantSelections.value['__custom__']?.checked && !!variantSelections.value['__custom__']?.customName?.trim();
     return fixed || custom;
 });
@@ -1068,7 +1129,7 @@ const hasCheckedVariants = computed(() => {
 const selectProductForVariants = (p: CatalogProduct) => {
     activeProduct.value = p;
     const selections: Record<string, VariantCheckState> = {};
-    for (const opt of variantOptions) {
+    for (const opt of pickerVariants.value) {
         const defaultData = p.default_variants?.find((dv) => dv.variant === opt.value);
         selections[opt.value] = {
             checked: !!defaultData,
@@ -1088,7 +1149,7 @@ const closeVariantPicker = () => {
 const addProductWithVariants = () => {
     if (!activeProduct.value) return;
     const p = activeProduct.value;
-    const selectedVariants: LiftVariant[] = variantOptions
+    const selectedVariants: LiftVariant[] = pickerVariants.value
         .filter((opt) => variantSelections.value[opt.value]?.checked)
         .map((opt) => ({
             variant: opt.value,
@@ -1124,6 +1185,7 @@ const addProductWithVariants = () => {
     } else {
         liftItems.value.push({
             product_catalog_id: p.id,
+            saved_variants: p.default_variants ?? [],
             product_name: p.name,
             image_url: p.image_url || null,
             category_name: p.category_name,
@@ -1158,10 +1220,13 @@ const removeVariant = (itemIdx: number, vIdx: number) => {
     }
 };
 
-const fixedVariantValues = new Set(variantOptions.map((o) => o.value));
+const itemVariantOptions = (itemIdx: number): VariantOption[] =>
+    optionsFor(liftItems.value[itemIdx]?.saved_variants);
 
-const isCustomVariant = (value: string) =>
-    !!value && value !== '__custom__' && !fixedVariantValues.has(value);
+// Only a size this product has never been lifted at needs the free-text box.
+const isCustomVariant = (value: string, itemIdx: number) =>
+    !!value && value !== '__custom__' &&
+    !itemVariantOptions(itemIdx).some((o) => o.value === value);
 
 const onVariantSelect = (itemIdx: number, vIdx: number) => {
     const v = liftItems.value[itemIdx].variants[vIdx];
@@ -1169,7 +1234,7 @@ const onVariantSelect = (itemIdx: number, vIdx: number) => {
         v.variant = '';
         return;
     }
-    const opt = variantOptions.find((o) => o.value === v.variant);
+    const opt = itemVariantOptions(itemIdx).find((o) => o.value === v.variant);
     if (opt) v.bottles_per_case = opt.bottles_per_case;
 };
 
@@ -1273,9 +1338,24 @@ const totalFreeBottles = computed(() =>
     validItems.value.reduce((sum, item) => sum + item.validVariants.reduce((s, v) => s + calcFreeBottles(v), 0), 0)
 );
 
+/**
+ * What this lift has ALREADY taken out of the supplier's deposit. Zero for a new
+ * lift and for a draft (a draft draws nothing); the recorded total when editing
+ * a completed lift.
+ */
+const alreadyDrawnFromDeposit = ref(0);
+
 const remainingDeposit = computed(() => {
     if (!selectedSupplier.value) return 0;
-    return selectedSupplier.value.remaining_deposit - grandTotal.value;
+    // The balance the server reports already has this lift deducted, so add it
+    // back before subtracting the new total - otherwise editing a lift reads as
+    // paying for it a second time and demands a deposit that isn't needed. The
+    // server only ever charges the difference.
+    return (
+        selectedSupplier.value.remaining_deposit +
+        alreadyDrawnFromDeposit.value -
+        grandTotal.value
+    );
 });
 
 const shortfallAmount = computed(() =>
@@ -1405,6 +1485,7 @@ const resetAll = () => {
     variantSelections.value = {};
     draftLiftId.value = null;
     loadedLiftStatus.value = null;
+    alreadyDrawnFromDeposit.value = 0;
     liftDate.value = getTodayString();
 };
 

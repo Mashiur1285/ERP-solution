@@ -607,6 +607,7 @@
                     </button>
 
                     <button
+                        v-if="canSaveDraft"
                         @click="saveDraft"
                         :disabled="isLoading || cartItems.length === 0"
                         class="w-full py-2.5 border border-amber-300 text-amber-700 text-sm font-medium rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -671,6 +672,7 @@ interface EditSale {
     supplier_id: number;
     sale_date: string | null;
     invoice_number: string;
+    status: string;
     paid_amount: number;
     discount: number;
     payment: {
@@ -929,7 +931,11 @@ const roadSearchQuery = ref("");
 const shopSearchQuery = ref("");
 const shopId = ref<number | string>("");
 const saleDate = ref(localDateString());
-const draftSaleId = ref<number | null>(props.draftSale?.id ?? null);
+// A draft opened through the edit page must keep its id, otherwise saving the
+// draft again posts draft_id: null and creates a second draft.
+const draftSaleId = ref<number | null>(
+    props.draftSale?.id ?? (props.editSale?.status === "draft" ? props.editSale.id : null)
+);
 const includeFreeBottles = ref(true);
 const cartItems = ref<CartItem[]>([]);
 const showRoadOptions = ref(false);
@@ -1107,6 +1113,8 @@ const primarySupplierId = computed(() =>
 
 // Edit mode
 const isEditMode = computed(() => !!props.editSale);
+// A confirmed sale has no draft to save back to, so it must not offer the button.
+const canSaveDraft = computed(() => !isEditMode.value || props.editSale?.status === "draft");
 const editPaymentAmount = ref(props.editSale?.payment?.amount ?? 0);
 const editPaymentMethod = ref(props.editSale?.payment?.payment_method ?? 'cash');
 
@@ -1119,6 +1127,7 @@ const toastMessage = ref("");
 const toastType = ref<"success" | "error">("success");
 
 const loadEditSale = async (editSale: EditSale) => {
+    draftSaleId.value = editSale.status === "draft" ? editSale.id : null;
     shopId.value = editSale.shop_id;
     saleDate.value = editSale.sale_date || localDateString();
 

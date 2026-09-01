@@ -326,7 +326,7 @@ const translations = {
         thankYou: "Thank you for your business!",
         contactUs: "Contact us: support@company.com | +123-456-7890",
         printReceipt: "Print Receipt",
-        backToSales: "Back to Sales",
+        backToSales: "Back to Sales List",
         case: "cases",
         extraBottles: "extra",
     },
@@ -351,7 +351,7 @@ const translations = {
         thankYou: "আপনার ব্যবসার জন্য ধন্যবাদ!",
         contactUs: "যোগাযোগ করুন: support@company.com | +123-456-7890",
         printReceipt: "রসিদ প্রিন্ট করুন",
-        backToSales: "বিক্রয়ে ফিরে যান",
+        backToSales: "বিক্রয় তালিকায় ফিরুন",
         case: "কেস",
         extraBottles: "অতিরিক্ত",
     },
@@ -403,7 +403,7 @@ const printReceipt = () => {
 };
 
 const goToSales = () => {
-    router.visit("/sales");
+    router.visit("/sales/report");
 };
 </script>
 

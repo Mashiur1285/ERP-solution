@@ -1,5 +1,5 @@
 <template>
-    <div class="date-range-picker bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-2.5">
+    <div class="date-range-picker bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-2.5 min-w-0 max-w-full overflow-hidden">
         <div class="flex flex-row items-center justify-between gap-2 sm:gap-3">
             <!-- Header & Display -->
             <div class="flex items-center justify-start min-w-0">
@@ -35,23 +35,23 @@
         </div>
 
         <!-- Custom Date Inputs (shown only when "Custom" selected) -->
-        <div v-if="activePreset === 'custom'" class="flex flex-col sm:flex-row items-center gap-2 mt-2 pt-2 border-t border-gray-100">
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <label class="text-[10px] font-medium text-gray-500 whitespace-nowrap w-12">{{ startLabel }}:</label>
+        <div v-if="activePreset === 'custom'" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-100">
+            <div class="min-w-0">
+                <label class="block text-[10px] font-medium text-gray-500 mb-0.5 truncate">{{ startLabel }}</label>
                 <input
                     v-model="localStart"
                     type="date"
                     @change="emitCustomRange"
-                    class="flex-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    class="block w-full min-w-0 px-2 py-1 text-xs bg-white border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
             </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <label class="text-[10px] font-medium text-gray-500 whitespace-nowrap w-12">{{ endLabel }}:</label>
+            <div class="min-w-0">
+                <label class="block text-[10px] font-medium text-gray-500 mb-0.5 truncate">{{ endLabel }}</label>
                 <input
                     v-model="localEnd"
                     type="date"
                     @change="emitCustomRange"
-                    class="flex-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    class="block w-full min-w-0 px-2 py-1 text-xs bg-white border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
             </div>
         </div>
@@ -103,6 +103,12 @@ function computeRange(key: string): { start: string; end: string } {
         case "today":
             return { start: today, end: today };
 
+        case "yesterday": {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 1);
+            return { start: toISO(d), end: toISO(d) };
+        }
+
         case "last_week": {
             const mon = getMonday(now);
             mon.setDate(mon.getDate() - 7);
@@ -150,6 +156,7 @@ const presets = computed(() => {
     const isEN = lang.value === "en";
     return [
         { key: "today",      label: isEN ? "Today"      : "আজ"          },
+        { key: "yesterday",  label: isEN ? "Yesterday"  : "গতকাল"       },
         { key: "last_week",  label: isEN ? "Last Week"  : "গত সপ্তাহ"   },
         { key: "this_week",  label: isEN ? "This Week"  : "এই সপ্তাহ"   },
         { key: "last_month", label: isEN ? "Last Month" : "গত মাস"      },
@@ -204,6 +211,7 @@ function resolvePreset(start: string, end: string) {
 
     const presetKeys = [
         "today",
+        "yesterday",
         "last_week",
         "this_week",
         "last_month",
