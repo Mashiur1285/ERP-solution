@@ -99,23 +99,29 @@
                     <div v-else-if="productList.length === 0" class="text-center text-gray-400 text-sm py-3">
                         {{ t('noProductsFound') }}
                     </div>
-                    <div v-else class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
-                        <button
-                            v-for="p in productList"
-                            :key="p.product_id"
-                            @click="selectProduct(p)"
-                            :class="['px-3 py-1.5 rounded-lg border text-sm font-medium transition-all',
-                                pendingProduct?.product_id === p.product_id
-                                    ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
-                                    : cartItems.some(c => c.product_id === p.product_id)
-                                        ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                                        : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300 hover:text-orange-600'
-                            ]"
-                        >
-                            {{ p.product_name }}
-                            <span class="font-normal opacity-70">({{ p.supplier_name }})</span>
-                            <span v-if="cartItems.some(c => c.product_id === p.product_id)" class="ml-1 text-xs">✓</span>
-                        </button>
+                    <div v-else class="max-h-[220px] space-y-3 overflow-y-auto pr-1">
+                        <div v-for="group in productsBySupplier" :key="group.supplier_id">
+                            <p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                {{ group.supplier_name }}
+                            </p>
+                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                <button
+                                    v-for="p in group.products"
+                                    :key="p.product_id"
+                                    @click="selectProduct(p)"
+                                    :class="['truncate px-3 py-1.5 rounded-lg border text-sm font-medium text-left transition-all',
+                                        pendingProduct?.product_id === p.product_id
+                                            ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
+                                            : cartItems.some(c => c.product_id === p.product_id)
+                                                ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
+                                                : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300 hover:text-orange-600'
+                                    ]"
+                                >
+                                    {{ p.product_name }}
+                                    <span v-if="cartItems.some(c => c.product_id === p.product_id)" class="ml-1 text-xs">✓</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1300,6 +1306,28 @@ const hasCheckedVariants = computed(() =>
     Object.values(variantSelections.value).some((v) => v)
 );
 
+/**
+ * One block per supplier, so a search for "globe" keeps Globe's products
+ * together instead of interleaving them with everyone else's.
+ */
+const productsBySupplier = computed(() => {
+    const groups = new Map<number, { supplier_id: number; supplier_name: string; products: SearchProduct[] }>();
+
+    for (const product of productList.value) {
+        const key = product.supplier_id;
+        if (!groups.has(key)) {
+            groups.set(key, {
+                supplier_id: key,
+                supplier_name: product.supplier_name || "-",
+                products: [],
+            });
+        }
+        groups.get(key)!.products.push(product);
+    }
+
+    return [...groups.values()].sort((a, b) => a.supplier_name.localeCompare(b.supplier_name));
+});
+
 const openVariantPicker = (product: SearchProduct) => {
     pendingProduct.value = product;
     const selections: Record<string, boolean> = {};
@@ -1344,6 +1372,13 @@ const addVariantsToCart = () => {
 
 const selectProduct = (product: SearchProduct) => {
     openVariantPicker(product);
+
+    // Clear the box so the next product can be typed straight away instead of
+    // having to delete the previous search first.
+    if (searchQuery.value) {
+        searchQuery.value = "";
+        fetchProducts("");
+    }
 };
 
 const removeCartItem = (index: number) => {

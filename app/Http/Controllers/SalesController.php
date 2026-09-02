@@ -335,7 +335,10 @@ class SalesController extends Controller
             ], $sale->id);
 
             if ($saveAsDraft) {
-                return redirect()->route('sales.report')->with('success', 'Sale draft saved successfully');
+                // Land on the Drafts tab: the draft they just saved is there, not
+                // in the completed list the report opens on by default.
+                return redirect()->route('sales.report', ['tab' => 'draft'])
+                    ->with('success', 'Sale draft saved successfully');
             }
 
             $shop = $this->shopRepository->find($request->shop_id);
@@ -890,7 +893,8 @@ class SalesController extends Controller
                 'status'       => $newDue <= 0 ? \App\Enums\SalesStatus::COMPLETED->value : \App\Enums\SalesStatus::IN_PROGRESS->value,
             ], $id);
 
-            return redirect()->route('sales.report')->with('success', 'Sale updated successfully');
+            return redirect()->route('sales.report', ['tab' => 'completed'])
+                ->with('success', 'Sale updated successfully');
         });
     }
 

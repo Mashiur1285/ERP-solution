@@ -1770,7 +1770,11 @@ const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedSale = ref<number | null>(null);
 const isLoading = ref(false);
-const activeTab = ref<"completed" | "draft">("completed");
+/** ?tab=draft after saving a draft, so the row just created is on screen. */
+const tabFromUrl = (): "completed" | "draft" =>
+    new URLSearchParams(window.location.search).get("tab") === "draft" ? "draft" : "completed";
+
+const activeTab = ref<"completed" | "draft">(tabFromUrl());
 const viewMode = ref<"invoice" | "product" | "summary">(props.defaultView || "invoice");
 const summaryDisplayMode = ref<"invoice" | "product">("invoice");
 const printViewMode = computed(() =>

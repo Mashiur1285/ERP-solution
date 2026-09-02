@@ -171,6 +171,13 @@ class ProductPurchaseController extends Controller
         $search = trim((string) $request->input('search', ''));
         $showOutOfStock = $request->boolean('show_out_of_stock', false);
 
+        // This page means "right now", and getInventoryStock() already ignores
+        // batches dated later than today. Everything else on the row has to use
+        // the same cut-off, or a lift dated tomorrow raises the purchase value
+        // while the stock stays put - which is exactly how the page and the
+        // inventory report came to disagree.
+        $asOf = now()->toDateString();
+
         $categories = $this->categoryRepository->all()->map(fn ($category) => [
             'id' => $category->id,
             'name' => $category->name,
@@ -182,8 +189,12 @@ class ProductPurchaseController extends Controller
         ])->values();
 
         $products = ProductCatalog::query()
-            ->with(['supplier', 'category', 'brand', 'products:id,product_catalog_id,metadata'])
-            ->when(!$showOutOfStock, fn ($q) => $q->whereHas('products', fn ($q2) => $q2->whereNull('deleted_at')))
+            ->with(['supplier', 'category', 'brand', 'products' => fn ($q) => $q
+                ->select('id', 'product_catalog_id', 'metadata')
+                ->whereDate('date', '<=', $asOf)])
+            ->when(!$showOutOfStock, fn ($q) => $q->whereHas('products', fn ($q2) => $q2
+                ->whereNull('deleted_at')
+                ->whereDate('date', '<=', $asOf)))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($builder) use ($search) {
                     $builder
@@ -221,6 +232,7 @@ class ProductPurchaseController extends Controller
                 )
                 ->whereNull('deleted_at')
                 ->whereNotNull('product_catalog_id')
+                ->whereDate('date', '<=', $asOf)
                 ->whereIn('product_catalog_id', $productIds)
                 ->groupBy('product_catalog_id')
                 ->get()

@@ -1944,7 +1944,7 @@ it('T65: the lift page reports the deposit balance already reduced by the lift',
     // 10 cases x 240 = 2400 drawn against the deposit.
     $this->actingAs($user)
          ->post(route('lifts.store'), liftPayload($supplier, $catalog))
-         ->assertRedirect(route('lifts.report'));
+         ->assertRedirect(route('lifts.report', ['tab' => 'completed']));
 
     expect((float) $balanceOf())->toBe(7600.0);
 });
@@ -2101,7 +2101,7 @@ it('T73: recording a lift lands on the lift report with a confirmation', functio
 
     $this->actingAs($user)
          ->post(route('lifts.store'), liftPayload($supplier, $catalog))
-         ->assertRedirect(route('lifts.report'))
+         ->assertRedirect(route('lifts.report', ['tab' => 'completed']))
          ->assertSessionHas('success', 'Lift recorded successfully');
 });
 
@@ -2117,7 +2117,7 @@ it('T74: saving a lift draft lands on the lift report too', function () {
 
     $this->actingAs($user)
          ->post(route('lifts.store'), $payload)
-         ->assertRedirect(route('lifts.report'))
+         ->assertRedirect(route('lifts.report', ['tab' => 'draft']))
          ->assertSessionHas('success', 'Lift draft saved successfully');
 });
 
@@ -2129,7 +2129,7 @@ it('T75: saving a sale draft lands on the sales report with a confirmation', fun
 
     $this->actingAs($user)
          ->post(route('sales.store'), $payload)
-         ->assertRedirect(route('sales.report'))
+         ->assertRedirect(route('sales.report', ['tab' => 'draft']))
          ->assertSessionHas('success', 'Sale draft saved successfully');
 });
 
@@ -4599,4 +4599,207 @@ it('T180: the inventory screens never do money arithmetic of their own', functio
             $offenders->implode(' | ')
         ));
     }
+});
+
+// ── T181–T183: the product list must not count what has not arrived ─────────
+
+it('T181: a lift dated tomorrow changes neither the stock nor the purchase value', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 500000);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $today = liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 30, 'bottles_per_case' => 100,
+        'case_buying_price' => 400,
+    ]);
+    $today['lift_date'] = now()->toDateString();
+    $this->actingAs($user)->post(route('lifts.store'), $today)->assertRedirect();
+
+    $before = listRow($user, $catalog->name);
+    expect((int) $before['stock_bottles'])->toBe(3000)
+        ->and(round((float) $before['total_purchase_amount'], 2))->toBe(12000.0);
+
+    // Entered now, dated tomorrow - what a server running a day behind produces.
+    $tomorrow = liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 2, 'bottles_per_case' => 100,
+        'case_buying_price' => 500,
+    ]);
+    $tomorrow['lift_date'] = now()->addDay()->toDateString();
+    $this->actingAs($user)->post(route('lifts.store'), $tomorrow)->assertRedirect();
+
+    $after = listRow($user, $catalog->name);
+
+    // Both figures hold still: the money must not move without the bottles.
+    expect((int) $after['stock_bottles'])->toBe(3000)
+        ->and((int) $after['stock_cases'])->toBe(30)
+        ->and(round((float) $after['total_purchase_amount'], 2))->toBe(12000.0)
+        ->and((int) $after['purchase_batches_count'])->toBe(1);
+});
+
+it('T182: the product list and the inventory report agree once the day arrives', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 500000);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    // Both lifts dated today, so nothing is held back.
+    foreach ([[30, 400], [2, 500]] as [$cases, $price]) {
+        $p = liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 100,
+            'case_buying_price' => $price,
+        ]);
+        $p['lift_date'] = now()->toDateString();
+        $this->actingAs($user)->post(route('lifts.store'), $p)->assertRedirect();
+    }
+
+    $list   = listRow($user, $catalog->name);
+    $report = reportRow($user, $catalog->name);
+
+    expect((int) $list['stock_bottles'])->toBe((int) $report['total_available_bottles'])
+        ->toBe(3200)
+        ->and((int) $list['stock_cases'])->toBe((int) $report['total_available_cases'])
+        ->and(round((float) $list['total_purchase_amount'], 2))->toBe(13000.0);
+});
+
+it('T183: a variant that only exists in a future lift shows no stock and no value', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 500000);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $today = liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 30, 'bottles_per_case' => 100,
+        'case_buying_price' => 400,
+    ]);
+    $today['lift_date'] = now()->toDateString();
+    $this->actingAs($user)->post(route('lifts.store'), $today)->assertRedirect();
+
+    $later = liftPayload($supplier, $catalog, [
+        'variant' => '250ml', 'number_of_cases' => 33, 'bottles_per_case' => 24,
+        'case_buying_price' => 409,
+    ]);
+    $later['lift_date'] = now()->addDay()->toDateString();
+    $this->actingAs($user)->post(route('lifts.store'), $later)->assertRedirect();
+
+    $row = listRow($user, $catalog->name);
+    $future = collect($row['default_variants'])->firstWhere('variant', '250ml');
+
+    // It may be listed - the catalogue knows the size now - but it must carry
+    // neither stock nor money until the lift date comes round.
+    expect((int) ($future['stock_bottles'] ?? 0))->toBe(0)
+        ->and(round((float) ($future['total_purchase_amount'] ?? 0), 2))->toBe(0.0)
+        ->and(round((float) $row['total_purchase_amount'], 2))->toBe(12000.0);
+});
+
+// ── T184–T187: you land on the tab holding what you just saved ──────────────
+
+it('T184: saving a sale draft lands on the report asking for the Drafts tab', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $payload = salePayload($supplier, $shop, $product);
+    $payload['save_as_draft'] = true;
+
+    $this->actingAs($user)
+         ->post(route('sales.store'), $payload)
+         ->assertRedirect(route('sales.report', ['tab' => 'draft']));
+});
+
+it('T185: saving a lift draft lands on the Drafts tab', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view']);
+
+    $payload = liftPayload($supplier, $catalog);
+    $payload['save_as_draft'] = true;
+
+    $this->actingAs($user)
+         ->post(route('lifts.store'), $payload)
+         ->assertRedirect(route('lifts.report', ['tab' => 'draft']));
+});
+
+it('T186: recording a lift lands on the completed tab', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view']);
+
+    $this->actingAs($user)
+         ->post(route('lifts.store'), liftPayload($supplier, $catalog))
+         ->assertRedirect(route('lifts.report', ['tab' => 'completed']));
+});
+
+it('T187: the tab in the url does not change what the report loads', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+
+    $draft = salePayload($supplier, $shop, $product);
+    $draft['save_as_draft'] = true;
+    $this->actingAs($user)->post(route('sales.store'), $draft)->assertRedirect();
+
+    // The tab is a display choice; both rows must still be sent either way.
+    foreach ([['tab' => 'draft'], ['tab' => 'completed'], []] as $query) {
+        $rows = $this->actingAs($user)
+            ->get(route('sales.report', $query))
+            ->viewData('page')['props']['sales'];
+
+        expect($rows)->toHaveCount(2);
+    }
+});
+
+// ── T188–T189: the sale search must be groupable by supplier ────────────────
+
+it('T188: search results carry the supplier so the sale screen can group them', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    $globe  = makeSupplier();
+    $partex = makeSupplier();
+
+    foreach ([[$globe, ['Globe Lemon', 'Globe Orange', 'Globe Cola']],
+              [$partex, ['Partex Water', 'Partex Cola']]] as [$supplier, $names]) {
+        seedDeposit($supplier);
+        foreach ($names as $name) {
+            $catalog = makeCatalog($supplier, $name);
+            $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+                'variant' => '500ml', 'number_of_cases' => 5, 'bottles_per_case' => 24,
+            ]))->assertRedirect();
+        }
+    }
+
+    $rows = collect($this->actingAs($user)->getJson('/api/inventory/search?q=')->json());
+
+    // Every row names its supplier, and the two suppliers stay distinct.
+    expect($rows->every(fn ($r) => filled($r['supplier_name']) && filled($r['supplier_id'])))->toBeTrue()
+        ->and($rows->groupBy('supplier_id'))->toHaveCount(2)
+        ->and($rows->where('supplier_id', $globe->id))->toHaveCount(3)
+        ->and($rows->where('supplier_id', $partex->id))->toHaveCount(2);
+});
+
+it('T189: searching one supplier name returns only that supplier products', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    $globe  = makeSupplier();
+    $partex = makeSupplier();
+
+    foreach ([[$globe, 'Globe Lemon'], [$globe, 'Globe Orange'], [$partex, 'Partex Water']] as [$supplier, $name]) {
+        seedDeposit($supplier);
+        $catalog = makeCatalog($supplier, $name);
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => 5, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $rows = collect($this->actingAs($user)->getJson('/api/inventory/search?q=Globe')->json());
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows->pluck('supplier_id')->unique()->all())->toBe([$globe->id]);
 });

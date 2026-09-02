@@ -629,7 +629,11 @@ const translations = {
 const currentLanguage = ref(localStorage.getItem("language") || "en");
 const searchQuery = ref("");
 const expandedLifts = ref({});
-const activeTab = ref("completed");
+/** ?tab=draft after saving a draft, so the row just created is on screen. */
+const tabFromUrl = () =>
+    new URLSearchParams(window.location.search).get("tab") === "draft" ? "draft" : "completed";
+
+const activeTab = ref(tabFromUrl());
 
 // Date range state (default: server-provided range or today)
 const _today = new Date();

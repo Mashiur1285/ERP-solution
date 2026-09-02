@@ -214,8 +214,10 @@ class LiftController extends Controller
 
         // Both a draft and a recorded lift land on the report, so the user sees
         // the row they just created instead of an empty form.
+        // A draft belongs on the Drafts tab, a recorded lift on the completed one,
+        // so the row they just made is the one they see.
         return redirect()
-            ->route('lifts.report')
+            ->route('lifts.report', ['tab' => $saveAsDraft ? 'draft' : 'completed'])
             ->with('success', $saveAsDraft ? 'Lift draft saved successfully' : 'Lift recorded successfully');
     }
 
