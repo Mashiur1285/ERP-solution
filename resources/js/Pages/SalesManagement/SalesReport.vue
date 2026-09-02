@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-4 lg:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="px-1 py-4 lg:p-6 space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <FlashToast />
@@ -946,7 +946,18 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <template v-for="sale in filteredSales" :key="sale.id">
+                        <template
+                            v-for="(sale, index) in filteredSales"
+                            :key="sale.id"
+                        >
+                            <tr v-if="startsSupplierGroup(index)" class="bg-slate-100/70">
+                                <td
+                                    colspan="9"
+                                    class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600"
+                                >
+                                    {{ sale.supplier_name || "-" }}
+                                </td>
+                            </tr>
                             <tr
                                 class="hover:bg-gray-50 transition-colors cursor-pointer"
                                 @click="toggleItems(sale.id)"
@@ -1817,6 +1828,27 @@ const hasAnyCases = computed(() => {
     );
 });
 
+const supplierNameOf = (sale: Sale) => (sale.supplier_name || "").trim();
+
+/**
+ * Rows of one supplier stay in a single run, whatever their dates, so a report
+ * can be read (and handed over) supplier by supplier. Inside a supplier the
+ * usual newest-first order is kept.
+ */
+const bySupplierThenNewest = (a: Sale, b: Sale) => {
+    const supplier = supplierNameOf(a).localeCompare(supplierNameOf(b));
+    if (supplier !== 0) return supplier;
+    if (a.sale_date !== b.sale_date) return a.sale_date < b.sale_date ? 1 : -1;
+    return b.id - a.id;
+};
+
+/** True when this row opens a new supplier's block, so a heading is drawn. */
+const startsSupplierGroup = (index: number) => {
+    const list = filteredSales.value;
+    if (index === 0) return true;
+    return supplierNameOf(list[index]) !== supplierNameOf(list[index - 1]);
+};
+
 const filteredSales = computed(() => {
     return tabbedSales.value.filter((sale) => {
         // Date range filter (client-side, instant — no server round-trip needed)
@@ -1837,7 +1869,7 @@ const filteredSales = computed(() => {
         }
 
         return true;
-    });
+    }).sort(bySupplierThenNewest);
 });
 
 const productSummary = computed(() => {
@@ -2062,11 +2094,14 @@ function toBengaliNumber(numValue: number | string, decimals: number | null = nu
     let n = Number(numValue);
     if (isNaN(n)) return String(numValue);
 
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
     let output: string;
     if (decimals !== null) {
-        output = n.toFixed(decimals);
+        output = n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     } else {
-        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+        output = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     if (currentLanguage.value !== 'bn') return output;

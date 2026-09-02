@@ -607,16 +607,12 @@
                                             class="text-sm font-semibold text-purple-600 metric-value"
                                             :class="{
                                                 'large-number':
-                                                    (
-                                                        variant.total_bottles_available *
-                                                        variant.unit_price
-                                                    ).toString().length > 10,
+                                                    Number(variant.stock_value ?? 0).toString().length > 10,
                                             }"
                                         >
                                             ৳{{
                                                 toBengaliNumber(
-                                                    variant.total_bottles_available *
-                                                        variant.unit_price,
+                                                    Number(variant.stock_value ?? 0),
                                                     2
                                                 )
                                             }}
@@ -703,10 +699,11 @@ const toBengaliNumber = (num, decimals = 0) => {
 
     // Round decimals to 2 places if it's a number or a numeric string
     let n = Number(num);
-    if (!isNaN(n) && n % 1 !== 0) {
-        num = n.toFixed(2);
-    } else if (!isNaN(n)) {
-        num = n.toString();
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
+    if (!isNaN(n)) {
+        num = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     if (props.t("languageLabel") !== "বাংলা") {
@@ -735,22 +732,9 @@ const totalBoxes = computed(() =>
 );
 const totalPurchaseValue = computed(() => {
     const total = props.inventoryStock.reduce((sum, item) => {
-        const itemTotalValue = item.variants.reduce((variantSum, variant) => {
-            if (
-                typeof variant.total_bottles_available !== "number" ||
-                typeof variant.unit_price !== "number"
-            ) {
-                console.warn(
-                    `Invalid variant data in item ${item.product_name}:`,
-                    variant
-                );
-                return variantSum;
-            }
-            return (
-                variantSum +
-                variant.total_bottles_available * variant.unit_price
-            );
-        }, 0);
+        // The server sends each row's value ready to add up. Recomputing it here
+        // is how this page and the inventory report came to show different totals.
+        const itemTotalValue = Number(item.total_stock_value ?? 0);
         return sum + itemTotalValue;
     }, 0);
     return total;
@@ -766,19 +750,7 @@ const processedInventory = computed(() => {
             );
             return { ...item, total_value: 0 };
         }
-        const total_value = item.variants.reduce((sum, variant) => {
-            if (
-                typeof variant.total_bottles_available !== "number" ||
-                typeof variant.unit_price !== "number"
-            ) {
-                console.warn(
-                    `Invalid variant data in item ${item.product_name}:`,
-                    variant
-                );
-                return sum;
-            }
-            return sum + variant.total_bottles_available * variant.unit_price;
-        }, 0);
+        const total_value = Number(item.total_stock_value ?? 0);
         return {
             ...item,
             total_value,

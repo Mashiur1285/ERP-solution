@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="px-1 py-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
     >
         <!-- Toast Notification -->
         <div

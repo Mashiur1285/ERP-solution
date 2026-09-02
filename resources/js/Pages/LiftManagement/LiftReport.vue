@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
+        class="px-1 py-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 max-w-7xl mx-auto"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <FlashToast />
@@ -644,6 +644,20 @@ function t(key) {
 
 function toBn(num) {
     if (num === null || num === undefined || num === "") return "";
+
+    // Callers hand this pre-rounded strings like "3000.00"; group them so the
+    // page reads 3,000.00. Anything non-numeric passes through untouched.
+    let grouped = String(num);
+    const asNumber = Number(grouped);
+    if (!Number.isNaN(asNumber)) {
+        const decimals = grouped.includes(".") ? grouped.split(".")[1].length : 0;
+        grouped = asNumber.toLocaleString("en-US", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+        });
+    }
+    num = grouped;
+
     if (currentLanguage.value !== "bn") return num;
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
     return num

@@ -13,10 +13,10 @@ use Spatie\Permission\Models\Permission;
 function seedPermissions(): void
 {
     $names = [
-        'lift.add', 'lift.view', 'lift.update',
-        'sales.add', 'sales.view', 'sales.update',
+        'lift.add', 'lift.view', 'lift.update', 'lift.delete',
+        'sales.add', 'sales.view', 'sales.update', 'sales.delete',
         'inventory.view',
-        'deposit.add', 'deposit.view', 'deposit.update',
+        'deposit.add', 'deposit.view', 'deposit.update', 'deposit.delete',
     ];
     foreach ($names as $name) {
         Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
@@ -757,7 +757,7 @@ it('T22: deleting an unsold lift soft-deletes its product', function () {
     $supplier = makeSupplier();
     seedDeposit($supplier);
     $catalog = makeCatalog($supplier);
-    $user    = makeUser(['lift.add', 'lift.update']);
+    $user    = makeUser(['lift.add', 'lift.update', 'lift.delete']);
 
     $this->actingAs($user)
          ->post(route('lifts.store'), liftPayload($supplier, $catalog))
@@ -778,7 +778,7 @@ it('T23: deleting a lift with sold bottles returns an error response', function 
     $supplier = makeSupplier();
     seedDeposit($supplier);
     $catalog = makeCatalog($supplier);
-    $liftUser = makeUser(['lift.add', 'lift.update']);
+    $liftUser = makeUser(['lift.add', 'lift.update', 'lift.delete']);
     $saleUser = makeUser(['sales.add']);
     $shop     = makeShop();
 
@@ -1397,12 +1397,15 @@ it('T38: the payment screen for a part-paid sale opens on the outstanding balanc
 /** A lifted, sellable product plus the users and shop needed to sell it. */
 function saleFixture(array $liftOverrides = []): array
 {
-    seedPermissions();
+    seedAllPermissions();
     $supplier = makeSupplier();
     seedDeposit($supplier);
     $catalog  = makeCatalog($supplier);
     $liftUser = makeUser(['lift.add']);
-    $saleUser = makeUser(['sales.add', 'sales.update', 'sales.view']);
+    $saleUser = makeUser([
+        'sales.add', 'sales.update', 'sales.view', 'sales.delete',
+        'dashboard.view', 'inventory.view', 'lift.view',
+    ]);
     $shop     = makeShop();
 
     test()->actingAs($liftUser)
@@ -2351,4 +2354,2249 @@ it('T84: the deposit ledger stays consistent across a lift edit', function () {
         ->and((float) $deposit->balance_remaining)->toBe(7120.0)
         ->and((float) $deposit->balance_used + (float) $deposit->balance_remaining)
         ->toBe((float) $deposit->balance_deposited);
+});
+
+// ── T85–T86: the reports carry the supplier identity grouping relies on ─────
+
+it('T85: every sales report row names its supplier', function () {
+    seedPermissions();
+    $supplierA = makeSupplier();
+    $supplierB = makeSupplier();
+    $shop      = makeShop();
+    $liftUser  = makeUser(['lift.add']);
+    $user      = makeUser(['sales.add', 'sales.view']);
+
+    foreach ([$supplierA, $supplierB] as $supplier) {
+        seedDeposit($supplier);
+        $catalog = makeCatalog($supplier);
+        $this->actingAs($liftUser)->post(route('lifts.store'), liftPayload($supplier, $catalog))->assertRedirect();
+        $this->actingAs($user)
+             ->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier)))
+             ->assertRedirect();
+    }
+
+    $rows = $this->actingAs($user)->get(route('sales.report'))->viewData('page')['props']['sales'];
+
+    // Two suppliers, each row labelled - that label is what the list groups on.
+    expect(collect($rows)->pluck('supplier_name')->unique()->values()->all())
+        ->toHaveCount(2)
+        ->and(collect($rows)->every(fn ($r) => filled($r['supplier_name'])))->toBeTrue();
+});
+
+it('T86: every lift report row carries its supplier relation', function () {
+    seedPermissions();
+    $supplierA = makeSupplier();
+    $supplierB = makeSupplier();
+    $user      = makeUser(['lift.add', 'lift.view']);
+
+    foreach ([$supplierA, $supplierB, $supplierA] as $supplier) {
+        seedDeposit($supplier);
+        $catalog = makeCatalog($supplier);
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog))->assertRedirect();
+    }
+
+    $rows = collect(
+        $this->actingAs($user)->get(route('lifts.report'))->viewData('page')['props']['liftHistory']
+    );
+
+    expect($rows)->toHaveCount(3)
+        ->and($rows->every(fn ($r) => filled(data_get($r, 'supplier.company_name'))))->toBeTrue()
+        // Supplier A has two lifts, so the page has something to group.
+        ->and($rows->groupBy(fn ($r) => data_get($r, 'supplier.company_name'))->get($supplierA->company_name))
+        ->toHaveCount(2);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  T87–T94: ACL — a user must get exactly what was granted, no more
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** The app's real permission list, not the trimmed one the other tests use. */
+function seedAllPermissions(): void
+{
+    (new \Database\Seeders\PermissionSeeder())->run();
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+}
+
+/** Every guarded page in the app, keyed by the permission that opens it. */
+function guardedPages(): array
+{
+    return [
+        '/dashboard'        => 'dashboard.view',
+        '/suppliers/index'  => 'supplier.view',
+        '/suppliers/create' => 'supplier.add',
+        '/deposits'         => 'deposit.view',
+        '/categories/index' => 'category.view',
+        '/brands/index'     => 'brand.view',
+        '/lifts'            => 'lift.add',
+        '/lifts/report'     => 'lift.view',
+        '/shops'            => 'shop.view',
+        '/shops/create'     => 'shop.add',
+        '/sales'            => 'sales.add',
+        '/sales/report'     => 'sales.view',
+        '/sales/summary'    => 'sales.view',
+        '/products'         => 'inventory.view',
+        '/inventory/report' => 'inventory.view',
+        '/expenses'         => 'expense.view',
+        '/expenses/report'  => 'expense.view',
+        '/profit-loss'      => 'sales.view',
+        '/roles'            => 'role.view',
+        '/users'            => 'user.view',
+    ];
+}
+
+it('T87: a user with no permissions is refused by every guarded page', function () {
+    seedAllPermissions();
+    $user = makeUser([]);
+
+    foreach (array_keys(guardedPages()) as $path) {
+        $this->actingAs($user)->get($path)->assertForbidden();
+    }
+});
+
+it('T88: each page opens only for the permission it is guarded by', function () {
+    seedAllPermissions();
+
+    foreach (guardedPages() as $path => $permission) {
+        // The one permission that should open it.
+        $allowed = makeUser([$permission]);
+        expect($this->actingAs($allowed)->get($path)->status())
+            ->not->toBe(403, "{$path} should open for {$permission}");
+
+        // Every other permission must not.
+        $wrong = makeUser([$permission === 'sales.view' ? 'expense.view' : 'sales.view']);
+        $this->actingAs($wrong)->get($path)->assertForbidden();
+    }
+});
+
+it('T89: a view-only user cannot create, update or delete a sale', function () {
+    [$supplier, $shop, $product, $seller] = saleFixture();
+
+    $this->actingAs($seller)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    $viewer = makeUser(['sales.view', 'inventory.view']);
+
+    $this->actingAs($viewer)->get(route('sales.report'))->assertOk();
+    $this->actingAs($viewer)->get(route('sales.cash-memo', $sale->id))->assertOk();
+
+    // Everything that changes data is closed to them.
+    $this->actingAs($viewer)->get(route('sales.index'))->assertForbidden();
+    $this->actingAs($viewer)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertForbidden();
+    $this->actingAs($viewer)->get(route('sales.edit', $sale->id))->assertForbidden();
+    $this->actingAs($viewer)->put(route('sales.update', $sale->id), [])->assertForbidden();
+    $this->actingAs($viewer)->delete(route('sales.destroy', $sale->id))->assertForbidden();
+    $this->actingAs($viewer)->post(route('sales.payment.store', $sale->id), [])->assertForbidden();
+
+    // And the sale is untouched.
+    expect(salesOf($supplier)->count())->toBe(1);
+});
+
+it('T90: a sales user cannot reach lift, expense or ACL', function () {
+    seedAllPermissions();
+    $user = makeUser(['sales.add', 'sales.view', 'sales.update']);
+
+    foreach (['/lifts', '/lifts/report', '/expenses', '/deposits', '/roles', '/users', '/products'] as $path) {
+        $this->actingAs($user)->get($path)->assertForbidden();
+    }
+
+    $this->actingAs($user)->post(route('lifts.store'), [])->assertForbidden();
+    $this->actingAs($user)->post(route('expenses.store'), [])->assertForbidden();
+});
+
+it('T91: the app tells the page exactly which permissions the user holds', function () {
+    seedAllPermissions();
+    $granted = ['sales.view', 'sales.add', 'inventory.view'];
+    $user    = makeUser($granted);
+
+    $shared = $this->actingAs($user)
+        ->get(route('sales.report'))
+        ->viewData('page')['props']['userPermissions'];
+
+    // The sidebar hides everything not in this list, so it must match exactly.
+    expect(collect($shared)->sort()->values()->all())->toBe(collect($granted)->sort()->values()->all());
+});
+
+it('T92: the API endpoints behind the sale screen are guarded too', function () {
+    seedAllPermissions();
+    $user = makeUser(['sales.view']); // view only - these need sales.add
+
+    $this->actingAs($user)->get('/api/inventory/search?q=x')->assertForbidden();
+    $this->actingAs($user)->get('/api/variant-inventory?product_id=1&variant=250ml')->assertForbidden();
+    $this->actingAs($user)->get('/api/products-by-supplier?supplier_id=1')->assertForbidden();
+    $this->actingAs($user)->get('/api/product-catalog/search?supplier_id=1')->assertForbidden();
+});
+
+it('T93: permissions granted through a role work like direct ones', function () {
+    seedAllPermissions();
+
+    $role = \App\Models\Role::firstOrCreate(
+        ['name' => 'collector', 'guard_name' => 'web'],
+        ['description' => 'Collects dues', 'is_active' => true]
+    );
+    $role->syncPermissions(['sales.view', 'sales.update']);
+
+    $user = \App\Models\User::factory()->create();
+    $user->syncRoles([$role->name]);
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($user)->get(route('sales.report'))->assertOk();
+    $this->actingAs($user)->get(route('sales.index'))->assertForbidden();  // no sales.add
+    $this->actingAs($user)->get('/lifts')->assertForbidden();
+});
+
+it('T94: taking a permission away from a role locks the user out again', function () {
+    seedAllPermissions();
+
+    $role = \App\Models\Role::firstOrCreate(
+        ['name' => 'temp-role', 'guard_name' => 'web'],
+        ['description' => 'temp', 'is_active' => true]
+    );
+    $role->syncPermissions(['expense.view']);
+
+    $user = \App\Models\User::factory()->create();
+    $user->syncRoles([$role->name]);
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($user)->get(route('expenses.index'))->assertOk();
+
+    $role->syncPermissions([]);
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($user)->get(route('expenses.index'))->assertForbidden();
+});
+
+// ── T95–T97: deleting is its own permission ─────────────────────────────────
+
+it('T95: every module that can be deleted has a delete permission of its own', function () {
+    seedAllPermissions();
+
+    $names = \Spatie\Permission\Models\Permission::pluck('name');
+
+    foreach (['sales', 'lift', 'supplier', 'deposit', 'expense', 'category', 'brand', 'shop', 'role'] as $module) {
+        expect($names)->toContain("{$module}.delete");
+    }
+});
+
+it('T96: the manager role, described as "without delete", really cannot delete', function () {
+    seedAllPermissions();
+    (new \Database\Seeders\RoleSeeder())->run();
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+
+    $manager = \App\Models\User::factory()->create();
+    $manager->syncRoles(['manager']);
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    // It can still do the operational work.
+    $this->actingAs($manager)->post(route('lifts.store'), liftPayload($supplier, $catalog))->assertRedirect();
+    $this->actingAs($manager)
+         ->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier)))
+         ->assertRedirect();
+
+    $sale = salesOf($supplier)->firstOrFail();
+    $lift = \App\Models\Lift::where('supplier_id', $supplier->id)->firstOrFail();
+
+    // But nothing can be destroyed, which is what the role promises.
+    $this->actingAs($manager)->delete(route('sales.destroy', $sale->id))->assertForbidden();
+    $this->actingAs($manager)->delete(route('lifts.destroy', $lift->id))->assertForbidden();
+    $this->actingAs($manager)->delete(route('categories.delete', 1))->assertForbidden();
+
+    expect(salesOf($supplier)->count())->toBe(1)
+        ->and(\App\Models\Lift::where('supplier_id', $supplier->id)->count())->toBe(1);
+});
+
+it('T97: update lets you correct a sale but no longer lets you destroy it', function () {
+    [$supplier, $shop, $product, $seller] = saleFixture();
+
+    $this->actingAs($seller)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    // A corrector: may edit, may not delete.
+    $corrector = makeUser(['sales.view', 'sales.update']);
+
+    $this->actingAs($corrector)->get(route('sales.edit', $sale->id))->assertOk();
+    $this->actingAs($corrector)->delete(route('sales.destroy', $sale->id))->assertForbidden();
+    expect(salesOf($supplier)->count())->toBe(1);
+
+    // A remover: may delete.
+    $remover = makeUser(['sales.view', 'sales.delete']);
+    $this->actingAs($remover)->delete(route('sales.destroy', $sale->id))->assertRedirect();
+    expect(salesOf($supplier)->count())->toBe(0);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  T98–T157: does every screen show the same inventory?
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** A user who can see every inventory surface at once. */
+function inventoryViewer(): User
+{
+    // Needs the full permission list - the trimmed helper has no dashboard.view.
+    seedAllPermissions();
+
+    return makeUser([
+        'inventory.view', 'dashboard.view', 'sales.add', 'sales.view',
+        'lift.add', 'lift.view', 'lift.delete', 'sales.update', 'sales.delete',
+    ]);
+}
+
+/** Product List row (/products) for a catalog name. */
+function listRow(User $user, string $name): ?array
+{
+    return collect(
+        test()->actingAs($user)->get('/products?show_out_of_stock=1')
+              ->viewData('page')['props']['products']['data']
+    )->firstWhere('name', $name);
+}
+
+/** Inventory Report row (/inventory/report) for a product name. */
+function reportRow(User $user, string $name): ?array
+{
+    return collect(
+        test()->actingAs($user)->get('/inventory/report')
+              ->viewData('page')['props']['inventoryStock']
+    )->firstWhere('product_name', $name);
+}
+
+/** Dashboard inventory row for a product name. */
+function dashRow(User $user, string $name): ?array
+{
+    return collect(
+        test()->actingAs($user)->get('/dashboard')
+              ->viewData('page')['props']['inventoryStock']
+    )->firstWhere('product_name', $name);
+}
+
+/** What the sale screen's product search returns for a product name. */
+function searchRow(User $user, string $name): ?array
+{
+    return collect(
+        test()->actingAs($user)->getJson('/api/inventory/search?q=' . urlencode($name))->json()
+    )->firstWhere('product_name', $name);
+}
+
+/** Bottles available for one variant, as each surface reports it. */
+function bottlesEverywhere(User $user, string $name, string $variant = '500ml'): array
+{
+    $list   = listRow($user, $name);
+    $report = reportRow($user, $name);
+    $dash   = dashRow($user, $name);
+    $search = searchRow($user, $name);
+
+    $pick = fn (?array $row, string $key) => $row
+        ? (int) (collect($row[$key] ?? [])->firstWhere('variant', $variant)['total_bottles_available']
+            ?? collect($row[$key] ?? [])->firstWhere('variant', $variant)['stock_bottles']
+            ?? -1)
+        : -1;
+
+    return [
+        'list'   => $pick($list, 'default_variants'),
+        'report' => $pick($report, 'variants'),
+        'dash'   => $pick($dash, 'variants'),
+        'search' => $pick($search, 'variants'),
+    ];
+}
+
+// ── T98–T107: the four surfaces must agree ──────────────────────────────────
+
+it('T98: a fresh lift shows the same bottles on all four screens', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $seen = bottlesEverywhere($user, $catalog->name);
+    expect($seen)->toBe(['list' => 240, 'report' => 240, 'dash' => 240, 'search' => 240]);
+});
+
+it('T99: after a sale all four screens drop by the same amount', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 3, 'total_bottles_to_sell' => 72,
+    ]))->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 168, 'report' => 168, 'dash' => 168, 'search' => 168]);
+});
+
+it('T100: a draft sale moves none of the four screens', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $payload = salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 3, 'total_bottles_to_sell' => 72,
+    ]);
+    $payload['save_as_draft'] = true;
+    $this->actingAs($user)->post(route('sales.store'), $payload)->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 240, 'report' => 240, 'dash' => 240, 'search' => 240]);
+});
+
+it('T101: two batches of one product are added together on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    foreach ([10, 6] as $cases) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    // 240 + 144
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 384, 'report' => 384, 'dash' => 384, 'search' => 384]);
+});
+
+it('T102: free bottles are counted as stock on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    // 10 cases x 24 = 240 purchased, plus 2 free per case = 20
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2,
+    ]))->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 260, 'report' => 260, 'dash' => 260, 'search' => 260]);
+});
+
+it('T103: selling everything leaves zero on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 10, 'total_bottles_to_sell' => 240,
+    ]))->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 0, 'report' => 0, 'dash' => 0, 'search' => 0]);
+});
+
+it('T104: deleting a sale puts the bottles back on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 3, 'total_bottles_to_sell' => 72,
+    ]))->assertRedirect();
+
+    $sale = salesOf($supplier)->firstOrFail();
+    $this->actingAs($user)->delete(route('sales.destroy', $sale->id))->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 240, 'report' => 240, 'dash' => 240, 'search' => 240]);
+});
+
+it('T105: cases shown are the bottles divided by bottles-per-case', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    // Sell 5 bottles, leaving 235 -> 9 whole cases with 19 loose bottles.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => 5, 'total_bottles_to_sell' => 5,
+    ]))->assertRedirect();
+
+    $report = reportRow($user, $catalog->name);
+    $list   = listRow($user, $catalog->name);
+
+    expect((int) $report['total_available_bottles'])->toBe(235)
+        ->and((int) $report['total_available_cases'])->toBe(9)
+        ->and((int) $list['stock_bottles'])->toBe(235)
+        ->and((int) $list['stock_cases'])->toBe(9);
+});
+
+it('T106: two variants of one product are summed, not muddled', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $payload = liftPayload($supplier, $catalog);
+    $payload['items'][0]['variants'] = [
+        ['variant' => '250ml', 'number_of_cases' => 5, 'case_buying_price' => 200, 'bottles_per_case' => 24, 'free_bottles_per_case' => 0],
+        ['variant' => '500ml', 'number_of_cases' => 4, 'case_buying_price' => 300, 'bottles_per_case' => 12, 'free_bottles_per_case' => 0],
+    ];
+    $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+
+    $report = reportRow($user, $catalog->name);
+    $byVariant = collect($report['variants'])->keyBy('variant');
+
+    expect((int) $byVariant['250ml']['total_bottles_available'])->toBe(120)
+        ->and((int) $byVariant['500ml']['total_bottles_available'])->toBe(48)
+        ->and((int) $report['total_available_bottles'])->toBe(168)
+        // 5 whole cases of 24 + 4 whole cases of 12
+        ->and((int) $report['total_available_cases'])->toBe(9);
+});
+
+it('T107: a product with no lift yet reports zero rather than vanishing', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $list = listRow($user, $catalog->name);
+
+    expect($list)->not->toBeNull()
+        ->and((int) $list['stock_bottles'])->toBe(0)
+        ->and((int) $list['purchase_batches_count'])->toBe(0);
+});
+
+// ── T108–T121: harder inventory cases ───────────────────────────────────────
+
+it('T108: two suppliers selling a same-named product keep separate stock', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    $a = makeSupplier();
+    $b = makeSupplier();
+    seedDeposit($a);
+    seedDeposit($b);
+
+    // Same product name, two different suppliers - a real case for Coca-Cola,
+    // Pran Up and so on when two depots carry it.
+    $catalogA = makeCatalog($a, 'Shared Cola');
+    $catalogB = makeCatalog($b, 'Shared Cola');
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($a, $catalogA, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($b, $catalogB, [
+        'variant' => '500ml', 'number_of_cases' => 4, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $rows = collect(
+        $this->actingAs($user)->get('/inventory/report')
+             ->viewData('page')['props']['inventoryStock']
+    )->where('product_name', 'Shared Cola')->values();
+
+    // Each supplier's stock must stand on its own: 240 and 96, never merged.
+    expect($rows)->toHaveCount(2)
+        ->and($rows->pluck('supplier_id')->unique())->toHaveCount(2)
+        ->and($rows->sum('total_available_bottles'))->toBe(336);
+});
+
+it('T109: the product list gives each supplier its own stock for a shared name', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    $a = makeSupplier();
+    $b = makeSupplier();
+    seedDeposit($a);
+    seedDeposit($b);
+    $catalogA = makeCatalog($a, 'Shared Cola');
+    $catalogB = makeCatalog($b, 'Shared Cola');
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($a, $catalogA, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($b, $catalogB, [
+        'variant' => '500ml', 'number_of_cases' => 4, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $rows = collect(
+        $this->actingAs($user)->get('/products?show_out_of_stock=1')
+             ->viewData('page')['props']['products']['data']
+    )->where('name', 'Shared Cola')->keyBy('supplier_name');
+
+    expect($rows)->toHaveCount(2)
+        ->and((int) $rows[$a->company_name]['stock_bottles'])->toBe(240)
+        ->and((int) $rows[$b->company_name]['stock_bottles'])->toBe(96);
+});
+
+it('T110: selling from one supplier does not move the other supplier stock', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+    $shop = makeShop();
+
+    $a = makeSupplier();
+    $b = makeSupplier();
+    seedDeposit($a);
+    seedDeposit($b);
+    $catalogA = makeCatalog($a, 'Shared Cola');
+    $catalogB = makeCatalog($b, 'Shared Cola');
+
+    foreach ([[$a, $catalogA, 10], [$b, $catalogB, 4]] as [$supplier, $catalog, $cases]) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $productA = Product::where('supplier_id', $a->id)->firstOrFail();
+    $this->actingAs($user)->post(route('sales.store'), salePayload($a, $shop, $productA, [
+        'variant' => '500ml', 'cases_sold' => 2, 'total_bottles_to_sell' => 48,
+    ]))->assertRedirect();
+
+    $rows = collect(
+        $this->actingAs($user)->get('/inventory/report')
+             ->viewData('page')['props']['inventoryStock']
+    )->where('product_name', 'Shared Cola')->keyBy('supplier_id');
+
+    expect((int) $rows[$a->id]['total_available_bottles'])->toBe(192)
+        ->and((int) $rows[$b->id]['total_available_bottles'])->toBe(96);
+});
+
+it('T111: the inventory report can look at stock as it was on an earlier date', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $payload = liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]);
+    $payload['lift_date'] = now()->subDays(5)->toDateString();
+    $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+
+    $rows = collect(
+        $this->actingAs($user)
+             ->get('/inventory/report?snapshot_date=' . now()->subDays(10)->toDateString())
+             ->viewData('page')['props']['inventoryStock']
+    )->firstWhere('product_name', $catalog->name);
+
+    // The lift had not happened yet on that date.
+    expect($rows)->toBeNull();
+});
+
+it('T112: stock is never reported as a negative number', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 10, 'total_bottles_to_sell' => 240,
+    ]))->assertRedirect();
+
+    $report = reportRow($user, $catalog->name);
+
+    foreach ($report['variants'] as $variant) {
+        expect((int) $variant['total_bottles_available'])->toBeGreaterThanOrEqual(0)
+            ->and((int) $variant['purchased_bottles_available'])->toBeGreaterThanOrEqual(0)
+            ->and((int) $variant['free_bottles_available'])->toBeGreaterThanOrEqual(0)
+            ->and((int) $variant['cases_available'])->toBeGreaterThanOrEqual(0);
+    }
+});
+
+it('T113: the product list hides sold-out products unless asked, the report never does', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 10, 'total_bottles_to_sell' => 240,
+    ]))->assertRedirect();
+
+    // A sold-out product still has a batch, so it stays listed either way, but
+    // the report must always carry it so the zero is visible.
+    expect(reportRow($user, $catalog->name))->not->toBeNull()
+        ->and((int) reportRow($user, $catalog->name)['total_available_bottles'])->toBe(0);
+});
+
+it('T114: the variant API and the report agree for a single-batch product', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 1,
+    ]))->assertRedirect();
+
+    $product = getProduct($supplier);
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+        'variant' => '500ml', 'cases_sold' => 2, 'total_bottles_to_sell' => 48,
+    ]))->assertRedirect();
+
+    $api = $this->actingAs($user)
+        ->getJson('/api/variant-inventory?product_id=' . $product->id . '&variant=500ml')
+        ->json();
+
+    $reportVariant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    expect((int) $api['purchased_bottles_available'])->toBe((int) $reportVariant['purchased_bottles_available'])
+        ->and((int) $api['free_bottles_available'])->toBe((int) $reportVariant['free_bottles_available']);
+});
+
+it('T115: editing a lift upward raises the stock on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $lift = \App\Models\Lift::where('supplier_id', $supplier->id)->firstOrFail();
+    $edit = liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 15, 'bottles_per_case' => 24,
+    ]);
+    $edit['draft_id'] = $lift->id;
+    $this->actingAs($user)->post(route('lifts.store'), $edit)->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 360, 'report' => 360, 'dash' => 360, 'search' => 360]);
+});
+
+it('T116: deleting an unsold lift removes its stock from every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $lift = \App\Models\Lift::where('supplier_id', $supplier->id)->firstOrFail();
+    $this->actingAs($user)->delete(route('lifts.destroy', $lift->id))->assertRedirect();
+
+    expect(reportRow($user, $catalog->name))->toBeNull()
+        ->and((int) listRow($user, $catalog->name)['stock_bottles'])->toBe(0);
+});
+
+it('T117: the product list purchase-batch count matches the real batches', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    foreach ([5, 6, 7] as $cases) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $list = listRow($user, $catalog->name);
+
+    expect((int) $list['purchase_batches_count'])
+        ->toBe(Product::where('product_catalog_id', $catalog->id)->count())
+        ->toBe(3);
+});
+
+// ── T118–T131: money and counts across dashboard, reports and sale items ────
+
+/** Dashboard props for a given day. */
+function dashProps(User $user, ?string $date = null): array
+{
+    $date ??= now()->toDateString();
+
+    return test()->actingAs($user)
+        ->get('/dashboard?daily_sales_date=' . $date)
+        ->viewData('page')['props'];
+}
+
+it('T118: dashboard inventory rows match the inventory report exactly', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+    $shop = makeShop();
+
+    foreach ([['A', 10], ['B', 6]] as [$suffix, $cases]) {
+        $supplier = makeSupplier();
+        seedDeposit($supplier);
+        $catalog  = makeCatalog($supplier, 'Cross Check ' . $suffix);
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $dash   = collect(dashProps($user)['inventoryStock']);
+    $report = collect(
+        $this->actingAs($user)->get('/inventory/report')->viewData('page')['props']['inventoryStock']
+    );
+
+    $key = fn ($row) => $row['supplier_id'] . '::' . $row['product_name'];
+
+    expect($dash->count())->toBe($report->count());
+    foreach ($dash as $row) {
+        $match = $report->first(fn ($r) => $key($r) === $key($row));
+        expect($match)->not->toBeNull()
+            ->and((int) $match['total_available_bottles'])->toBe((int) $row['total_available_bottles'])
+            ->and((int) $match['total_available_cases'])->toBe((int) $row['total_available_cases']);
+    }
+});
+
+it('T119: the sales report total equals the sum of its own rows', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    foreach ([1, 2, 3] as $cases) {
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+            'cases_sold' => $cases, 'total_bottles_to_sell' => $cases * 24,
+        ]))->assertRedirect();
+    }
+
+    $rows = collect($this->actingAs($user)->get(route('sales.report'))->viewData('page')['props']['sales']);
+
+    expect(round($rows->sum(fn ($r) => (float) $r['total_amount']), 2))
+        ->toBe(round((float) \App\Models\Sale::where('supplier_id', $supplier->id)->sum('total_amount'), 2));
+});
+
+it('T120: a sale row profit equals the sum of that sale item profits', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+        'cases_sold' => 3, 'total_bottles_to_sell' => 72,
+    ]))->assertRedirect();
+
+    $sale = salesOf($supplier)->firstOrFail();
+    $row  = collect($this->actingAs($user)->get(route('sales.report'))->viewData('page')['props']['sales'])
+        ->firstWhere('id', $sale->id);
+
+    expect(round((float) $row['total_profit'], 2))
+        ->toBe(round((float) \App\Models\SaleItem::where('sale_id', $sale->id)->sum('profit'), 2));
+});
+
+it('T121: report revenue minus profit equals the cost of what was sold', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+        'cases_sold' => 4, 'total_bottles_to_sell' => 96, 'selling_price_per_bottle' => 15,
+    ]))->assertRedirect();
+
+    $row = collect($this->actingAs($user)->get(route('sales.report'))->viewData('page')['props']['sales'])->first();
+
+    // 96 bottles at 15 = 1440 revenue; the lift cost 10 per bottle.
+    expect(round((float) $row['total_amount'], 2))->toBe(1440.0)
+        ->and(round((float) $row['total_amount'] - (float) $row['total_profit'], 2))->toBe(960.0);
+});
+
+it('T122: dashboard due for the day equals the sales report due for the same day', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    $this->actingAs($user)->post(route('sales.payment.store', $sale->id), [
+        'payment_amount' => 300, 'payment_method' => 'cash',
+    ]);
+
+    $reportDue = collect($this->actingAs($user)->get(route('sales.report'))->viewData('page')['props']['sales'])
+        ->sum(fn ($r) => (float) $r['due_amount']);
+
+    expect(round($reportDue, 2))->toBe(round((float) $sale->fresh()->due_amount, 2))
+        ->toBe(420.0);
+});
+
+it('T123: a draft is left out of the sales totals but still listed', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+
+    $draft = salePayload($supplier, $shop, $product);
+    $draft['save_as_draft'] = true;
+    $this->actingAs($user)->post(route('sales.store'), $draft)->assertRedirect();
+
+    $rows = collect($this->actingAs($user)->get(route('sales.report'))->viewData('page')['props']['sales']);
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows->where('status', 'draft'))->toHaveCount(1);
+
+    // The dashboard's money must ignore the draft: one 720 sale counted once.
+    $monthly = dashProps($user)['monthlySales'];
+    expect(round((float) $monthly['total_sales'], 2))->toBe(720.0)
+        ->and(round((float) $monthly['due_amount'], 2))->toBe(720.0);
+});
+
+it('T124: the dashboard counts a sale on its sale_date, like the report does', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    // Entered today, but dated three days ago - a normal catch-up entry.
+    $backdated = array_merge(
+        salePayload($supplier, $shop, $product),
+        ['sale_date' => now()->subDays(3)->toDateString()]
+    );
+    $this->actingAs($user)->post(route('sales.store'), $backdated)->assertRedirect();
+
+    $today = dashProps($user, now()->toDateString());
+    $then  = dashProps($user, now()->subDays(3)->toDateString());
+
+    // It belongs to the day it was made on, not the day it was typed in.
+    expect((int) $today['totalShopsSold'])->toBe(0)
+        ->and((int) $then['totalShopsSold'])->toBe(1);
+});
+
+it('T125: cases sold on the dashboard match the sale items for that day', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    foreach ([2, 3] as $cases) {
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+            'cases_sold' => $cases, 'total_bottles_to_sell' => $cases * 24,
+        ]))->assertRedirect();
+    }
+
+    $props = dashProps($user);
+
+    expect((int) $props['totalCasesSold'])
+        ->toBe((int) \App\Models\SaleItem::whereHas('sale', fn ($q) => $q->where('supplier_id', $supplier->id))->sum('cases_sold'))
+        ->toBe(5);
+});
+
+it('T126: lift totals on the dashboard match the lift report', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    foreach ([10, 5] as $cases) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+            'case_buying_price' => 240,
+        ]))->assertRedirect();
+    }
+
+    $props   = dashProps($user);
+    $history = collect($this->actingAs($user)->get(route('lifts.report'))->viewData('page')['props']['liftHistory']);
+
+    expect((float) $props['totalLiftAmount'])
+        ->toBe(round($history->sum(fn ($l) => (float) $l['total_amount']), 2))
+        ->toBe(3600.0)
+        ->and((int) $props['totalLiftCases'])->toBe(15)
+        ->and((int) $props['totalLiftBottles'])->toBe(360);
+});
+
+it('T127: low-stock list only holds products actually under the threshold', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $low  = makeCatalog($supplier, 'Nearly Gone');
+    $full = makeCatalog($supplier, 'Plenty Left');
+
+    foreach ([[$low, 1], [$full, 20]] as [$catalog, $cases]) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    // Take the low one down to 4 bottles.
+    $lowBatch = Product::where('name', 'Nearly Gone')->firstOrFail();
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $lowBatch, [
+        'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => 20, 'total_bottles_to_sell' => 20,
+    ]))->assertRedirect();
+
+    $names = collect(dashProps($user)['lowStockProducts'])->pluck('product_name');
+
+    expect($names)->toContain('Nearly Gone')
+        ->and($names)->not->toContain('Plenty Left');
+});
+
+it('T128: top selling products reflect what was actually sold', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $busy = makeCatalog($supplier, 'Fast Mover');
+    $slow = makeCatalog($supplier, 'Slow Mover');
+
+    foreach ([$busy, $slow] as $catalog) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => 20, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, Product::where('name', 'Fast Mover')->firstOrFail(), [
+        'variant' => '500ml', 'cases_sold' => 10, 'total_bottles_to_sell' => 240,
+    ]))->assertRedirect();
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, Product::where('name', 'Slow Mover')->firstOrFail(), [
+        'variant' => '500ml', 'cases_sold' => 1, 'total_bottles_to_sell' => 24,
+    ]))->assertRedirect();
+
+    $top = collect(dashProps($user)['topSellingProducts']);
+
+    expect(data_get($top->first(), 'name'))->toBe('Fast Mover');
+});
+
+it('T129: the shop dues on the dashboard match what the sale still owes', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    $this->actingAs($user)->post(route('sales.payment.store', $sale->id), [
+        'payment_amount' => 200, 'payment_method' => 'cash',
+    ]);
+
+    $row = collect(dashProps($user)['shops'])->firstWhere('shop_id', $shop->id);
+
+    expect($row)->not->toBeNull()
+        ->and(round((float) $row['total_due'], 2))->toBe(round((float) $sale->fresh()->due_amount, 2))
+        ->toBe(520.0);
+});
+
+it('T130: the profit and loss page agrees with the sale item profits', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+        'cases_sold' => 5, 'total_bottles_to_sell' => 120,
+    ]))->assertRedirect();
+
+    $props = $this->actingAs($user)->get(route('profit-loss.index'))->viewData('page')['props'];
+    $stored = round((float) \App\Models\SaleItem::sum('profit'), 2);
+
+    $reported = collect($props)->first(fn ($v, $k) => str_contains(strtolower((string) $k), 'profit') && is_numeric($v));
+
+    expect($reported === null ? $stored : round((float) $reported, 2))->toBe($stored);
+});
+
+it('T131: the stock value on the report is the bottles times their cost', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    // 10 cases x 24 bottles at 240 per case = 10 per bottle.
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'case_buying_price' => 240,
+    ]))->assertRedirect();
+
+    $report = reportRow($user, $catalog->name);
+
+    expect(round((float) $report['total_stock_value'], 2))->toBe(2400.0);
+});
+
+// ── T132–T157: the remaining corners ────────────────────────────────────────
+
+it('T132: a draft sale does not make a product look like a top seller', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $real  = makeCatalog($supplier, 'Really Sold');
+    $draft = makeCatalog($supplier, 'Only Drafted');
+
+    foreach ([$real, $draft] as $catalog) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => 20, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, Product::where('name', 'Really Sold')->firstOrFail(), [
+        'variant' => '500ml', 'cases_sold' => 1, 'total_bottles_to_sell' => 24,
+    ]))->assertRedirect();
+
+    $draftPayload = salePayload($supplier, $shop, Product::where('name', 'Only Drafted')->firstOrFail(), [
+        'variant' => '500ml', 'cases_sold' => 15, 'total_bottles_to_sell' => 360,
+    ]);
+    $draftPayload['save_as_draft'] = true;
+    $this->actingAs($user)->post(route('sales.store'), $draftPayload)->assertRedirect();
+
+    $names = collect(dashProps($user)['topSellingProducts'])->pluck('name');
+
+    // The draft moved no stock, so it cannot be the best seller.
+    expect($names)->toContain('Really Sold')
+        ->and($names)->not->toContain('Only Drafted');
+});
+
+it('T133: deleting a sale takes it back out of the top sellers', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    $this->actingAs($user)->delete(route('sales.destroy', $sale->id))->assertRedirect();
+
+    expect(collect(dashProps($user)['topSellingProducts'])->pluck('name'))
+        ->not->toContain($product->name);
+});
+
+it('T134: the search endpoint and the report agree on available bottles', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    foreach ([10, 4] as $cases) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 5, 'total_bottles_to_sell' => 120,
+    ]))->assertRedirect();
+
+    $search = searchRow($user, $catalog->name);
+    $report = reportRow($user, $catalog->name);
+
+    expect((int) $search['total_available_bottles'])->toBe((int) $report['total_available_bottles'])
+        ->toBe(216)
+        ->and((int) $search['total_available_cases'])->toBe((int) $report['total_available_cases']);
+});
+
+it('T135: the sale screen never offers more bottles than the report shows', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $offered = (int) searchRow($user, $catalog->name)['total_available_bottles'];
+
+    // Selling exactly what is offered must succeed; one more must not.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => $offered,
+        'total_bottles_to_sell' => $offered,
+    ]))->assertRedirect();
+
+    expect((int) searchRow($user, $catalog->name)['total_available_bottles'])->toBe(0);
+});
+
+it('T136: adjusting stock by hand shows up on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $product = getProduct($supplier);
+
+    $response = $this->actingAs($user)->put(route('inventory.adjust-stock'), [
+        'product_id' => $product->id,
+        'variant'    => '500ml',
+        'purchased_bottles' => 200,
+        'free_bottles'      => 0,
+    ]);
+
+    // Whatever the endpoint decides, the screens must not disagree with each other.
+    $seen = bottlesEverywhere($user, $catalog->name);
+    expect($seen['list'])->toBe($seen['report'])
+        ->and($seen['report'])->toBe($seen['dash'])
+        ->and($seen['dash'])->toBe($seen['search']);
+});
+
+it('T137: a second variant added by a later lift appears on every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '250ml', 'number_of_cases' => 5, 'bottles_per_case' => 12,
+    ]))->assertRedirect();
+
+    $report = collect(reportRow($user, $catalog->name)['variants'])->pluck('variant');
+    $list   = collect(listRow($user, $catalog->name)['default_variants'])->pluck('variant');
+
+    expect($report)->toContain('500ml')->toContain('250ml')
+        ->and($list)->toContain('500ml')->toContain('250ml');
+});
+
+it('T138: total bottles on a row equal the sum of that row variants', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $payload = liftPayload($supplier, $catalog);
+    $payload['items'][0]['variants'] = [
+        ['variant' => '250ml', 'number_of_cases' => 5, 'case_buying_price' => 200, 'bottles_per_case' => 24, 'free_bottles_per_case' => 1],
+        ['variant' => '500ml', 'number_of_cases' => 4, 'case_buying_price' => 300, 'bottles_per_case' => 12, 'free_bottles_per_case' => 0],
+        ['variant' => '1000ml', 'number_of_cases' => 3, 'case_buying_price' => 400, 'bottles_per_case' => 6, 'free_bottles_per_case' => 2],
+    ];
+    $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+
+    $report = reportRow($user, $catalog->name);
+
+    expect((int) $report['total_available_bottles'])
+        ->toBe((int) collect($report['variants'])->sum('total_bottles_available'))
+        ->and((int) $report['total_available_cases'])
+        ->toBe((int) collect($report['variants'])->sum('cases_available'));
+});
+
+it('T139: bottles sold on the report equal the sale items for that product', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    foreach ([2, 3] as $cases) {
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+            'variant' => '500ml', 'cases_sold' => $cases, 'total_bottles_to_sell' => $cases * 24,
+        ]))->assertRedirect();
+    }
+
+    $report = reportRow($user, $catalog->name);
+
+    expect((int) $report['total_bottles_sold'])
+        ->toBe((int) \App\Models\SaleItem::whereHas('sale', fn ($q) => $q->where('supplier_id', $supplier->id))->sum('total_bottles_sold'))
+        ->toBe(120);
+});
+
+it('T140: lifted plus free minus sold equals what is left', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    // 10 cases x 24 = 240 purchased, 10 free
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 1,
+    ]))->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 3, 'total_bottles_to_sell' => 72,
+    ]))->assertRedirect();
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    $lifted = (int) $variant['purchased_bottles_total'] + (int) $variant['free_bottles_total'];
+    $left   = (int) $variant['total_bottles_available'];
+    $sold   = (int) $variant['total_bottles_sold'];
+
+    expect($lifted - $sold)->toBe($left);
+});
+
+it('T141: an expense lands on its expense date, not the day it was typed', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.view', 'expense.add', 'dashboard.view']);
+
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason'       => 'Backdated fuel',
+        'category'     => 'Fuel',
+        'description'  => 'test',
+        'amount'       => 500,
+        'expense_date' => now()->subDays(4)->toDateString(),
+    ]);
+
+    $today = dashProps($user, now()->toDateString());
+    $then  = dashProps($user, now()->subDays(4)->toDateString());
+
+    expect(round((float) $today['todaysExpensesAmount'], 2))->toBe(0.0)
+        ->and(round((float) $then['todaysExpensesAmount'], 2))->toBe(500.0);
+});
+
+it('T142: the daily sales graph counts a sale on its sale date', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $when = now()->subDays(2)->toDateString();
+    $this->actingAs($user)->post(route('sales.store'), array_merge(
+        salePayload($supplier, $shop, $product),
+        ['sale_date' => $when]
+    ))->assertRedirect();
+
+    $graph = collect(
+        $this->actingAs($user)
+             ->get('/dashboard?graph_start_date=' . now()->subDays(5)->toDateString()
+                 . '&graph_end_date=' . now()->toDateString())
+             ->viewData('page')['props']['dateWiseSalesData']
+    );
+
+    $row = $graph->first(fn ($r) => str_starts_with((string) data_get($r, 'sale_date'), $when));
+    expect($row)->not->toBeNull();
+});
+
+it('T143: the monthly figures ignore a sale dated outside the month', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), array_merge(
+        salePayload($supplier, $shop, $product),
+        ['sale_date' => now()->subMonths(2)->toDateString()]
+    ))->assertRedirect();
+
+    $monthly = dashProps($user)['monthlySales'];
+    expect(round((float) $monthly['total_sales'], 2))->toBe(0.0);
+});
+
+it('T144: paying a sale moves paid and due together on the dashboard', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    $this->actingAs($user)->post(route('sales.payment.store', $sale->id), [
+        'payment_amount' => 420, 'payment_method' => 'cash',
+    ]);
+
+    $monthly = dashProps($user)['monthlySales'];
+
+    expect(round((float) $monthly['total_sales'], 2))->toBe(720.0)
+        ->and(round((float) $monthly['paid_amount'], 2))->toBe(420.0)
+        ->and(round((float) $monthly['due_amount'], 2))->toBe(300.0)
+        ->and(round((float) $monthly['paid_amount'] + (float) $monthly['due_amount'], 2))->toBe(720.0);
+});
+
+it('T145: the product list stock equals the sum of its variant stock', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $payload = liftPayload($supplier, $catalog);
+    $payload['items'][0]['variants'] = [
+        ['variant' => '250ml', 'number_of_cases' => 5, 'case_buying_price' => 200, 'bottles_per_case' => 24, 'free_bottles_per_case' => 0],
+        ['variant' => '500ml', 'number_of_cases' => 4, 'case_buying_price' => 300, 'bottles_per_case' => 12, 'free_bottles_per_case' => 0],
+    ];
+    $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+
+    $list = listRow($user, $catalog->name);
+
+    expect((int) $list['stock_bottles'])
+        ->toBe((int) collect($list['default_variants'])->sum('stock_bottles'))
+        ->toBe(168);
+});
+
+it('T146: searching the product list does not change the numbers it shows', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier, 'Findable Drink');
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $unfiltered = listRow($user, 'Findable Drink');
+    $filtered = collect(
+        $this->actingAs($user)->get('/products?show_out_of_stock=1&search=Findable')
+             ->viewData('page')['props']['products']['data']
+    )->firstWhere('name', 'Findable Drink');
+
+    expect((int) $filtered['stock_bottles'])->toBe((int) $unfiltered['stock_bottles'])
+        ->and((int) $filtered['stock_cases'])->toBe((int) $unfiltered['stock_cases']);
+});
+
+it('T147: a product list search by supplier name finds the product', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $rows = collect(
+        $this->actingAs($user)
+             ->get('/products?show_out_of_stock=1&search=' . urlencode($supplier->company_name))
+             ->viewData('page')['props']['products']['data']
+    );
+
+    expect($rows->pluck('name'))->toContain($catalog->name);
+});
+
+it('T148: a sale of only free bottles leaves the purchased pool alone', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2,
+    ]))->assertRedirect();
+
+    // Excluding free bottles means only purchased stock may move.
+    $payload = salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 2, 'total_bottles_to_sell' => 48,
+    ]);
+    $payload['include_free_bottles'] = false;
+    $this->actingAs($user)->post(route('sales.store'), $payload)->assertRedirect();
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    expect((int) $variant['free_bottles_available'])->toBe(20)
+        ->and((int) $variant['purchased_bottles_available'])->toBe(192);
+});
+
+it('T149: a soft-deleted batch is gone from every screen', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    foreach ([10, 5] as $cases) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    expect((int) reportRow($user, $catalog->name)['total_available_bottles'])->toBe(360);
+
+    $lift = \App\Models\Lift::where('supplier_id', $supplier->id)->orderByDesc('id')->firstOrFail();
+    $this->actingAs($user)->delete(route('lifts.destroy', $lift->id))->assertRedirect();
+
+    expect(bottlesEverywhere($user, $catalog->name))
+        ->toBe(['list' => 240, 'report' => 240, 'dash' => 240, 'search' => 240]);
+});
+
+it('T150: the report is not thrown off by a product with no variants', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    $catalog  = makeCatalog($supplier, 'Empty Catalogue');
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->get('/inventory/report')->assertOk();
+    $this->actingAs($user)->get('/products?show_out_of_stock=1')->assertOk();
+    $this->actingAs($user)->get('/dashboard')->assertOk();
+
+    expect(reportRow($user, 'Empty Catalogue'))->toBeNull();
+});
+
+it('T151: every inventory screen loads with no data at all', function () {
+    seedAllPermissions();
+    $user = makeUser(['inventory.view', 'dashboard.view', 'sales.view', 'sales.add', 'lift.view']);
+
+    $this->actingAs($user)->get('/products')->assertOk();
+    $this->actingAs($user)->get('/inventory/report')->assertOk();
+    $this->actingAs($user)->get('/dashboard')->assertOk();
+    $this->actingAs($user)->get(route('lifts.report'))->assertOk();
+    $this->actingAs($user)->getJson('/api/inventory/search?q=')->assertOk();
+});
+
+it('T152: three batches at different prices give a blended bottle cost', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    // 10 cases at 240 and 10 at 360 -> 20 cases, 4800 total, 480 bottles = 10 each
+    foreach ([240, 360] as $price) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+            'case_buying_price' => $price,
+        ]))->assertRedirect();
+    }
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    expect(round((float) $variant['unit_price'], 2))->toBe(12.5)
+        ->and((int) $variant['total_bottles_available'])->toBe(480);
+});
+
+it('T153: stock value across the report equals bottles times their blended cost', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    foreach ([240, 360] as $price) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+            'case_buying_price' => $price,
+        ]))->assertRedirect();
+    }
+
+    $report = reportRow($user, $catalog->name);
+    $variant = collect($report['variants'])->firstWhere('variant', '500ml');
+
+    expect(round((float) $report['total_stock_value'], 2))
+        ->toBe(round((float) $variant['unit_price'] * (int) $variant['total_bottles_available'], 2));
+});
+
+it('T154: a lift dated in the future stays out of today figures', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $payload = liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+    ]);
+    $payload['lift_date'] = now()->addDays(3)->toDateString();
+    $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+
+    // Today's snapshot must not count stock that has not arrived yet.
+    expect(reportRow($user, $catalog->name))->toBeNull();
+});
+
+it('T155: the same product on two screens never disagrees after mixed activity', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    foreach ([10, 8] as $cases) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+            'free_bottles_per_case' => 1,
+        ]))->assertRedirect();
+    }
+
+    foreach ([2, 1, 3] as $cases) {
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+            'variant' => '500ml', 'cases_sold' => $cases, 'total_bottles_to_sell' => $cases * 24,
+        ]))->assertRedirect();
+    }
+
+    $draft = salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 4, 'total_bottles_to_sell' => 96,
+    ]);
+    $draft['save_as_draft'] = true;
+    $this->actingAs($user)->post(route('sales.store'), $draft)->assertRedirect();
+
+    $seen = bottlesEverywhere($user, $catalog->name);
+
+    expect($seen['list'])->toBe($seen['report'])
+        ->and($seen['report'])->toBe($seen['dash'])
+        ->and($seen['dash'])->toBe($seen['search'])
+        ->and($seen['list'])->toBeGreaterThan(0);
+});
+
+it('T156: two suppliers with a shared product name keep separate dashboard rows', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    $a = makeSupplier();
+    $b = makeSupplier();
+    seedDeposit($a);
+    seedDeposit($b);
+
+    foreach ([[$a, 10], [$b, 4]] as [$supplier, $cases]) {
+        $catalog = makeCatalog($supplier, 'Twin Named');
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    $rows = collect(dashProps($user)['inventoryStock'])->where('product_name', 'Twin Named');
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows->pluck('total_available_bottles')->sort()->values()->all())->toBe([96, 240]);
+});
+
+it('T157: low stock counts each supplier product separately', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    $a = makeSupplier();
+    $b = makeSupplier();
+    seedDeposit($a);
+    seedDeposit($b);
+
+    // One supplier is nearly out, the other is well stocked.
+    foreach ([[$a, 1], [$b, 30]] as [$supplier, $cases]) {
+        $catalog = makeCatalog($supplier, 'Twin Named');
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 1,
+        ]))->assertRedirect();
+    }
+
+    $low = collect(dashProps($user)['lowStockProducts'])->where('product_name', 'Twin Named');
+
+    // Only the short one should be flagged, not both and not neither.
+    expect($low)->toHaveCount(1)
+        ->and((int) $low->first()['supplier_id'])->toBe($a->id);
+});
+
+// ── T158–T162: which purchase price a sale is costed at ─────────────────────
+
+/** Lift the same variant twice at two different case prices. */
+function twoPriceFixture(int $firstPrice, int $secondPrice, int $cases = 10): array
+{
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    foreach ([[30, $firstPrice], [10, $secondPrice]] as [$daysAgo, $price]) {
+        $payload = liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+            'case_buying_price' => $price,
+        ]);
+        $payload['lift_date'] = now()->subDays($daysAgo)->toDateString();
+        test()->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+    }
+
+    return [$supplier, $shop, $catalog, $user];
+}
+
+it('T158: a sale is costed at the price of the batch the bottles came from', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    // Sell 5 cases at 25 a bottle: 120 x 25 = 3000 revenue. Those 120 bottles all
+    // come out of the older 300 batch, which holds 240.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 5, 'total_bottles_to_sell' => 120,
+        'selling_price_per_bottle' => 25,
+    ]))->assertRedirect();
+
+    $item = \App\Models\SaleItem::latest('id')->firstOrFail();
+
+    // Cost 120 x (300/24) = 1500, so profit is 1500.
+    expect(round((float) $item->total_price, 2))->toBe(3000.0)
+        ->and(round((float) $item->profit, 2))->toBe(1500.0);
+});
+
+it('T158a: a sale spanning both batches is charged part at each price', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    // 300 bottles: the 240 cheap ones, then 60 from the dearer batch.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => 300,
+        'total_bottles_to_sell' => 300, 'selling_price_per_bottle' => 25,
+    ]))->assertRedirect();
+
+    $item = \App\Models\SaleItem::latest('id')->firstOrFail();
+    $cost = round((float) $item->total_price - (float) $item->profit, 2);
+
+    // 240 x 12.50 + 60 x 20.8333 = 3000 + 1250 = 4250
+    expect($cost)->toBe(4250.0);
+});
+
+it('T159: the value of remaining stock rises as the cheaper stock runs out', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    $before = (float) collect(reportRow($user, $catalog->name)['variants'])
+        ->firstWhere('variant', '500ml')['unit_price'];
+
+    // Stock leaves oldest-first, so this eats 5 of the 10 cheap cases.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 5, 'total_bottles_to_sell' => 120,
+        'selling_price_per_bottle' => 25,
+    ]))->assertRedirect();
+
+    $after = (float) collect(reportRow($user, $catalog->name)['variants'])
+        ->firstWhere('variant', '500ml')['unit_price'];
+
+    // 120 left at 300 and 240 at 500 -> 433.33 a case.
+    expect(round($before * 24, 2))->toBe(400.0)
+        ->and(round($after * 24, 2))->toBe(433.33)
+        ->and($after)->toBeGreaterThan($before);
+});
+
+it('T160: once the cheap stock is gone the remaining stock is valued at the later price', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    // Clear all 10 cheap cases.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 10, 'total_bottles_to_sell' => 240,
+        'selling_price_per_bottle' => 25,
+    ]))->assertRedirect();
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    expect(round((float) $variant['unit_price'] * 24, 2))->toBe(500.0)
+        ->and((int) $variant['total_bottles_available'])->toBe(240);
+});
+
+it('T161: the sale screen is given the batches it needs to quote the real cost', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    $quoted = collect(searchRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+    $batches = collect($quoted['cost_batches']);
+
+    // Oldest first, each with its own price, so the cart can walk them exactly as
+    // the server does. Without this the screen and the books would disagree.
+    expect($batches)->toHaveCount(2)
+        ->and((float) $batches[0]['case_buying_price'])->toBe(300.0)
+        ->and((float) $batches[1]['case_buying_price'])->toBe(500.0)
+        ->and((int) $batches[0]['available_purchased'])->toBe(240);
+
+    // Walking those batches for 120 bottles gives the cost the sale then records.
+    $quotedCost = round(120 * (300 / 24), 2);
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 5, 'total_bottles_to_sell' => 120,
+        'selling_price_per_bottle' => 25,
+    ]))->assertRedirect();
+
+    $item = \App\Models\SaleItem::latest('id')->firstOrFail();
+
+    expect(round((float) $item->total_price - (float) $item->profit, 2))->toBe($quotedCost);
+});
+
+it('T162: order of lifting does not change how the remaining stock is valued', function () {
+    [$supplierA, $shopA, $catalogA, $userA] = twoPriceFixture(300, 500);
+    $cheapFirst = (float) collect(reportRow($userA, $catalogA->name)['variants'])
+        ->firstWhere('variant', '500ml')['unit_price'];
+
+    [$supplierB, $shopB, $catalogB, $userB] = twoPriceFixture(500, 300);
+    $dearFirst = (float) collect(reportRow($userB, $catalogB->name)['variants'])
+        ->firstWhere('variant', '500ml')['unit_price'];
+
+    expect(round($cheapFirst, 4))->toBe(round($dearFirst, 4));
+});
+
+// ── T163–T164: does the cost charged add up to the cost paid? ────────────────
+
+it('T163: selling the whole stock in one go charges exactly what was paid', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    // 10 cases at 300 + 10 at 500 = 8000 paid for 480 bottles.
+    $paid = round((float) \App\Models\Lift::where('supplier_id', $supplier->id)->sum('total_amount'), 2);
+    expect($paid)->toBe(8000.0);
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 20, 'total_bottles_to_sell' => 480,
+        'selling_price_per_bottle' => 25,
+    ]))->assertRedirect();
+
+    $charged = \App\Models\SaleItem::whereHas('sale', fn ($q) => $q->where('supplier_id', $supplier->id))
+        ->get()
+        ->sum(fn ($i) => (float) $i->total_price - (float) $i->profit);
+
+    expect(round($charged, 2))->toBe($paid);
+});
+
+it('T164: selling the same stock in three goes still charges what was paid', function () {
+    [$supplier, $shop, $catalog, $user] = twoPriceFixture(300, 500);
+
+    $paid = round((float) \App\Models\Lift::where('supplier_id', $supplier->id)->sum('total_amount'), 2);
+
+    // Same 480 bottles, just spread over three sales as they would be in real life.
+    foreach ([120, 120, 240] as $bottles) {
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+            'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => $bottles,
+            'total_bottles_to_sell' => $bottles, 'selling_price_per_bottle' => 25,
+        ]))->assertRedirect();
+    }
+
+    $charged = \App\Models\SaleItem::whereHas('sale', fn ($q) => $q->where('supplier_id', $supplier->id))
+        ->get()
+        ->sum(fn ($i) => (float) $i->total_price - (float) $i->profit);
+
+    // The books must not report a different cost just because it took three trips.
+    expect(round($charged, 2))->toBe($paid);
+});
+
+it('T165: the same mismatch appears in reverse when prices fall', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    // Dear stock first, cheap stock second, on distinct dates so FIFO is definite.
+    foreach ([[30, 500], [10, 300]] as [$daysAgo, $price]) {
+        $payload = liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+            'case_buying_price' => $price,
+        ]);
+        $payload['lift_date'] = now()->subDays($daysAgo)->toDateString();
+        $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+    }
+
+    foreach ([120, 120, 240] as $bottles) {
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+            'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => $bottles,
+            'total_bottles_to_sell' => $bottles, 'selling_price_per_bottle' => 25,
+        ]))->assertRedirect();
+    }
+
+    $paid = round((float) \App\Models\Lift::where('supplier_id', $supplier->id)->sum('total_amount'), 2);
+    $charged = round(\App\Models\SaleItem::whereHas('sale', fn ($q) => $q->where('supplier_id', $supplier->id))
+        ->get()->sum(fn ($i) => (float) $i->total_price - (float) $i->profit), 2);
+
+    expect($charged)->toBe($paid);
+});
+
+// ── T166–T168: the free-bottle toggle still behaves exactly as before ────────
+
+it('T166: the subtotal with free bottles included is unchanged', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    // 10 cases x 24 bottles, 2 free per case.
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2, 'case_buying_price' => 240,
+    ]))->assertRedirect();
+
+    // Toggle ON: a case is 26 bottles, priced across all 26.
+    // (salePayload defaults the toggle to off, so it has to be turned on here.)
+    $payload = salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 2, 'extra_bottles' => 0,
+        'total_bottles_to_sell' => 52, 'free_bottles_per_case' => 2,
+        'selling_price_per_bottle' => 15,
+    ]);
+    $payload['include_free_bottles'] = true;
+    $this->actingAs($user)->post(route('sales.store'), $payload)->assertRedirect();
+
+    $item = \App\Models\SaleItem::latest('id')->firstOrFail();
+
+    // Revenue is bottles x price, untouched by how cost is worked out.
+    expect(round((float) $item->total_price, 2))->toBe(780.0)   // 52 x 15
+        ->and((int) $item->purchased_bottles_sold)->toBe(48)
+        ->and((int) $item->free_bottles_sold)->toBe(4)
+        ->and((int) $item->total_bottles_sold)->toBe(52);
+});
+
+it('T167: the subtotal with free bottles excluded is unchanged', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2, 'case_buying_price' => 240,
+    ]))->assertRedirect();
+
+    // Toggle OFF: only the 24 paid bottles of each case leave.
+    $payload = salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 2, 'extra_bottles' => 0,
+        'total_bottles_to_sell' => 48, 'free_bottles_per_case' => 2,
+        'selling_price_per_bottle' => 15,
+    ]);
+    $payload['include_free_bottles'] = false;
+    $this->actingAs($user)->post(route('sales.store'), $payload)->assertRedirect();
+
+    $item = \App\Models\SaleItem::latest('id')->firstOrFail();
+
+    expect(round((float) $item->total_price, 2))->toBe(720.0)   // 48 x 15
+        ->and((int) $item->purchased_bottles_sold)->toBe(48)
+        ->and((int) $item->free_bottles_sold)->toBe(0)
+        ->and((int) $item->total_bottles_sold)->toBe(48);
+
+    // The free bottles stayed on the shelf and were not charged to this sale.
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+    expect((int) $variant['free_bottles_available'])->toBe(20);
+});
+
+it('T168: with one batch the toggle costs exactly what it always did', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    // One batch only, so FIFO and the old average must give the same answer:
+    // 240 a case over 26 effective bottles = 9.2308 a bottle.
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2, 'case_buying_price' => 240,
+    ]))->assertRedirect();
+
+    $payload = salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 2, 'extra_bottles' => 0,
+        'total_bottles_to_sell' => 48, 'free_bottles_per_case' => 2,
+        'selling_price_per_bottle' => 15,
+    ]);
+    $payload['include_free_bottles'] = false;
+    $this->actingAs($user)->post(route('sales.store'), $payload)->assertRedirect();
+
+    $item = \App\Models\SaleItem::latest('id')->firstOrFail();
+    $cost = round((float) $item->total_price - (float) $item->profit, 2);
+
+    // 48 bottles x (240 / 26) = 443.08 - the same figure the old code produced.
+    expect($cost)->toBe(443.08);
+});
+
+// ── T169–T173: a short deposit no longer blocks a lift ──────────────────────
+
+it('T169: a lift bigger than the deposit goes through and leaves a negative balance', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 10);          // only 10 on account
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view']);
+
+    // 1 case at 15 - five more than the supplier's balance covers.
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'number_of_cases' => 1, 'case_buying_price' => 15, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    expect(round((float) Deposit::where('supplier_id', $supplier->id)->sum('balance_remaining'), 2))
+        ->toBe(-5.0)
+        // The lift itself was recorded in full.
+        ->and(round((float) \App\Models\Lift::where('supplier_id', $supplier->id)->sum('total_amount'), 2))->toBe(15.0)
+        ->and(Product::where('supplier_id', $supplier->id)->count())->toBe(1);
+});
+
+it('T170: the next deposit settles what was owed', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 10);
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view', 'deposit.add', 'deposit.view']);
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'number_of_cases' => 1, 'case_buying_price' => 15, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $balance = fn () => round((float) Deposit::where('supplier_id', $supplier->id)->sum('balance_remaining'), 2);
+    expect($balance())->toBe(-5.0);
+
+    // Paying in another 10 leaves 5 genuinely available.
+    Deposit::create([
+        'supplier_id'       => $supplier->id,
+        'balance_deposited' => 10,
+        'balance_remaining' => 10,
+        'deposit_date'      => now()->toDateString(),
+        'is_used'           => false,
+    ]);
+
+    expect($balance())->toBe(5.0);
+});
+
+it('T171: the lift screen shows the settled balance after a top-up', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 10);
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view']);
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'number_of_cases' => 1, 'case_buying_price' => 15, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    $shown = fn () => (float) collect(
+        test()->actingAs($user)->get(route('lifts.index'))->viewData('page')['props']['suppliers']
+    )->firstWhere('id', $supplier->id)['remaining_deposit'];
+
+    // The negative has to reach the screen, not be clamped to zero.
+    expect($shown())->toBe(-5.0);
+
+    Deposit::create([
+        'supplier_id'       => $supplier->id,
+        'balance_deposited' => 10,
+        'balance_remaining' => 10,
+        'deposit_date'      => now()->toDateString(),
+        'is_used'           => false,
+    ]);
+
+    expect($shown())->toBe(5.0);
+});
+
+it('T172: a further lift keeps digging from the negative balance', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier, 10);
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view']);
+
+    foreach ([15, 20] as $price) {
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'number_of_cases' => 1, 'case_buying_price' => $price, 'bottles_per_case' => 24,
+        ]))->assertRedirect();
+    }
+
+    // 10 in, 35 lifted -> 25 owed.
+    expect(round((float) Deposit::where('supplier_id', $supplier->id)->sum('balance_remaining'), 2))
+        ->toBe(-25.0);
+});
+
+it('T173: a lift for a supplier with no deposit at all still records', function () {
+    seedPermissions();
+    $supplier = makeSupplier();          // no deposit row whatsoever
+    $catalog  = makeCatalog($supplier);
+    $user     = makeUser(['lift.add', 'lift.view']);
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'number_of_cases' => 2, 'case_buying_price' => 100, 'bottles_per_case' => 24,
+    ]))->assertRedirect();
+
+    expect(round((float) Deposit::where('supplier_id', $supplier->id)->sum('balance_remaining'), 2))
+        ->toBe(-200.0)
+        ->and(Product::where('supplier_id', $supplier->id)->count())->toBe(1);
+});
+
+// ── T174–T176: one stock value, shared by every screen ──────────────────────
+
+it('T174: the report and the dashboard are handed the same stock value', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+
+    // A free-bottle product is where the two used to diverge.
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 30, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 1, 'case_buying_price' => 720,
+    ]))->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 4, 'total_bottles_to_sell' => 96,
+    ]))->assertRedirect();
+
+    $report = reportRow($user, $catalog->name);
+    $dash   = dashRow($user, $catalog->name);
+
+    expect(round((float) $report['total_stock_value'], 2))
+        ->toBe(round((float) $dash['total_stock_value'], 2));
+});
+
+it('T175: stock value is the bottles left times their blended rate', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    // 30 cases x 24 = 720 purchased + 30 free = 750 bottles for 21,600.
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 30, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 1, 'case_buying_price' => 720,
+    ]))->assertRedirect();
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    // Counting whole cases instead would give floor(750/24)=31 x 720 = 22,320 -
+    // more than was ever paid, because the free bottles inflate the case count.
+    expect((int) $variant['total_bottles_available'])->toBe(750)
+        ->and(round((float) reportRow($user, $catalog->name)['total_stock_value'], 2))->toBe(21600.0);
+});
+
+it('T176: across the whole catalogue, lifted equals sold cost plus stock value', function () {
+    seedPermissions();
+    $user = inventoryViewer();
+    $shop = makeShop();
+
+    foreach ([[10, 300, 0], [8, 480, 2], [5, 640, 1]] as $i => [$cases, $price, $free]) {
+        $supplier = makeSupplier();
+        seedDeposit($supplier);
+        $catalog  = makeCatalog($supplier, 'Balanced ' . $i);
+
+        $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+            'variant' => '500ml', 'number_of_cases' => $cases, 'bottles_per_case' => 24,
+            'free_bottles_per_case' => $free, 'case_buying_price' => $price,
+        ]))->assertRedirect();
+
+        // The sale must declare the same free-per-case the lift did, exactly as
+        // the sale screen does - it is what spreads the case price over the
+        // bottles a case really hands over.
+        $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+            'variant' => '500ml', 'cases_sold' => 2, 'total_bottles_to_sell' => 48,
+            'free_bottles_per_case' => $free,
+        ]))->assertRedirect();
+    }
+
+    $lifted = round((float) \App\Models\Lift::sum('total_amount'), 2);
+    $sold   = round(\App\Models\SaleItem::get()->sum(fn ($i) => (float) $i->total_price - (float) $i->profit), 2);
+    $shelf  = round(app(\App\Contracts\ProductPurchaseContract::class)->getInventoryStock()->sum('total_stock_value'), 2);
+
+    expect(round($sold + $shelf, 2))->toEqualWithDelta($lifted, 0.05);
+});
+
+// ── T177–T180: money is computed once, on the server ────────────────────────
+
+it('T177: a product stock value is exactly the sum of its variant values', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $payload = liftPayload($supplier, $catalog);
+    $payload['items'][0]['variants'] = [
+        ['variant' => '250ml', 'number_of_cases' => 10, 'case_buying_price' => 300, 'bottles_per_case' => 24, 'free_bottles_per_case' => 2],
+        ['variant' => '500ml', 'number_of_cases' => 6,  'case_buying_price' => 480, 'bottles_per_case' => 12, 'free_bottles_per_case' => 0],
+        ['variant' => '1000ml', 'number_of_cases' => 4, 'case_buying_price' => 640, 'bottles_per_case' => 6,  'free_bottles_per_case' => 1],
+    ];
+    $this->actingAs($user)->post(route('lifts.store'), $payload)->assertRedirect();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '250ml', 'cases_sold' => 3, 'total_bottles_to_sell' => 72,
+        'free_bottles_per_case' => 2,
+    ]))->assertRedirect();
+
+    $row = reportRow($user, $catalog->name);
+
+    // Every screen prints these; if the parts stopped adding to the whole, one
+    // screen would disagree with another again.
+    expect(round((float) $row['total_stock_value'], 2))
+        ->toBe(round(collect($row['variants'])->sum(fn ($v) => (float) $v['stock_value']), 2));
+});
+
+it('T178: every variant carries a ready-made stock value', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2, 'case_buying_price' => 240,
+    ]))->assertRedirect();
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+
+    // 10 cases at 240 = 2400 for 260 bottles. Counting cases instead would give
+    // floor(260/24)=10 x 240 = 2400 here, but 11 x 240 once any bottle is sold.
+    expect($variant)->toHaveKey('stock_value')
+        ->and(round((float) $variant['stock_value'], 2))->toBe(2400.0);
+});
+
+it('T179: the value survives a sale that leaves a part-case behind', function () {
+    seedPermissions();
+    $supplier = makeSupplier();
+    seedDeposit($supplier);
+    $catalog  = makeCatalog($supplier);
+    $shop     = makeShop();
+    $user     = inventoryViewer();
+
+    $this->actingAs($user)->post(route('lifts.store'), liftPayload($supplier, $catalog, [
+        'variant' => '500ml', 'number_of_cases' => 10, 'bottles_per_case' => 24,
+        'free_bottles_per_case' => 2, 'case_buying_price' => 240,
+    ]))->assertRedirect();
+
+    // Sell 5 loose bottles: 255 left, which is not a whole number of cases.
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, getProduct($supplier), [
+        'variant' => '500ml', 'cases_sold' => 0, 'extra_bottles' => 5,
+        'total_bottles_to_sell' => 5, 'free_bottles_per_case' => 2,
+    ]))->assertRedirect();
+
+    $variant = collect(reportRow($user, $catalog->name)['variants'])->firstWhere('variant', '500ml');
+    $rate    = 240 / 26;
+
+    expect((int) $variant['total_bottles_available'])->toBe(255)
+        ->and(round((float) $variant['stock_value'], 2))->toBe(round(255 * $rate, 2));
+});
+
+it('T180: the inventory screens never do money arithmetic of their own', function () {
+    // An architecture guard, not a behaviour test. The report and the dashboard
+    // drifted apart because one of them multiplied a price by a quantity in the
+    // template instead of printing the figure the server sends. Values are
+    // computed once, in ProductPurchaseRepository; screens only display them.
+    $screens = [
+        'resources/js/Pages/InventoryManagement/InventoryReport.vue',
+        'resources/js/Pages/InventoryManagement/ProductList.vue',
+        'resources/js/Pages/Dashboard/Partials/InventoryStock.vue',
+    ];
+
+    // Any multiplication involving a price or rate field is the thing to catch.
+    $moneyMaths = '/(case_buying_price|purchase_rate|unit_price|rate_per_bottle)\s*(\?\?[^*\n]*)?\)*\s*\*|\*\s*[^;\n]*(case_buying_price|purchase_rate|unit_price|rate_per_bottle)/i';
+
+    foreach ($screens as $screen) {
+        expect(file_exists(base_path($screen)))->toBeTrue("missing screen: {$screen}");
+
+        $offenders = collect(preg_split('/\R/', file_get_contents(base_path($screen))))
+            ->filter(fn ($line) => preg_match($moneyMaths, $line) === 1)
+            ->values();
+
+        expect($offenders->all())->toBe([], sprintf(
+            '%s works out money itself; print the value the server sends instead. Offending line(s): %s',
+            $screen,
+            $offenders->implode(' | ')
+        ));
+    }
 });

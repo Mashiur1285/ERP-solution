@@ -1,6 +1,6 @@
 <template>
     <div
-        class="max-w-3xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl"
+        class="max-w-3xl mx-auto bg-white px-1 py-4 sm:p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl"
     >
         <h1 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-8 text-center">
             Record Payment
@@ -312,7 +312,9 @@ const dueAmount = ref(Math.max(0, maxPaymentAmount.value - paymentForm.value.amo
 const paymentError = ref<string | null>(null);
 const isSubmitting = ref(false);
 
-const formatCurrency = (value: number) => `৳${Number(value).toFixed(2)}`;
+// Grouped, so a 3000 taka payment reads as 3,000.00 and not 3000.00.
+const formatCurrency = (value: number) =>
+    `৳${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const calculateDue = () => {
     const totalPaysa = toPaysa(props.sale.total_amount ?? 0);

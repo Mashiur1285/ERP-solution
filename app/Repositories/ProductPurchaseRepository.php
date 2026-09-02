@@ -162,8 +162,14 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             return $item['total_bottles_available'] >= 0; // Include 0-stock items so they remain visible
         });
 
-        // Group by product_name and then aggregate by variant
-        return $rawData->groupBy('product_name')->map(function ($productGroup, $productName) {
+        // Group per supplier's product, then aggregate by variant. Grouping on the
+        // name alone merged two suppliers that stock the same product (Coca-Cola,
+        // Pran Up...) into one row: the report showed their stock added together
+        // under whichever supplier happened to come first, and the product list -
+        // which looks rows up by catalog - left the other supplier's product on
+        // zero. Sales already deduct per supplier, so only the display was wrong.
+        return $rawData->groupBy(fn ($item) => $item['supplier_id'] . '::' . $item['product_name'])
+            ->map(function ($productGroup) {
             // Aggregate variants by variant name
             // PHP casts numeric-string array keys (e.g. "500") to integers, so the
             // groupBy key must be cast back to string before it is sent to the client.
@@ -187,7 +193,15 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                     'case_buying_price'   => (float) ($g['variant_metadata']['case_buying_price'] ?? 0),
                     'rate_per_bottle'     => (float) ($g['unit_price'] ?? 0),
                 ]));
-                $unitPrice = $weightedCost['rate_per_bottle'];
+                // Derive the rate from the case price at full precision, the same
+                // way a sale is costed. The stored actual_rate_per_bottle is
+                // rounded to 4 places, and multiplying that by a few hundred
+                // bottles drifts the valuation by a paisa or two.
+                $freePerCase   = (float) ($variantGroup->first()['variant_metadata']['free_bottles_per_case'] ?? 0);
+                $effectivePerCase = $bottlesPerCase + $freePerCase;
+                $unitPrice = $effectivePerCase > 0
+                    ? $weightedCost['case_buying_price'] / $effectivePerCase
+                    : $weightedCost['rate_per_bottle'];
 
                 // Carry the weighted case price on the metadata the cart reads from
                 // (full precision so it matches the backend's stored-profit basis).
@@ -210,15 +224,31 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                     'total_bottles_available' => $totalBottlesAvailable,
                     'total_bottles_sold' => $totalSoldBottles,
                     'unit_price' => $unitPrice,
+                    // What this variant's remaining stock is worth. Sent ready to
+                    // print so no screen has to multiply a price by a quantity -
+                    // that is how the report and the dashboard drifted apart.
+                    'stock_value' => round($unitPrice * $totalBottlesAvailable, 2),
                     'bottles_per_case' => $bottlesPerCase,
                     'cases_available' => $totalCasesAvailable,
                     'purchase_rate' => $unitPrice,
                     'variant_metadata' => $variantMetadata,
+                    // Oldest first, so the cart can price a sale batch by batch and
+                    // show the profit that will actually be recorded.
+                    'cost_batches' => $variantGroup
+                        ->sortBy([['purchase_date', 'asc'], ['product_id', 'asc']])
+                        ->map(fn ($g) => [
+                            'available_purchased' => (int) $g['purchased_bottles_available'],
+                            'available_free'      => (int) $g['free_bottles_available'],
+                            'case_buying_price'   => (float) ($g['variant_metadata']['case_buying_price'] ?? 0),
+                            'rate_per_bottle'     => (float) ($g['unit_price'] ?? 0),
+                        ])
+                        ->values()
+                        ->all(),
                 ];
             })->values();
 
             return [
-                'product_name' => $productName,
+                'product_name' => $productGroup->first()['product_name'],
                 'product_id' => $productGroup->first()['product_id'],
                 'product_catalog_id' => $productGroup->first()['product_catalog_id'],
                 'image_url' => $productGroup->first()['image_url'],
@@ -229,9 +259,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 'total_bottles_sold' => $aggregatedVariants->sum('total_bottles_sold'),
                 'total_available_bottles' => $aggregatedVariants->sum('total_bottles_available'),
                 'total_available_cases' => $aggregatedVariants->sum('cases_available'),
-                'total_stock_value' => $aggregatedVariants->sum(
-                    fn ($variant) => ($variant['unit_price'] ?? 0) * ($variant['total_bottles_available'] ?? 0)
-                ),
+                'total_stock_value' => round($aggregatedVariants->sum('stock_value'), 2),
             ];
         })->values();
     }
@@ -344,6 +372,8 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
         $costBatches = Product::where('name', $product->name)
             ->where('supplier_id', $product->supplier_id)
             ->whereNotNull('metadata')
+            ->orderBy('date')
+            ->orderBy('id')
             ->get()
             ->map(function ($p) use ($variant) {
                 $vd = collect($p->metadata['variants'] ?? [])->firstWhere('variant', $variant);
@@ -354,6 +384,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
                 $bpc = $vd['bottles_per_case'] ?? 0;
                 return [
                     'available_purchased' => $vd['current_purchased_quantity'] ?? ($cases * $bpc),
+                    'available_free'      => $vd['current_free_quantity'] ?? ($vd['total_free_bottles'] ?? 0),
                     'case_buying_price'   => (float) ($vd['case_buying_price'] ?? 0),
                     'rate_per_bottle'     => (float) ($vd['actual_rate_per_bottle'] ?? 0),
                 ];
@@ -368,6 +399,7 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
             'bottles_per_case' => $variantData['bottles_per_case'] ?? 0,
             'purchase_rate' => $weightedCost['rate_per_bottle'],
             'case_buying_price' => $weightedCost['case_buying_price'],
+            'cost_batches' => $costBatches->all(),
             'variant_data' => $variantData,
             'free_bottles_per_case' => $variantData['free_bottles_per_case'] ?? 0,
             'cases_without_free_bottles' => $variantData['cases_without_free_bottles'] ?? 0,
@@ -378,9 +410,14 @@ class ProductPurchaseRepository extends BaseRepository implements ProductPurchas
 
     public function getTopSellingProducts(int $limit): Collection
     {
+        // A draft moves no stock, so it must not make a product look like a best
+        // seller. Without this join a large draft outranked everything actually sold.
         return DB::table('sale_items')
             ->select('products.name', DB::raw('SUM(sale_items.total_bottles_sold) as total_sold'))
             ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', '!=', 'draft')
+            ->whereNull('products.deleted_at')
             ->groupBy('products.name')
             ->orderByDesc('total_sold')
             ->limit($limit)

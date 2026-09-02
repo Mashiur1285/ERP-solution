@@ -63,9 +63,13 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
         $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
 
+        // sale_date, not created_at: a sale entered today for last week belongs to
+        // last week, which is how every report already counts it. Dating by row
+        // creation put catch-up entries on the wrong day and made the dashboard
+        // disagree with the sales report.
         $monthlySales = $this->salesRepository->query()
             ->where('status', '!=', SalesStatus::DRAFT->value)
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereBetween('sale_date', [$startOfMonth, $endOfMonth])
             ->with('items')
             ->get();
 
@@ -82,7 +86,7 @@ class DashboardController extends Controller
 
         // Calculate monthly expense metrics
         $monthlyExpenses = $this->expenseRepository->query()
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereBetween('expense_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->get();
 
         $totalExpenses = $monthlyExpenses->count();
@@ -90,12 +94,12 @@ class DashboardController extends Controller
 
         $sales = $this->salesRepository->query()
             ->where('status', '!=', SalesStatus::DRAFT->value)
-            ->whereDate('created_at', $dailySalesDate)
+            ->whereDate('sale_date', $dailySalesDate)
             ->with('items', 'shop')
             ->get();
 
         $todaysExpensesAmount = $this->expenseRepository->query()
-            ->whereDate('created_at', $dailySalesDate)
+            ->whereDate('expense_date', $dailySalesDate)
             ->sum('amount');
 
         $lifts = $this->liftRepository->query()

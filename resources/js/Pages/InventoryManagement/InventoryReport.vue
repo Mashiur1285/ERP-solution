@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="px-1 py-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Language Toggle -->
@@ -639,7 +639,7 @@
                                                         >
                                                             ৳{{
                                                                 toBengaliNumber(
-                                                                    Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
+                                                                    Number(variant.stock_value ?? 0),
                                                                     2
                                                                 )
                                                             }}
@@ -915,7 +915,7 @@
                                                                 class="font-bold text-lg text-green-600"
                                                                 >৳{{
                                                                     toBengaliNumber(
-                                                                        Number(variant.cases_available ?? 0) * Number(variant.variant_metadata?.case_buying_price ?? 0),
+                                                                        Number(variant.stock_value ?? 0),
                                                                         2
                                                                     )
                                                                 }}</span
@@ -1043,11 +1043,11 @@ const processedInventory = computed(() => {
             (sum, variant) => sum + (variant.total_bottles_sold || 0),
             0
         );
-        const total_value = item.variants.reduce((sum, variant) => {
-            const casePrice = Number(variant.variant_metadata?.case_buying_price ?? 0);
-            const cases = Number(variant.cases_available ?? 0);
-            return sum + cases * casePrice;
-        }, 0);
+        // Use the value the server already worked out (bottles x their blended
+        // rate). Counting whole cases x the case price instead double-counted
+        // free bottles: they swell the case count but were never paid for, so a
+        // product with freebies read higher here than on the dashboard.
+        const total_value = Number(item.total_stock_value ?? 0);
 
         return {
             ...item,
@@ -1118,11 +1118,14 @@ function toBengaliNumber(numValue, decimals = null) {
     let n = Number(numValue);
     if (isNaN(n)) return String(numValue);
 
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
     let output;
     if (decimals !== null) {
-        output = n.toFixed(decimals);
+        output = n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     } else {
-        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+        output = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     if (currentLanguage.value !== "bn") {

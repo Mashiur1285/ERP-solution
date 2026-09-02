@@ -1131,10 +1131,11 @@ function toBengaliNumber(num: number | string): string {
     
     // Round decimals to 2 places if it's a number or a numeric string
     let n = Number(num);
-    if (!isNaN(n) && n % 1 !== 0) {
-        num = n.toFixed(2);
-    } else if (!isNaN(n)) {
-        num = n.toString();
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
+    if (!isNaN(n)) {
+        num = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     if (currentLanguage.value !== 'bn') return String(num);

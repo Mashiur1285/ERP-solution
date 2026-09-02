@@ -100,8 +100,35 @@ class DepositRepository extends BaseRepository implements DepositContract
             $remainingAmount = round($remainingAmount - $usedNow, 2);
         }
 
+        // Whatever the deposits could not cover is money the supplier is still owed.
+        // The lift really happened, so refusing it left the books behind reality;
+        // instead the balance goes negative and the next deposit absorbs it.
         if ($remainingAmount > 0) {
-            throw new \RuntimeException('Insufficient deposit balance for this supplier.');
+            $carry = $this->model
+                ->where('supplier_id', $supplierId)
+                ->orderBy('deposit_date', 'desc')
+                ->orderBy('id', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            if ($carry) {
+                $carry->balance_remaining = round(((float) $carry->balance_remaining) - $remainingAmount, 2);
+                $carry->balance_used      = round(((float) ($carry->balance_used ?? 0)) + $remainingAmount, 2);
+                $carry->is_used           = $carry->balance_remaining <= 0;
+                $carry->save();
+
+                return;
+            }
+
+            // No deposit on file at all: open one that records only the debt.
+            $this->model->create([
+                'supplier_id'       => $supplierId,
+                'balance_deposited' => 0,
+                'balance_used'      => $remainingAmount,
+                'balance_remaining' => -$remainingAmount,
+                'deposit_date'      => now()->toDateString(),
+                'is_used'           => true,
+            ]);
         }
     }
 

@@ -305,20 +305,22 @@ class DummyDataSeeder extends Seeder
             $items    = [];
 
             foreach ($lines as [$productName, $variant, $cases, $extra, $pricePerCase]) {
+                // Each variant is its own product batch, so the oldest batch by
+                // date usually holds a different size - look for the one that
+                // actually carries this variant.
                 $batch = Product::where('name', $productName)
                     ->where('supplier_id', $supplier->id)
                     ->whereNotNull('metadata')
                     ->orderBy('date')
-                    ->first();
+                    ->get()
+                    ->first(fn ($p) => collect($p->metadata['variants'] ?? [])
+                        ->contains(fn ($v) => ($v['variant'] ?? null) === $variant));
 
                 if (! $batch) {
                     continue;
                 }
 
-                $meta = collect($batch->metadata['variants'] ?? [])->firstWhere('variant', $variant);
-                if (! $meta) {
-                    continue;
-                }
+                $meta = collect($batch->metadata['variants'])->firstWhere('variant', $variant);
 
                 $bpc  = (int) ($meta['bottles_per_case'] ?? 0);
                 $free = (int) ($meta['free_bottles_per_case'] ?? 0);

@@ -18,7 +18,7 @@ class ShopRepository extends BaseRepository implements ShopContract
         return $this->model
             ->leftJoin('sales', function ($join) use ($date) {
                 $join->on('shops.id', '=', 'sales.shop_id')
-                    ->whereRaw('DATE(sales.created_at) = ?', [$date])
+                    ->whereRaw('DATE(sales.sale_date) = ?', [$date])
                     ->where('sales.status', '!=', 'draft');
             })
             ->select(
@@ -42,18 +42,18 @@ class ShopRepository extends BaseRepository implements ShopContract
             $startDate = \Carbon\Carbon::now()->subDays(5)->format('Y-m-d');
         }
 
-        // Get sales data for the date range using created_at instead of sale_date
+        // Dated by sale_date so the graph lines up with the sales report.
         $salesData = DB::table('sales')
-            ->whereRaw('DATE(created_at) BETWEEN ? AND ?', [$startDate, $endDate])
+            ->whereRaw('DATE(sale_date) BETWEEN ? AND ?', [$startDate, $endDate])
             ->select(
-                DB::raw('DATE(created_at) as sale_date'),
+                DB::raw('DATE(sale_date) as sale_date'),
                 DB::raw('COALESCE(SUM(paid_amount), 0) as total_paid'),
                 DB::raw('COALESCE(SUM(due_amount), 0) as total_due'),
                 DB::raw('COALESCE(SUM(total_amount), 0) as total_amount'),
                 DB::raw('COUNT(DISTINCT shop_id) as shop_count')
             )
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy(DB::raw('DATE(created_at)'), 'asc')
+            ->groupBy(DB::raw('DATE(sale_date)'))
+            ->orderBy(DB::raw('DATE(sale_date)'), 'asc')
             ->get()
             ->keyBy('sale_date');
 

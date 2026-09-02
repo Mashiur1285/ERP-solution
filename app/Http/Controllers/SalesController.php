@@ -226,17 +226,6 @@ class SalesController extends Controller
                 }
 
                 $bottlesPerCase          = $batches->first()['bottles_per_case'];
-                // Weighted-average cost across batches (by available purchased
-                // bottles) — the same basis the sale modal shows, so the stored
-                // profit matches the report when a product was lifted at different
-                // prices.
-                $weightedCost            = $this->productPurchaseRepository->weightedVariantCost($batches->map(fn ($b) => [
-                    'available_purchased' => $b['purchased'],
-                    'case_buying_price'   => $b['case_buying_price'],
-                    'rate_per_bottle'     => $b['purchase_rate'],
-                ]));
-                $purchaseRatePerBottle   = $weightedCost['rate_per_bottle'];
-                $avgCaseBuyingPrice      = $weightedCost['case_buying_price'];
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
@@ -275,16 +264,26 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
-                // Cost is the blended per-bottle rate × the bottles that actually
-                // leave inventory. When free bottles are excluded from the sale they
-                // stay in stock and must NOT be charged here — their cost is realized
-                // when they are sold later. (Charging the full case price per case
-                // would otherwise dump the retained free bottles' cost onto this sale
-                // and report a false loss.)
-                $purchaseCost   = round($actualTotalBottlesSold * $bottleRate, 2);
-                $profit         = round($totalSalePrice - $purchaseCost, 2);
+
+                // Cost the bottles that actually leave inventory, each at the price
+                // of the batch it leaves. Bottles retained (free ones the sale
+                // excludes) are not charged here - their cost is realised when they
+                // are sold later.
+                $consumption  = $this->planFifoConsumption(
+                    $batches,
+                    (int) $totalToDeduct,
+                    (bool) $request->include_free_bottles,
+                    (int) $effectiveBottlesPerCase
+                );
+                $purchaseCost = $consumption['cost'];
+                $profit       = round($totalSalePrice - $purchaseCost, 2);
+
+                // What this sale actually worked out at per bottle. With one batch
+                // it is that batch's rate; spanning two, it lands in between.
+                $purchaseRatePerBottle = $actualTotalBottlesSold > 0
+                    ? round($purchaseCost / $actualTotalBottlesSold, 4)
+                    : 0.0;
 
                 $itemsData = [
                     'sale_id'                => $sale->id,
@@ -311,35 +310,16 @@ class SalesController extends Controller
 
                 $this->salesItemRepository->create($itemsData);
 
+                // Same plan the cost came from, so what was charged and what left
+                // the shelf can never drift apart.
                 if (!$saveAsDraft) {
-                    $remainingToDeduct = (int) $totalToDeduct;
-                    foreach ($batches as $batch) {
-                        if ($remainingToDeduct <= 0) break;
-
-                        // Free bottles are only consumed when the sale includes them;
-                        // otherwise deduct from the purchased pool exclusively.
-                        if ($request->include_free_bottles) {
-                            $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
-                            if ($batchTotal <= 0) continue;
-
-                            $deductFromBatch = min($remainingToDeduct, $batchTotal);
-                            $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
-                            $deductFree      = $deductFromBatch - $deductPurchased;
-                        } else {
-                            $deductPurchased = min($remainingToDeduct, (int) $batch['purchased']);
-                            $deductFree      = 0;
-                            $deductFromBatch = $deductPurchased;
-                        }
-
-                        if ($deductFromBatch <= 0) continue;
-
+                    foreach ($consumption['plan'] as $step) {
                         $this->productPurchaseRepository->updateInventory(
-                            $batch['product'],
+                            $step['product'],
                             $item['variant'],
-                            $deductPurchased,
-                            $deductFree
+                            $step['purchased'],
+                            $step['free']
                         );
-                        $remainingToDeduct -= $deductFromBatch;
                     }
                 }
 
@@ -383,6 +363,82 @@ class SalesController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * Work out what a sale takes from each batch, oldest first, and cost every
+     * bottle at the price of the batch it actually leaves.
+     *
+     * Stock already leaves FIFO, so costing it any other way cannot balance. A
+     * weighted average over what remains climbs as the cheap batches drain, so
+     * across several sales the books charged more (with rising prices) or less
+     * (with falling ones) than the lifts ever cost. Costing batch by batch makes
+     * the total charged equal the total paid, whatever order the sales come in.
+     *
+     * @param  \Illuminate\Support\Collection  $batches  oldest first
+     * @return array{cost: float, plan: array<int, array{product: mixed, purchased: int, free: int}>}
+     */
+    private function planFifoConsumption(
+        $batches,
+        int $bottlesToTake,
+        bool $includeFreeBottles,
+        int $effectiveBottlesPerCase
+    ): array {
+        $remaining = max(0, $bottlesToTake);
+        $cost      = 0.0;
+        $plan      = [];
+        $lastRate  = 0.0;
+
+        $rateOf = function ($batch) use ($effectiveBottlesPerCase) {
+            return $effectiveBottlesPerCase > 0
+                ? ((float) ($batch['case_buying_price'] ?? 0)) / $effectiveBottlesPerCase
+                : (float) ($batch['purchase_rate'] ?? 0);
+        };
+
+        foreach ($batches as $batch) {
+            $lastRate = $rateOf($batch);
+
+            if ($remaining <= 0) {
+                continue;
+            }
+
+            // Free bottles are only consumed when the sale includes them;
+            // otherwise the purchased pool alone is drawn down.
+            if ($includeFreeBottles) {
+                $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
+                if ($batchTotal <= 0) {
+                    continue;
+                }
+                $take          = min($remaining, $batchTotal);
+                $takePurchased = min($take, (int) $batch['purchased']);
+                $takeFree      = $take - $takePurchased;
+            } else {
+                $takePurchased = min($remaining, (int) $batch['purchased']);
+                $takeFree      = 0;
+                $take          = $takePurchased;
+            }
+
+            if ($take <= 0) {
+                continue;
+            }
+
+            $cost += $take * $lastRate;
+            $plan[] = [
+                'product'   => $batch['product'],
+                'purchased' => $takePurchased,
+                'free'      => $takeFree,
+            ];
+            $remaining -= $take;
+        }
+
+        // A draft may be written for more than is in stock. Price the shortfall at
+        // the newest batch's rate so its projected profit stays sensible; a real
+        // sale never gets here because the stock check rejects it first.
+        if ($remaining > 0) {
+            $cost += $remaining * $lastRate;
+        }
+
+        return ['cost' => round($cost, 2), 'plan' => $plan];
     }
 
     public function payment(Request $request, $id)
@@ -693,15 +749,6 @@ class SalesController extends Controller
                 }
 
                 $bottlesPerCase          = $batches->first()['bottles_per_case'];
-                // Weighted-average cost across batches (by available purchased
-                // bottles) — matches the sale modal so stored profit == report.
-                $weightedCost            = $this->productPurchaseRepository->weightedVariantCost($batches->map(fn ($b) => [
-                    'available_purchased' => $b['purchased'],
-                    'case_buying_price'   => $b['case_buying_price'],
-                    'rate_per_bottle'     => $b['purchase_rate'],
-                ]));
-                $purchaseRatePerBottle   = $weightedCost['rate_per_bottle'];
-                $avgCaseBuyingPrice      = $weightedCost['case_buying_price'];
                 $totalPurchasedAvailable = $batches->sum('purchased');
                 $totalFreeAvailable      = $batches->sum('free');
 
@@ -740,16 +787,26 @@ class SalesController extends Controller
                     ]);
                 }
 
-                $bottleRate     = $effectiveBottlesPerCase > 0 ? $avgCaseBuyingPrice / $effectiveBottlesPerCase : $purchaseRatePerBottle;
                 $totalSalePrice = round($targetBottlesToSell * $actualSellingPricePerBottle, 2);
-                // Cost is the blended per-bottle rate × the bottles that actually
-                // leave inventory. When free bottles are excluded from the sale they
-                // stay in stock and must NOT be charged here — their cost is realized
-                // when they are sold later. (Charging the full case price per case
-                // would otherwise dump the retained free bottles' cost onto this sale
-                // and report a false loss.)
-                $purchaseCost   = round($actualTotalBottlesSold * $bottleRate, 2);
-                $profit         = round($totalSalePrice - $purchaseCost, 2);
+
+                // Cost the bottles that actually leave inventory, each at the price
+                // of the batch it leaves. Bottles retained (free ones the sale
+                // excludes) are not charged here - their cost is realised when they
+                // are sold later.
+                $consumption  = $this->planFifoConsumption(
+                    $batches,
+                    (int) $totalToDeduct,
+                    (bool) $request->include_free_bottles,
+                    (int) $effectiveBottlesPerCase
+                );
+                $purchaseCost = $consumption['cost'];
+                $profit       = round($totalSalePrice - $purchaseCost, 2);
+
+                // What this sale actually worked out at per bottle. With one batch
+                // it is that batch's rate; spanning two, it lands in between.
+                $purchaseRatePerBottle = $actualTotalBottlesSold > 0
+                    ? round($purchaseCost / $actualTotalBottlesSold, 4)
+                    : 0.0;
 
                 $itemsData = [
                     'sale_id'                => $sale->id,
@@ -776,34 +833,15 @@ class SalesController extends Controller
 
                 $this->salesItemRepository->create($itemsData);
 
-                $remainingToDeduct = (int) $totalToDeduct;
-                foreach ($batches as $batch) {
-                    if ($remainingToDeduct <= 0) break;
-
-                    // Free bottles are only consumed when the sale includes them;
-                    // otherwise deduct from the purchased pool exclusively.
-                    if ($request->include_free_bottles) {
-                        $batchTotal = (int) $batch['purchased'] + (int) $batch['free'];
-                        if ($batchTotal <= 0) continue;
-
-                        $deductFromBatch = min($remainingToDeduct, $batchTotal);
-                        $deductPurchased = min($deductFromBatch, (int) $batch['purchased']);
-                        $deductFree      = $deductFromBatch - $deductPurchased;
-                    } else {
-                        $deductPurchased = min($remainingToDeduct, (int) $batch['purchased']);
-                        $deductFree      = 0;
-                        $deductFromBatch = $deductPurchased;
-                    }
-
-                    if ($deductFromBatch <= 0) continue;
-
+                // Same plan the cost came from, so what was charged and what left
+                // the shelf can never drift apart.
+                foreach ($consumption['plan'] as $step) {
                     $this->productPurchaseRepository->updateInventory(
-                        $batch['product'],
+                        $step['product'],
                         $item['variant'],
-                        $deductPurchased,
-                        $deductFree
+                        $step['purchased'],
+                        $step['free']
                     );
-                    $remainingToDeduct -= $deductFromBatch;
                 }
 
                 $totalAmount += $totalSalePrice;

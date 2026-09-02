@@ -1,5 +1,5 @@
 <template>
-    <div class="p-3 sm:p-4 bg-gray-100 min-h-screen" :class="{ 'bangla-font': lang === 'bn' }">
+    <div class="px-1 py-3 sm:p-4 bg-gray-100 min-h-screen" :class="{ 'bangla-font': lang === 'bn' }">
         <!-- Toast -->
         <div v-if="toast.show" class="fixed top-20 right-4 z-[200] animate-slide-in print:hidden">
             <div class="px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium flex items-center space-x-2"
@@ -201,11 +201,14 @@
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('totalProducts') }}</span><span class="font-bold">{{ liftItems.filter(i => i.variants.some(v => v.number_of_cases > 0)).length }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('totalCost') }}</span><span class="font-bold text-green-600">৳{{ toBengaliNumber(grandTotal, 2) }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-600">{{ t('remainingDeposit') }}</span>
-                        <span class="font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">৳{{ toBengaliNumber(remainingDeposit, 2) }}</span></div>
+                        <span class="font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-amber-700'">৳{{ toBengaliNumber(remainingDeposit, 2) }}</span></div>
+                    <p v-if="remainingDeposit < 0" class="text-xs text-amber-700">
+                        {{ t('owedNote') }}
+                    </p>
                     </div>
                 <div class="flex justify-end space-x-3">
                     <button @click="showConfirmModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">{{ t('cancel') }}</button>
-                    <button @click="submitLift" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" :disabled="isLoading || remainingDeposit < 0">
+                    <button @click="submitLift" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60" :disabled="isLoading">
                         {{ isLoading ? t('processing') : t('confirm') }}
                     </button>
                 </div>
@@ -702,18 +705,18 @@
 
                             <!-- Remaining Deposit -->
                             <div v-if="selectedSupplier" class="mt-3 p-3 rounded-lg"
-                                :class="remainingDeposit >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+                                :class="remainingDeposit >= 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'">
                                 <div class="flex justify-between items-center">
                                     <div>
                                         <p class="text-xs text-gray-500">{{ t('remainingDeposit') }}</p>
                                         <p class="text-xs text-gray-400">{{ t('afterLift') }}</p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-lg font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-red-600'">
+                                        <p class="text-lg font-bold" :class="remainingDeposit >= 0 ? 'text-green-600' : 'text-amber-700'">
                                             ৳{{ toBengaliNumber(remainingDeposit, 2) }}
                                         </p>
-                                        <p class="text-xs" :class="remainingDeposit >= 0 ? 'text-green-500' : 'text-red-500'">
-                                            {{ remainingDeposit >= 0 ? t('sufficient') : t('insufficient') }}
+                                        <p class="text-xs" :class="remainingDeposit >= 0 ? 'text-green-500' : 'text-amber-600'">
+                                            {{ remainingDeposit >= 0 ? t('sufficient') : t('supplierOwed') }}
                                         </p>
                                     </div>
                                 </div>
@@ -726,7 +729,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                     </svg>
-                                    {{ t('addMissingDeposit') }} ৳{{ toBengaliNumber(shortfallAmount, 2) }}
+                                    {{ t('addDepositOptional') }} ৳{{ toBengaliNumber(shortfallAmount, 2) }}
                                 </button>
                             </div>
                         </div>
@@ -1426,7 +1429,9 @@ const submitLift = () => {
             draft_id: draftLiftId.value,
             supplier_id: selectedSupplier.value!.id,
             lift_date: liftDate.value,
-            deposit_from_here_amount: shortfallAmount.value > 0 ? shortfallAmount.value : null,
+            // Only sent when the user deliberately added one; a shortfall on its
+            // own is carried as a negative balance, not covered behind their back.
+            deposit_from_here_amount: null,
             items,
         },
         {
@@ -1553,6 +1558,9 @@ const translations: Record<string, Record<string, string>> = {
         afterLift: "After this lift",
         sufficient: "Sufficient",
         insufficient: "Insufficient",
+        supplierOwed: "Supplier will be owed",
+        owedNote: "The deposit does not cover this lift. The balance goes negative and your next deposit will settle it.",
+        addDepositOptional: "Add deposit now (optional)",
         confirmLift: "Confirm Lift",
         confirmLiftPrompt: "Are you sure you want to record this lift?",
         cancel: "Cancel",
@@ -1630,6 +1638,9 @@ const translations: Record<string, Record<string, string>> = {
         afterLift: "এই লিফটের পর",
         sufficient: "যথেষ্ট",
         insufficient: "অপর্যাপ্ত",
+        supplierOwed: "সরবরাহকারী পাবেন",
+        owedNote: "ডিপোজিটে এই লিফটের টাকা নেই। ব্যালেন্স ঋণাত্মক থাকবে, পরের ডিপোজিটে সমন্বয় হয়ে যাবে।",
+        addDepositOptional: "এখনই ডিপোজিট দিন (ঐচ্ছিক)",
         confirmLift: "লিফট নিশ্চিত করুন",
         confirmLiftPrompt: "আপনি কি নিশ্চিতভাবে এই লিফট রেকর্ড করতে চান?",
         cancel: "বাতিল",
@@ -1680,11 +1691,14 @@ const toBengaliNumber = (numValue: number | string, decimals: number | null = nu
     let n = Number(numValue);
     if (isNaN(n)) return String(numValue);
 
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
     let output: string;
     if (decimals !== null) {
-        output = n.toFixed(decimals);
+        output = n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     } else {
-        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+        output = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     if (lang.value !== 'bn') return output;

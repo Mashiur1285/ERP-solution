@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="px-1 py-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Flash Message -->
@@ -601,11 +601,14 @@ const toBengaliNumber = (numValue: number | string, decimals: number | null = nu
     let n = Number(numValue);
     if (isNaN(n)) return String(numValue);
 
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
     let output: string;
     if (decimals !== null) {
-        output = n.toFixed(decimals);
+        output = n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     } else {
-        output = n % 1 !== 0 ? n.toFixed(2) : n.toString();
+        output = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     if (currentLanguage.value !== 'bn') return output;

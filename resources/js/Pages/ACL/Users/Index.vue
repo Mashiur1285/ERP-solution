@@ -1,5 +1,5 @@
 <template>
-    <div class="p-3 sm:p-6 space-y-3 sm:space-y-6">
+    <div class="px-1 py-3 sm:p-6 space-y-3 sm:space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-lg sm:text-2xl font-semibold text-gray-800">User Management</h1>

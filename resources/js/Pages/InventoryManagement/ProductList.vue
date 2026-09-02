@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="px-1 py-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <div
@@ -711,7 +711,12 @@ const changeLanguage = (lang) => {
 const toBengaliNumber = (numValue) => {
     if (numValue === null || numValue === undefined || numValue === "") return "";
     const n = Number(numValue);
-    const output = Number.isNaN(n) ? String(numValue) : (n % 1 !== 0 ? n.toFixed(2) : n.toString());
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
+    const output = Number.isNaN(n)
+        ? String(numValue)
+        : (n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US"));
     if (currentLanguage.value !== "bn") return output;
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
     return output.replace(/[0-9]/g, (digit) => bengaliDigits[parseInt(digit)]);

@@ -374,10 +374,11 @@ const toBengaliNumber = (numValue: number | string): string => {
     
     // Round decimals to 2 places if it's a number or a numeric string
     let n = Number(numValue);
-    if (!isNaN(n) && n % 1 !== 0) {
-        numValue = n.toFixed(2);
-    } else if (!isNaN(n)) {
-        numValue = n.toString();
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
+    if (!isNaN(n)) {
+        numValue = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];

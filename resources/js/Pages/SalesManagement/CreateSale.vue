@@ -38,7 +38,7 @@
         />
 
         <!-- Header -->
-        <div class="bg-gradient-to-r from-orange-500 to-orange-400 border-b border-orange-600 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-400 border-b border-orange-600 sm:rounded-tl-[1.25rem] px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
             <h1 class="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
                 <div class="p-1.5 bg-white/20 rounded-lg flex-shrink-0">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@
         </div>
 
         <!-- POS Layout -->
-        <div class="flex flex-col lg:flex-row flex-1 gap-4 p-3 sm:p-4 min-h-0">
+        <div class="flex flex-col lg:flex-row flex-1 gap-4 px-1 py-3 sm:p-4 min-h-0">
 
             <!-- LEFT: Product search + cart -->
             <div class="flex-1 min-w-0 space-y-4 lg:overflow-y-auto">
@@ -695,6 +695,7 @@ interface ProductVariant {
     bottles_per_case: number;
     purchase_rate: number;
     case_buying_price: number;
+    cost_batches?: CostBatch[];
     cases_available: number;
     variant_metadata: Record<string, any>;
 }
@@ -709,6 +710,13 @@ interface SearchProduct {
     total_available_cases: number;
 }
 
+interface CostBatch {
+    available_purchased: number;
+    available_free: number;
+    case_buying_price: number;
+    rate_per_bottle: number;
+}
+
 interface CartItem {
     product_id: number;
     product_name: string;
@@ -720,6 +728,7 @@ interface CartItem {
     free_bottles_per_case: number;
     purchase_rate: number;
     case_buying_price: number;
+    cost_batches?: CostBatch[];
     cases: number;
     extra_bottles: number | null;
     price_per_case: number;
@@ -891,10 +900,11 @@ const toBengaliNumber = (num: number | string): string => {
     
     // Round decimals to 2 places if it's a number or a numeric string
     let n = Number(num);
-    if (!isNaN(n) && n % 1 !== 0) {
-        num = n.toFixed(2);
-    } else if (!isNaN(n)) {
-        num = n.toString();
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
+    if (!isNaN(n)) {
+        num = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
@@ -1181,6 +1191,7 @@ const loadEditSale = async (editSale: EditSale) => {
                 free_bottles_per_case: item.free_bottles_per_case,
                 purchase_rate: variantInventory?.purchase_rate ?? 0,
                 case_buying_price: safeNumber(variantInventory?.case_buying_price ?? 0),
+                cost_batches: variantInventory?.cost_batches ?? [],
                 cases: item.cases,
                 extra_bottles: item.extra_bottles ?? null,
                 price_per_case: item.price_per_case,
@@ -1273,6 +1284,7 @@ const loadDraftSale = async (draftSale: DraftSale) => {
                 free_bottles_per_case: item.free_bottles_per_case,
                 purchase_rate: variantInventory?.purchase_rate ?? 0,
                 case_buying_price: safeNumber(variantInventory?.case_buying_price ?? 0),
+                cost_batches: variantInventory?.cost_batches ?? [],
                 cases: item.cases,
                 extra_bottles: item.extra_bottles ?? null,
                 price_per_case: item.price_per_case,
@@ -1321,6 +1333,7 @@ const addVariantsToCart = () => {
             free_bottles_per_case: safeNumber(v.variant_metadata?.free_bottles_per_case ?? 0),
             purchase_rate: safeNumber(v.purchase_rate),
             case_buying_price: safeNumber(v.variant_metadata?.case_buying_price ?? v.case_buying_price ?? 0),
+            cost_batches: v.cost_batches ?? [],
             cases: 0,
             extra_bottles: null,
             price_per_case: 0,
@@ -1407,6 +1420,41 @@ const getItemSubtotal = (item: CartItem): number => {
     return Math.round(targetBottles * pricePerBottle * 100) / 100;
 };
 
+/**
+ * Cost the bottles batch by batch, oldest first - the same walk the server makes
+ * when it records the sale. Costing at a blended average instead would show the
+ * seller one profit and write another into the books.
+ */
+const fifoCost = (batches: CostBatch[], bottles: number, effectiveBPC: number, fallbackRate: number): number => {
+    let remaining = bottles;
+    let cost = 0;
+    let lastRate = fallbackRate;
+
+    for (const batch of batches) {
+        const rate = effectiveBPC > 0
+            ? safeNumber(batch.case_buying_price) / effectiveBPC
+            : safeNumber(batch.rate_per_bottle);
+        lastRate = rate;
+
+        if (remaining <= 0) continue;
+
+        const available = includeFreeBottles.value
+            ? safeNumber(batch.available_purchased) + safeNumber(batch.available_free)
+            : safeNumber(batch.available_purchased);
+        if (available <= 0) continue;
+
+        const take = Math.min(remaining, available);
+        cost += take * rate;
+        remaining -= take;
+    }
+
+    // More than is in stock (only reachable while drafting): price the rest at
+    // the newest batch's rate, which is what the server does too.
+    if (remaining > 0) cost += remaining * lastRate;
+
+    return Math.round(cost * 100) / 100;
+};
+
 // Invoice summary
 const saleSummary = computed(() => {
     let totalCases = 0;
@@ -1432,12 +1480,13 @@ const saleSummary = computed(() => {
         const pricePerBottle = pricingBottlesPerCase > 0 ? pricePerCase / pricingBottlesPerCase : 0;
         const targetBottles = includeFreeBottles.value ? (cases * effectiveBPC) + extra : (cases * bpc) + extra;
         const subtotal = Math.round(targetBottles * pricePerBottle * 100) / 100;
-        // Derive bottle rate directly from caseBuyingPrice (symmetric with revenue calc) to avoid pre-rounded purchaseRate errors
+        // Bottles retained (free ones an excluding sale keeps) are not charged
+        // here - their cost is realised when they are sold later.
+        const batches = item.cost_batches ?? [];
         const bottleRate = effectiveBPC > 0 ? caseBuyingPrice / effectiveBPC : purchaseRate;
-        // Cost = blended per-bottle rate × bottles actually sold (targetBottles).
-        // When free bottles are excluded they stay in stock and aren't charged here,
-        // so a case sold without its free bottles no longer shows a false loss.
-        const cost = Math.round(targetBottles * bottleRate * 100) / 100;
+        const cost = batches.length
+            ? fifoCost(batches, targetBottles, effectiveBPC, bottleRate)
+            : Math.round(targetBottles * bottleRate * 100) / 100;
 
         totalCases += cases;
         totalBottles += targetBottles;

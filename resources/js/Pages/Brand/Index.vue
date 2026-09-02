@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+        class="px-1 py-3 sm:p-6 space-y-4 sm:space-y-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Flash Message -->
@@ -748,15 +748,17 @@ const getTranslationLabel = (key: string, lang: string) => {
 
 const toBengaliNumber = (num: number | string): string => {
     if (num === null || num === undefined || num === "") return "";
-    if (currentLanguage.value !== "bn") return String(num); // Return as string if not Bengali
 
-    // Round decimals to 2 places if it's a number or a numeric string
+    // Format first: returning early meant English saw the raw, ungrouped value.
     let n = Number(num);
-    if (!isNaN(n) && n % 1 !== 0) {
-        num = n.toFixed(2);
-    } else if (!isNaN(n)) {
-        num = n.toString();
+    // Group thousands so 3000 reads as 3,000 wherever an amount is shown.
+    if (!isNaN(n)) {
+        num = n % 1 !== 0
+            ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : n.toLocaleString("en-US");
     }
+
+    if (currentLanguage.value !== "bn") return String(num);
 
     const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
     return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);

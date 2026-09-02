@@ -1,6 +1,6 @@
 <template>
     <div
-        class="px-3 pt-1.5 pb-3 space-y-3 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+        class="px-1 pt-1.5 pb-3 space-y-3 bg-gradient-to-br from-gray-50 via-white to-gray-50 sm:px-4"
         :class="{ 'bangla-font': currentLanguage === 'bn' }"
     >
         <!-- Header: Date + Language Toggle -->

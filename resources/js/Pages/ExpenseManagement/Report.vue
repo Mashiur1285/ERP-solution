@@ -1,5 +1,5 @@
 <template>
-    <div class="p-3 sm:p-6 space-y-3 sm:space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
+    <div class="px-1 py-3 sm:p-6 space-y-3 sm:space-y-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen"
         :class="{ 'bangla-font': lang === 'bn' }">
 
         <!-- ═══════ SCREEN UI ═══════ -->

@@ -1,10 +1,17 @@
 <template>
-    <div>
+    <!-- The purple shows only through the notch at the panel's top-left corner,
+         which is what makes the bar and the sidebar read as one surface. -->
+    <div class="min-h-screen bg-[#3F0E40] print:bg-white">
         <Head :title="pageTitle" />
-        <TheNavbar class="print:hidden" @toggle-sidebar="toggleSidebar" />
+        <TheNavbar
+            class="print:hidden"
+            :collapsed="isMenuCollapsed"
+            @toggle-sidebar="toggleSidebar"
+        />
         <TheSidebar
             class="print:hidden"
             :is-open="isSidebarOpen"
+            :collapsed="isMenuCollapsed"
             @close="closeSidebar"
         />
 
@@ -17,18 +24,23 @@
             />
         </Transition>
 
-        <div
-            class="flex flex-col min-h-screen justify-between transition-all duration-200 px-4 sm:ml-72 pt-[72px] print:p-0 print:sm:ml-0"
+        <main
+            class="pt-14 transition-[padding] duration-200 print:p-0 print:sm:pl-0"
+            :class="isMenuCollapsed ? 'sm:pl-16' : 'sm:pl-72'"
         >
-            <div class="flex-1">
-                <slot />
+            <div
+                class="flex min-h-[calc(100vh-3.5rem)] flex-col justify-between bg-gray-50 sm:rounded-tl-[1.25rem] print:min-h-0 print:rounded-none print:bg-white"
+            >
+                <div class="flex-1">
+                    <slot />
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Head, usePage } from "@inertiajs/vue3";
 import TheNavbar from "@/Layouts/Navbar/TheNavbar.vue";
 import TheSidebar from "@/Layouts/Sidebar/TheSidebar.vue";
@@ -74,7 +86,32 @@ const pageTitle = computed(() => {
 
 const isSidebarOpen = ref(false);
 
+// Desktop keeps the rail and folds the menu column away; the choice is
+// remembered so it does not spring back open on every page change.
+const isMenuCollapsed = ref(false);
+
+onMounted(() => {
+    try {
+        isMenuCollapsed.value = localStorage.getItem("sidebarCollapsed") === "1";
+    } catch {
+        // Private browsing can throw on access; the default is fine.
+    }
+});
+
+const isDesktop = () =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+
 const toggleSidebar = () => {
+    if (isDesktop()) {
+        isMenuCollapsed.value = !isMenuCollapsed.value;
+        try {
+            localStorage.setItem("sidebarCollapsed", isMenuCollapsed.value ? "1" : "0");
+        } catch {
+            // Not being able to remember it is not worth breaking the toggle.
+        }
+        return;
+    }
+
     isSidebarOpen.value = !isSidebarOpen.value;
 };
 
