@@ -134,14 +134,14 @@
                             <td class="hidden sm:table-cell px-1.5 sm:px-4 py-2.5 text-gray-400 text-xs">{{ idx + 1 }}</td>
                             <td class="px-1.5 sm:px-4 py-2.5 font-medium text-gray-900">
                                 {{ expense.reason }}
-                                <span class="sm:hidden block text-[10px] font-normal text-gray-400">{{ formatDate(expense.created_at) }}</span>
+                                <span class="sm:hidden block text-[10px] font-normal text-gray-400">{{ formatDate(expense.effective_date ?? expense.created_at) }}</span>
                             </td>
                             <td class="px-1.5 sm:px-4 py-2.5">
                                 <span v-if="expense.category" class="px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">{{ expense.category }}</span>
                                 <span v-else class="text-gray-400 text-xs">—</span>
                             </td>
                             <td class="px-1.5 sm:px-4 py-2.5 text-gray-500 hidden sm:table-cell text-xs">{{ expense.description || '—' }}</td>
-                            <td class="hidden sm:table-cell px-1.5 sm:px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(expense.created_at) }}</td>
+                            <td class="hidden sm:table-cell px-1.5 sm:px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(expense.effective_date ?? expense.created_at) }}</td>
                             <td class="px-1.5 sm:px-4 py-2.5 text-right font-bold text-rose-600">৳{{ fmt(expense.amount) }}</td>
                         </tr>
                         <tr v-if="!report.detailed.length">
@@ -252,7 +252,7 @@
                         <td class="exp-td exp-td-indent">{{ expense.reason }}</td>
                         <td class="exp-td">{{ expense.category || '—' }}</td>
                         <td class="exp-td" style="color:#64748b;font-size:8pt">{{ expense.description || '—' }}</td>
-                        <td class="exp-td exp-td-center">{{ formatDate(expense.created_at) }}</td>
+                        <td class="exp-td exp-td-center">{{ formatDate(expense.effective_date ?? expense.created_at) }}</td>
                         <td class="exp-td exp-td-amount">৳{{ fmt(expense.amount) }}</td>
                     </tr>
                     <tr v-if="!report.detailed.length">
@@ -290,6 +290,7 @@ interface ExpenseEntry {
     description: string | null;
     amount: number;
     created_at: string;
+    effective_date?: string | null;
 }
 
 const props = defineProps<{

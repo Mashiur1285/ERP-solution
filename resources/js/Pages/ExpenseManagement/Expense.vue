@@ -338,7 +338,7 @@
                                             </thead>
                                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                                 <tr v-for="item in group.items" :key="item.id" class="hover:bg-indigo-50/30">
-                                                    <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 whitespace-nowrap">{{ new Date(item.created_at).toLocaleDateString() }}</td>
+                                                    <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 whitespace-nowrap">{{ new Date(item.effective_date ?? item.created_at).toLocaleDateString() }}</td>
                                                     <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 break-words">{{ item.description || '-' }}</td>
                                                     <td class="px-1.5 sm:px-3 py-1.5 sm:py-2 font-semibold text-right whitespace-nowrap text-indigo-600">{{ toBengaliNumber(item.amount, 2) }} {{ getTranslation('currency') }}</td>
                                                     <td class="px-1 sm:px-3 py-1.5 sm:py-2 text-center">
@@ -392,6 +392,7 @@ interface Expense {
     description: string | null;
     amount: number;
     created_at: string;
+    effective_date?: string | null;
 }
 
 const props = defineProps<{
@@ -416,7 +417,7 @@ const translations = {
         reason: "Reason",
         description: "Description",
         amount: "Amount",
-        createdAt: "Created At",
+        createdAt: "Date",
         actions: "Actions",
         edit: "Edit",
         expenseDetails: "Expense Details",
@@ -446,7 +447,7 @@ const translations = {
         reason: "কারণ",
         description: "বিবরণ",
         amount: "পরিমাণ",
-        createdAt: "তৈরি হয়েছে",
+        createdAt: "তারিখ",
         actions: "কার্যক্রম",
         edit: "সম্পাদনা",
         expenseDetails: "ব্যয়ের বিবরণ",
@@ -491,11 +492,23 @@ const filteredExpenses = computed(() => {
     const query = searchQuery.value.toLowerCase();
 
     return props.expenses.filter((expense) => {
-        // Date range filter by created_at (parse in local timezone to avoid UTC offset mismatch)
+        // Filter on the same date the row displays, so a backdated expense is
+        // found by the day it was spent rather than the day it was typed in.
         if (dateStart.value || dateEnd.value) {
-            if (!expense.created_at) return false;
-            const d = new Date(String(expense.created_at).replace(' ', 'T'));
-            const eDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const raw = String(expense.effective_date ?? expense.created_at ?? '');
+            if (!raw) return false;
+
+            // effective_date is already Y-m-d, so use it as-is: passing a
+            // date-only string through Date() parses it as UTC and would shift
+            // the day for anyone west of Greenwich. A timestamp still needs its
+            // date part read in local time.
+            let eDateStr: string;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+                eDateStr = raw;
+            } else {
+                const d = new Date(raw.replace(' ', 'T'));
+                eDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
             if (dateStart.value && eDateStr < dateStart.value) return false;
             if (dateEnd.value && eDateStr > dateEnd.value) return false;
         }
@@ -521,7 +534,7 @@ const recentExpenses = computed(() => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     return filteredExpenses.value.filter(
-        (expense) => new Date(expense.created_at) > sevenDaysAgo
+        (expense) => new Date(expense.effective_date ?? expense.created_at) > sevenDaysAgo
     ).length;
 });
 

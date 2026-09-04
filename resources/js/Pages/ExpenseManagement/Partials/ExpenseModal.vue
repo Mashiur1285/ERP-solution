@@ -274,6 +274,23 @@
                             </p>
                         </div>
 
+                        <!-- Date: an expense belongs to the day it was spent, not
+                             the day it happened to be typed in. -->
+                        <div>
+                            <label
+                                for="expense_date"
+                                class="block text-sm font-semibold text-gray-700 mb-2"
+                            >
+                                {{ getTranslation("expenseDate") }}
+                            </label>
+                            <input
+                                v-model="expenseForm.expense_date"
+                                id="expense_date"
+                                type="date"
+                                class="w-full min-w-0 px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl shadow-sm focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 transition-all duration-300 text-sm font-medium hover:border-indigo-200"
+                            />
+                        </div>
+
                         <!-- Description -->
                         <div>
                             <label
@@ -507,6 +524,7 @@ const props = defineProps<{
         category?: string | null;
         description: string | null;
         amount: number;
+        expense_date?: string | null;
     };
     editMode?: boolean;
     existingReasons?: string[];
@@ -541,6 +559,7 @@ const translations = {
         reason: "Reason",
         description: "Description",
         amount: "Amount",
+        expenseDate: "Date",
         optional: "optional",
         enterReason: "Enter expense reason",
         enterAmount: "Enter expense amount",
@@ -563,6 +582,7 @@ const translations = {
         reason: "কারণ",
         description: "বিবরণ",
         amount: "পরিমাণ",
+        expenseDate: "তারিখ",
         optional: "ঐচ্ছিক",
         enterReason: "ব্যয়ের কারণ লিখুন",
         enterAmount: "ব্যয়ের পরিমাণ লিখুন",
@@ -604,11 +624,17 @@ const hideSuggestions = () => {
     setTimeout(() => { showSuggestions.value = false; }, 150);
 };
 
+const today = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 const expenseForm = ref({
     reason: props.expense?.reason || "",
     category: props.expense?.category || null as string | null,
     description: props.expense?.description || null,
     amount: props.expense?.amount || null,
+    expense_date: props.expense?.expense_date || today(),
 });
 
 watch(
@@ -619,6 +645,7 @@ watch(
             category: newExpense?.category || null,
             description: newExpense?.description || null,
             amount: newExpense?.amount || null,
+            expense_date: newExpense?.expense_date || today(),
         };
     },
     { deep: true }
@@ -662,6 +689,7 @@ const submit = () => {
                     category: null,
                     description: null,
                     amount: null,
+                    expense_date: today(),
                 };
             }
             isSubmitted.value = false;

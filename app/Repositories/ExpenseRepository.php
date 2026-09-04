@@ -17,8 +17,15 @@ class ExpenseRepository extends BaseRepository implements ExpenseContract
         $start = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
         $end   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
 
-        $expenses = Expense::whereBetween('created_at', [$start, $end])
-            ->orderBy('created_at', 'desc')
+        // Date by expense_date, falling back to created_at for rows entered
+        // before the form had a date field. The dashboard counts them the same
+        // way, so the two can no longer put an expense in different months.
+        $expenses = Expense::whereRaw('COALESCE(expense_date, created_at::date) BETWEEN ? AND ?', [
+                $start->toDateString(),
+                $end->toDateString(),
+            ])
+            ->orderByRaw('COALESCE(expense_date, created_at::date) DESC')
+            ->orderByDesc('id')
             ->get();
 
         $summary = $expenses

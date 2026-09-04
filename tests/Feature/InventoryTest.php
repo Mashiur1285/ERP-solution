@@ -4803,3 +4803,241 @@ it('T189: searching one supplier name returns only that supplier products', func
     expect($rows)->toHaveCount(2)
         ->and($rows->pluck('supplier_id')->unique()->all())->toBe([$globe->id]);
 });
+
+// ── T190–T193: expenses reach the dashboard ─────────────────────────────────
+
+it('T190: an expense created through the form carries its date', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view']);
+
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason'       => 'Delivery van fuel',
+        'category'     => 'Fuel',
+        'description'  => 'test',
+        'amount'       => 4500,
+        'expense_date' => now()->toDateString(),
+    ]);
+
+    $expense = \App\Models\Expense::latest('id')->firstOrFail();
+
+    // Deliberately uncast on the model: the date input needs a plain Y-m-d
+    // string, and a date cast would serialise it as an ISO timestamp instead.
+    expect($expense->expense_date)->not->toBeNull()
+        ->and((string) $expense->expense_date)->toBe(now()->toDateString());
+});
+
+it('T191: today expenses show on the dashboard', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view', 'dashboard.view']);
+
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason' => 'Fuel', 'category' => 'Fuel', 'amount' => 4500,
+        'expense_date' => now()->toDateString(),
+    ]);
+
+    $props = dashProps($user);
+
+    expect(round((float) $props['todaysExpensesAmount'], 2))->toBe(4500.0)
+        ->and(round((float) $props['monthlyExpenses']['total_amount'], 2))->toBe(4500.0)
+        ->and((int) $props['monthlyExpenses']['total_expenses'])->toBe(1);
+});
+
+it('T192: an expense with no date still counts, on the day it was recorded', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view', 'dashboard.view']);
+
+    // Rows created before the form had a date field look like this.
+    \App\Models\Expense::create([
+        'reason'       => 'Legacy expense',
+        'category'     => 'Misc',
+        'description'  => 'no date on file',
+        'amount'       => 6000,
+        'expense_date' => null,
+    ]);
+
+    $props = dashProps($user);
+
+    // It must not vanish from the dashboard just because the column is null.
+    expect(round((float) $props['todaysExpensesAmount'], 2))->toBe(6000.0)
+        ->and(round((float) $props['monthlyExpenses']['total_amount'], 2))->toBe(6000.0);
+});
+
+it('T193: a backdated expense lands on its own day, not today', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view', 'dashboard.view']);
+
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason' => 'Warehouse rent', 'category' => 'Rent', 'amount' => 25000,
+        'expense_date' => now()->subDays(4)->toDateString(),
+    ]);
+
+    expect(round((float) dashProps($user, now()->toDateString())['todaysExpensesAmount'], 2))->toBe(0.0)
+        ->and(round((float) dashProps($user, now()->subDays(4)->toDateString())['todaysExpensesAmount'], 2))->toBe(25000.0);
+});
+
+// ── T194–T197: the expense report and the dashboard date alike ──────────────
+
+it('T194: a backdated expense lands in the month it was spent', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view', 'dashboard.view']);
+
+    // Spent last month, typed in today.
+    $spent = now()->subMonthNoOverflow()->startOfMonth()->addDays(3);
+
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason' => 'Warehouse rent', 'category' => 'Rent', 'amount' => 25000,
+        'expense_date' => $spent->toDateString(),
+    ]);
+
+    $lastMonth = $this->actingAs($user)
+        ->get(route('expenses.report', ['month' => $spent->month, 'year' => $spent->year]))
+        ->viewData('page')['props']['report'];
+
+    $thisMonth = $this->actingAs($user)
+        ->get(route('expenses.report', ['month' => now()->month, 'year' => now()->year]))
+        ->viewData('page')['props']['report'];
+
+    expect(round((float) $lastMonth['total'], 2))->toBe(25000.0)
+        ->and(round((float) $thisMonth['total'], 2))->toBe(0.0);
+});
+
+it('T195: an expense with no date still appears in the month it was recorded', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.view']);
+
+    \App\Models\Expense::create([
+        'reason' => 'Legacy', 'category' => 'Misc', 'description' => null,
+        'amount' => 6000, 'expense_date' => null,
+    ]);
+
+    $report = $this->actingAs($user)
+        ->get(route('expenses.report', ['month' => now()->month, 'year' => now()->year]))
+        ->viewData('page')['props']['report'];
+
+    expect(round((float) $report['total'], 2))->toBe(6000.0);
+});
+
+it('T196: every expense row carries the date the screens display', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view']);
+
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason' => 'Fuel', 'category' => 'Fuel', 'amount' => 500,
+        'expense_date' => now()->subDays(2)->toDateString(),
+    ]);
+    \App\Models\Expense::create(['reason' => 'Legacy', 'amount' => 100, 'expense_date' => null]);
+
+    $rows = collect($this->actingAs($user)
+        ->get(route('expenses.report'))
+        ->viewData('page')['props']['report']['detailed']);
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows->every(fn ($r) => filled($r['effective_date'])))->toBeTrue();
+
+    // The dated one shows its own day; the undated one falls back to today.
+    expect($rows->firstWhere('reason', 'Fuel')['effective_date'])->toBe(now()->subDays(2)->toDateString())
+        ->and($rows->firstWhere('reason', 'Legacy')['effective_date'])->toBe(now()->toDateString());
+});
+
+it('T197: the expense report total matches what the dashboard counts', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view', 'dashboard.view']);
+
+    // Anchored to this month so the run date cannot push one into the previous
+    // month and skew the expected total.
+    foreach ([[0, 4500], [1, 2100], [2, 1700]] as [$offset, $amount]) {
+        $this->actingAs($user)->post(route('expenses.store'), [
+            'reason' => 'Cost ' . $offset, 'category' => 'Misc', 'amount' => $amount,
+            'expense_date' => now()->startOfMonth()->addDays($offset)->toDateString(),
+        ]);
+    }
+    // Plus a legacy row with no date at all.
+    \App\Models\Expense::create(['reason' => 'Legacy', 'amount' => 735, 'expense_date' => null]);
+
+    $reportTotal = (float) $this->actingAs($user)
+        ->get(route('expenses.report'))
+        ->viewData('page')['props']['report']['total'];
+
+    $dashTotal = (float) dashProps($user)['monthlyExpenses']['total_amount'];
+
+    expect(round($reportTotal, 2))->toBe(round($dashTotal, 2))
+        ->toBe(9035.0);
+});
+
+// ── T198–T200: existing production rows must read exactly as before ─────────
+
+/** The eight rows the live system already holds, all with no expense_date. */
+function productionLikeExpenses(): void
+{
+    $rows = [
+        ['Extra Expanse', 'Miscellaneous', 'Nasta', 135],
+        ['Babol S R', 'Salary', 'Advance', 2020],
+        ['Oill', 'Transport', 'Oill repine', 2100],
+        ['Babol S R', 'Salary', 'Buy nodols', 160],
+        ['Babol S R', 'Salary', 'Advance', 200],
+        ['Babol S R', 'Salary', 'Advance', 300],
+        ['Unload', 'Miscellaneous', 'Products unload', 1700],
+        ['D S R', 'Salary', "Three day's da,together", 420],
+    ];
+
+    foreach ($rows as [$reason, $category, $description, $amount]) {
+        \App\Models\Expense::create([
+            'reason'       => $reason,
+            'category'     => $category,
+            'description'  => $description,
+            'amount'       => $amount,
+            'expense_date' => null,   // as they are on the live system today
+        ]);
+    }
+}
+
+it('T198: the live expense figures are unchanged by the date rework', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.view']);
+    productionLikeExpenses();
+
+    $report = $this->actingAs($user)
+        ->get(route('expenses.report'))
+        ->viewData('page')['props']['report'];
+
+    // The totals the client is looking at right now.
+    expect(round((float) $report['total'], 2))->toBe(7035.0)
+        ->and($report['detailed'])->toHaveCount(8);
+
+    $byCategory = collect($report['summary']);
+    expect(round((float) $byCategory['Salary'], 2))->toBe(3100.0)
+        ->and(round((float) $byCategory['Transport'], 2))->toBe(2100.0)
+        ->and(round((float) $byCategory['Miscellaneous'], 2))->toBe(1835.0);
+});
+
+it('T199: dated and undated expenses live together without double counting', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.add', 'expense.view', 'dashboard.view']);
+
+    productionLikeExpenses();                       // 7,035 with no dates
+    $this->actingAs($user)->post(route('expenses.store'), [
+        'reason' => 'New fuel', 'category' => 'Transport', 'amount' => 965,
+        'expense_date' => now()->toDateString(),    // the first row with a date
+    ]);
+
+    $report = $this->actingAs($user)->get(route('expenses.report'))->viewData('page')['props']['report'];
+    $dash   = dashProps($user)['monthlyExpenses'];
+
+    expect(round((float) $report['total'], 2))->toBe(8000.0)
+        ->and($report['detailed'])->toHaveCount(9)
+        ->and(round((float) $dash['total_amount'], 2))->toBe(8000.0)
+        ->and((int) $dash['total_expenses'])->toBe(9);
+});
+
+it('T200: an undated expense keeps showing the day it was recorded', function () {
+    seedAllPermissions();
+    $user = makeUser(['expense.view']);
+    productionLikeExpenses();
+
+    $rows = collect($this->actingAs($user)
+        ->get(route('expenses.report'))
+        ->viewData('page')['props']['report']['detailed']);
+
+    // Same day the old screen printed from created_at, so nothing moves on screen.
+    expect($rows->every(fn ($r) => $r['effective_date'] === now()->toDateString()))->toBeTrue();
+});

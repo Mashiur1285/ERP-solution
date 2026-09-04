@@ -86,7 +86,10 @@ class DashboardController extends Controller
 
         // Calculate monthly expense metrics
         $monthlyExpenses = $this->expenseRepository->query()
-            ->whereBetween('expense_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->whereRaw('COALESCE(expense_date, created_at::date) BETWEEN ? AND ?', [
+                $startOfMonth->toDateString(),
+                $endOfMonth->toDateString(),
+            ])
             ->get();
 
         $totalExpenses = $monthlyExpenses->count();
@@ -99,7 +102,7 @@ class DashboardController extends Controller
             ->get();
 
         $todaysExpensesAmount = $this->expenseRepository->query()
-            ->whereDate('expense_date', $dailySalesDate)
+            ->whereRaw('COALESCE(expense_date, created_at::date) = ?', [$dailySalesDate])
             ->sum('amount');
 
         $lifts = $this->liftRepository->query()
