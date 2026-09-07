@@ -1,22 +1,21 @@
 <?php
 
-use App\Contracts\ProductPurchaseContract;
+use App\Http\Controllers\Acl\RoleController;
+use App\Http\Controllers\Acl\UserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\ExpenseController;
-use App\Http\Controllers\Acl\RoleController;
-use App\Http\Controllers\Acl\UserController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LiftController;
 use App\Http\Controllers\ProductPurchaseController;
-use App\Http\Controllers\SalesController; // Fixed: Correct namespace
+use App\Http\Controllers\ProfileController; // Fixed: Correct namespace
+use App\Http\Controllers\ProfitLossController;
+use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\LiftController;
-use App\Http\Controllers\ProfitLossController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -24,7 +23,8 @@ Route::get('/', function () {
 
 // Authentication and ERP Routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
+    Route::get('/home', HomeController::class)->name('home');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission.redirect:dashboard.view')->name('dashboard');
 
     // Profile Routes (from Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -124,4 +124,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('users/{user}', [UserController::class, 'update'])->middleware('permission:user.update')->name('users.update');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

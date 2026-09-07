@@ -49,7 +49,7 @@
                     </button>
 
                     <!-- Logo / Brand Name -->
-                    <Link :href="route('dashboard')" class="flex md:mr-24">
+                    <Link :href="route('home')" class="flex md:mr-24">
                         <span class="whitespace-nowrap text-lg font-bold text-white">
                             ERP Solution
                         </span>

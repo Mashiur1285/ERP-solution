@@ -2449,7 +2449,13 @@ it('T87: a user with no permissions is refused by every guarded page', function 
     $user = makeUser([]);
 
     foreach (array_keys(guardedPages()) as $path) {
-        $this->actingAs($user)->get($path)->assertForbidden();
+        $response = $this->actingAs($user)->get($path);
+
+        if ($path === '/dashboard') {
+            $response->assertRedirect(route('home', absolute: false));
+        } else {
+            $response->assertForbidden();
+        }
     }
 });
 
@@ -2464,7 +2470,13 @@ it('T88: each page opens only for the permission it is guarded by', function () 
 
         // Every other permission must not.
         $wrong = makeUser([$permission === 'sales.view' ? 'expense.view' : 'sales.view']);
-        $this->actingAs($wrong)->get($path)->assertForbidden();
+        $response = $this->actingAs($wrong)->get($path);
+
+        if ($path === '/dashboard') {
+            $response->assertRedirect(route('home', absolute: false));
+        } else {
+            $response->assertForbidden();
+        }
     }
 });
 
